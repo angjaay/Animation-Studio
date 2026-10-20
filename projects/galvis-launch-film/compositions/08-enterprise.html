@@ -52,7 +52,7 @@
           // Each side gets its own crop of map body, clear of the pin, labels, legend and chart baked into the source.
           const W = 1920, H = 600, BEAM = 1100;
           const strip = document.getElementById(`${id}-strip`);
-          const before = await GV.ditheredCanvas('assets/solution/ESC/desktop/biodiversity.jpg', BEAM, H, { palette: 'brand', cell: 3, resolve: 1, crop: [0.40, 0.30, 0.26, 0.40] });
+          const before = await GV.ditheredCanvas('assets/sentinel/riau-plantation.jpg', BEAM, H, { palette: 'brand', cell: 3, resolve: 1, crop: [0, 0.52, 0.62, 0.46] });
           // Behind the beam the next layer is still raw; ahead of it the current layer is resolved.
           const after = await GV.ditheredCanvas('assets/solution/DMR/desktop/risk.jpg', W - BEAM, H, { palette: 'brand', cell: 3, resolve: 0, crop: [0.55, 0.05, 0.27, 0.62] });
           after.style.left = `${BEAM}px`;
