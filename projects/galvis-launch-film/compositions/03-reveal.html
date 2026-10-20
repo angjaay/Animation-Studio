@@ -6,7 +6,7 @@
       <style>
         #act03-reveal-root { position: absolute; inset: 0; overflow: hidden; background: var(--white); }
         #act03-reveal-dust { position: absolute; inset: 0; }
-        #act03-reveal-dust canvas { display: block; width: 100%; height: 100%; }
+        #act03-reveal-dust canvas, #act03-reveal-particles { display: block; position: absolute; inset: 0; width: 1920px; height: 1080px; }
         #act03-reveal-keylines { position: absolute; inset: 0; width: 1920px; height: 1080px; }
         #act03-reveal-mark { position: absolute; left: 840px; top: 160px; width: 240px; height: 263px; }
         #act03-reveal-mark > div { position: absolute; inset: 0; }
@@ -16,44 +16,58 @@
           font-family: var(--font-display); font-weight: 700; font-size: 120px; letter-spacing: 0.2em;
           padding-left: 0.2em; color: var(--navy); line-height: 1;
         }
-        #act03-reveal-full {
-          position: absolute; left: 0; right: 0; top: 744px; text-align: center;
-          font-family: var(--font-text); font-weight: 600; font-size: 32px; color: var(--text-body);
+        #act03-reveal-name span { display: inline-block; }
+        .act03-reveal-sub {
+          position: absolute; left: 0; right: 0; text-align: center; font-family: var(--font-text); font-weight: 600; color: var(--text-body);
         }
+        #act03-reveal-full { top: 744px; font-size: 32px; }
+        #act03-reveal-tag { top: 806px; font-size: 24px; color: var(--text-muted); }
+        #act03-reveal-flash, #act03-reveal-inside { position: absolute; inset: 0; }
+        #act03-reveal-flash { background: #fff; }
+        #act03-reveal-inside { background: var(--navy); }
       </style>
       <div id="act03-reveal-root" data-composition-id="act03-reveal" data-width="1920" data-height="1080">
         <div id="act03-reveal-dust"></div>
+        <canvas id="act03-reveal-particles" width="1920" height="1080"></canvas>
         <svg id="act03-reveal-keylines" viewBox="0 0 1920 1080"></svg>
         <div id="act03-reveal-mark"></div>
-        <div id="act03-reveal-name"></div>
-        <div id="act03-reveal-full"></div>
+        <div id="act03-reveal-name"><span id="act03-reveal-gal"></span><span id="act03-reveal-vis"></span></div>
+        <div id="act03-reveal-full" class="act03-reveal-sub"></div>
+        <div id="act03-reveal-tag" class="act03-reveal-sub"></div>
+        <div id="act03-reveal-inside"></div>
+        <div id="act03-reveal-flash"></div>
       </div>
       <script>
-        (async () => {
+        GV.register('act03-reveal', async (tl) => {
           const id = 'act03-reveal';
-          document.getElementById(`${id}-name`).textContent = GV.COPY['reveal.name'];
-          document.getElementById(`${id}-full`).textContent = GV.COPY['reveal.full'];
+          const A = (bar, beat) => GV.at(id, bar, beat);
+          const $ = (s) => document.getElementById(`${id}-${s}`);
+          const name = GV.COPY['reveal.name'];
+          $('gal').textContent = name.slice(0, 3);
+          $('vis').textContent = name.slice(3);
+          $('full').textContent = GV.COPY['reveal.full'];
+          $('tag').textContent = GV.COPY['reveal.sub'];
 
-          // Logo assembled from its anatomy (stacked parts reproduce the original mark).
+          // The mark, one layer per part of its anatomy.
           const parts = GV.logoParts('act03');
-          const mark = document.getElementById(`${id}-mark`);
+          const layer = {};
           for (const key of ['hexagon', 'arrow', 'plates']) {
-            const layer = document.createElement('div');
-            layer.innerHTML = parts[key];
-            mark.append(layer);
+            layer[key] = document.createElement('div');
+            layer[key].innerHTML = parts[key];
+            $('mark').append(layer[key]);
           }
 
-          // Three keylines echo the hexagon (pointy-top) around the mark.
+          // Keylines echo the pointy-top hexagon around the mark.
           const cx = 960, cy = 291;
           const hex = (r) => Array.from({ length: 6 }, (_, i) => {
             const a = (Math.PI / 3) * i - Math.PI / 2;
             return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`;
           }).join(' ');
-          document.getElementById(`${id}-keylines`).innerHTML = [[168, 0.32], [204, 0.2], [240, 0.1]]
+          $('keylines').innerHTML = [[168, 0.32], [204, 0.2], [240, 0.1]]
             .map(([r, o]) => `<polygon points="${hex(r)}" fill="none" stroke="#024ABC" stroke-opacity="${o}" stroke-width="1.5" stroke-linejoin="round"/>`)
             .join('');
 
-          // Left-over dither "dust" at the edges: a dithered radial ramp, clear in the middle.
+          // Left-over dither dust at the edges (static, screen-locked).
           const src = document.createElement('canvas');
           src.width = 640; src.height = 360;
           const g = src.getContext('2d');
@@ -66,11 +80,58 @@
           const dust = document.createElement('canvas');
           dust.width = 1920; dust.height = 1080;
           GV.mountDither(dust, src, { palette: 'landing', cell: 3 }).draw();
-          document.getElementById(`${id}-dust`).append(dust);
+          $('dust').append(dust);
 
-          const tl = gsap.timeline({ paused: true });
-          window.__timelines["act03-reveal"] = tl;
-        })();
+          // Impact: the frame is white, then the node bursts into points that gather into the mark.
+          gsap.set($('flash'), { opacity: 1 });
+          tl.to($('flash'), { opacity: 0, duration: 0.4, ease: 'power2.out' }, 0);
+          const rnd = GV.seeded(3);
+          const points = Array.from({ length: 600 }, () => ({
+            x0: 960 + (rnd() - 0.5) * 1700, y0: 600 + (rnd() - 0.5) * 900,
+            x1: 852 + rnd() * 216, y1: 175 + rnd() * 235,
+            c: ['#032750', '#024ABC', '#1FAFA1', '#86C36A'][Math.floor(rnd() * 4)],
+          }));
+          const pctx = $('particles').getContext('2d');
+          const drawParticles = (k, fadeOut) => {
+            pctx.clearRect(0, 0, 1920, 1080);
+            if (fadeOut >= 1) return;
+            pctx.globalAlpha = 1 - fadeOut;
+            const e = 1 - Math.pow(1 - k, 3);
+            for (const p of points) {
+              pctx.fillStyle = p.c;
+              pctx.fillRect(p.x0 + (p.x1 - p.x0) * e, p.y0 + (p.y1 - p.y0) * e, 3, 3);
+            }
+          };
+          const gather = { k: 0, fade: 0 };
+          tl.to(gather, { k: 1, duration: A(14), ease: 'none', onUpdate: () => drawParticles(gather.k, gather.fade) }, 0);
+          tl.to(gather, { fade: 1, duration: 0.6, ease: 'none', onUpdate: () => drawParticles(gather.k, gather.fade) }, A(14));
+          drawParticles(0, 0);
+
+          // Bar 14: the mark assembles from its anatomy.
+          gsap.set(layer.hexagon, { scale: 0.6, opacity: 0 });
+          gsap.set(layer.arrow, { rotationX: 90, transformPerspective: 600, opacity: 0 });
+          gsap.set(layer.plates, { y: -60, opacity: 0 });
+          tl.to(layer.hexagon, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.6)' }, A(14));
+          tl.to(layer.arrow, { rotationX: 0, opacity: 1, duration: 0.5, ease: 'power3.out' }, A(14, 1));
+          tl.to(layer.plates, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' }, A(14, 2));
+          const polys = $('keylines').querySelectorAll('polygon');
+          gsap.set(polys, { opacity: 0, scale: 0.9, svgOrigin: `${cx} ${cy}` });
+          tl.to(polys, { opacity: 1, scale: 1, duration: 0.6, stagger: 0.12, ease: 'power2.out' }, A(14, 3));
+
+          // Bars 15-17: the name in two syllables, then the full name and the line beneath it.
+          const rise = { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' };
+          gsap.set([$('gal'), $('vis'), $('full'), $('tag')], { opacity: 0, y: 30 });
+          tl.to($('gal'), rise, A(15));
+          tl.to($('vis'), rise, A(15, 1));
+          tl.to($('full'), rise, A(16));
+          tl.to($('tag'), rise, A(17));
+
+          // Last beat: the camera dives into the hexagon.
+          gsap.set($('inside'), { opacity: 0 });
+          tl.to($('mark'), { scale: 9, duration: 0.5, ease: 'power3.in' }, A(17, 3));
+          tl.to([$('name'), $('full'), $('tag'), $('keylines')], { opacity: 0, duration: 0.25 }, A(17, 3));
+          tl.to($('inside'), { opacity: 1, duration: 0.3, ease: 'power2.in' }, A(17, 3) + 0.2);
+        }, 10);
       </script>
     </template>
   </body>
