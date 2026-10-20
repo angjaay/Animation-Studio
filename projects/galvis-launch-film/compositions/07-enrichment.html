@@ -11,7 +11,8 @@
         }
         #act07-enrichment-tag i { display: block; width: 64px; height: 4px; border-radius: 2px; background: var(--teal); margin-top: 12px; }
         #act07-enrichment-sub { position: absolute; left: 96px; top: 150px; font-family: var(--font-display); font-weight: 700; font-size: 40px; color: var(--navy); }
-        #act07-enrichment-thread { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+        #act07-enrichment-close { position: absolute; inset: 0; }
+        #act07-enrichment-thread, #act07-enrichment-outline { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
         #act07-enrichment-shape { position: absolute; left: 180px; top: 260px; width: 720px; height: 720px; }
         #act07-enrichment-card {
           position: absolute; left: 1040px; top: 150px; width: 700px; background: #fff; border-radius: 18px;
@@ -25,21 +26,42 @@
         .act07-enrichment-row .act07-enrichment-bar { height: 8px; border-radius: 4px; background: var(--cool-gray); position: relative; }
         .act07-enrichment-row .act07-enrichment-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--teal); }
         .act07-enrichment-row em { font-style: normal; font-family: var(--font-mono); font-size: 16px; color: var(--navy); text-align: right; }
+        #act07-enrichment-wide { position: absolute; inset: 0; }
+        #act07-enrichment-region { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+        #act07-enrichment-flow {
+          position: absolute; left: 0; right: 0; top: 930px; display: flex; justify-content: center; align-items: center; gap: 18px;
+          font-family: var(--font-text); font-weight: 700; font-size: 26px; color: var(--navy);
+        }
+        #act07-enrichment-flow svg { width: 22px; height: 22px; }
+        #act07-enrichment-position {
+          position: absolute; left: 0; right: 0; top: 860px; text-align: center;
+          font-family: var(--font-display); font-weight: 700; font-size: 52px; color: var(--navy);
+        }
       </style>
       <div id="act07-enrichment-root" data-composition-id="act07-enrichment" data-width="1920" data-height="1080">
-        <svg id="act07-enrichment-thread" viewBox="0 0 1920 1080"></svg>
+        <div id="act07-enrichment-wide">
+          <canvas id="act07-enrichment-region" width="1920" height="1080"></canvas>
+          <div id="act07-enrichment-flow"></div>
+          <div id="act07-enrichment-position"></div>
+        </div>
+        <div id="act07-enrichment-close">
+          <svg id="act07-enrichment-thread" viewBox="0 0 1920 1080"></svg>
+          <canvas id="act07-enrichment-shape" width="720" height="720"></canvas>
+          <svg id="act07-enrichment-outline" viewBox="0 0 1920 1080"></svg>
+          <div id="act07-enrichment-card"><h3></h3><p></p></div>
+        </div>
         <div id="act07-enrichment-tag"></div>
         <div id="act07-enrichment-sub"></div>
-        <canvas id="act07-enrichment-shape" width="720" height="720"></canvas>
-        <div id="act07-enrichment-card"><h3></h3><p></p></div>
       </div>
       <script>
-        (async () => {
+        GV.register('act07-enrichment', async (tl) => {
           const id = 'act07-enrichment';
-          const tag = document.getElementById(`${id}-tag`);
-          tag.textContent = GV.COPY['products.enrichment'];
-          tag.append(document.createElement('i'));
-          document.getElementById(`${id}-sub`).textContent = GV.COPY['enrichment.sub'];
+          const A = (bar, beat) => GV.at(id, bar, beat);
+          const $ = (s) => document.getElementById(`${id}-${s}`);
+          $('tag').textContent = GV.COPY['products.enrichment'];
+          $('tag').append(document.createElement('i'));
+          $('sub').textContent = GV.COPY['enrichment.sub'];
+          $('position').textContent = GV.COPY['enrichment.position'];
 
           // Each attribute is one solution map from gisact.io (content checked against the files).
           const S = 'assets/solution';
@@ -62,11 +84,11 @@
           const attrs = GV.COPY['enrichment.attrs'];
           const images = await Promise.all(MAP_PATHS.map((p) => GV.loadImage(p)));
 
-          // Thumbnails in the profile card.
-          const card = document.getElementById(`${id}-card`);
+          // Profile card rows.
+          const card = $('card');
           card.querySelector('h3').textContent = GV.COPY['enrichment.profile'].title;
           card.querySelector('p').textContent = GV.COPY['enrichment.profile'].subtitle;
-          attrs.forEach((name, i) => {
+          const rows = attrs.map((name, i) => {
             const row = document.createElement('div');
             row.className = `${id}-row`;
             const thumb = document.createElement('canvas');
@@ -84,50 +106,119 @@
             val.textContent = VALUES[i].toFixed(2);
             row.append(thumb, label, bar, val);
             card.append(row);
+            return row;
           });
 
-          // The polygon: a mosaic of attribute maps clipped to Riau; the last cells are still raw (dithered).
-          const shape = document.getElementById(`${id}-shape`);
-          const g = shape.getContext('2d');
-          const d = GV.RIAU_SVG.match(/ d="([^"]+)"/)[1];
-          const outline = new Path2D(d);
-          g.save();
-          g.scale(720 / 600, 720 / 600);
-          g.clip(outline);
-          const cols = 4, rows = 3, cw = 600 / cols, ch = 600 / rows;
-          for (let k = 0; k < cols * rows; k++) {
-            const img = images[k % images.length];
-            const cell = document.createElement('canvas');
-            cell.width = Math.ceil(cw * 1.2); cell.height = Math.ceil(ch * 1.2);
-            const raw = k >= 8;
-            const layer = GV.mountDither(cell, img, { palette: 'brand', cell: 3, resolve: raw ? 0 : 1, crop: CROP });
+          // The polygon: a mosaic of attribute maps clipped to Riau. Each cell resolves from raw (dithered)
+          // to clear on its own schedule; the frame is recomposed from the cells whenever one changes.
+          const outline = new Path2D(GV.RIAU_SVG.match(/ d="([^"]+)"/)[1]);
+          const g = $('shape').getContext('2d');
+          const cols = 4, nrows = 3, cw = 600 / cols, ch = 600 / nrows;
+          const cells = Array.from({ length: cols * nrows }, (_, k) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.ceil(cw * 1.2); canvas.height = Math.ceil(ch * 1.2);
+            const layer = GV.mountDither(canvas, images[k % images.length], { palette: 'brand', cell: 3, resolve: 0, crop: CROP });
             layer.draw();
-            g.drawImage(cell, (k % cols) * cw, Math.floor(k / cols) * ch, cw, ch);
-          }
-          g.restore();
-          g.save();
-          g.scale(720 / 600, 720 / 600);
-          g.save();
-          g.clip(outline);
-          g.strokeStyle = 'rgba(255,255,255,0.9)';
-          g.lineWidth = 1;
-          for (let c = 1; c < cols; c++) { g.beginPath(); g.moveTo(c * cw, 0); g.lineTo(c * cw, 600); g.stroke(); }
-          for (let r = 1; r < rows; r++) { g.beginPath(); g.moveTo(0, r * ch); g.lineTo(600, r * ch); g.stroke(); }
-          g.restore();
-          g.strokeStyle = '#1FAFA1';
-          g.lineWidth = 3.5;
-          g.stroke(outline);
-          g.restore();
+            const at = k < 8 ? A(41) + k * 0.4 : A(42, 3) + (k - 8) * 0.1;
+            return { canvas, layer, at, resolve: 0 };
+          });
+          const compose = (fill) => {
+            g.clearRect(0, 0, 720, 720);
+            g.save();
+            g.scale(720 / 600, 720 / 600);
+            g.clip(outline);
+            g.globalAlpha = fill;
+            cells.forEach((c, k) => g.drawImage(c.canvas, (k % cols) * cw, Math.floor(k / cols) * ch, cw, ch));
+            g.strokeStyle = 'rgba(255,255,255,0.9)';
+            g.lineWidth = 1;
+            for (let c = 1; c < cols; c++) { g.beginPath(); g.moveTo(c * cw, 0); g.lineTo(c * cw, 600); g.stroke(); }
+            for (let r = 1; r < nrows; r++) { g.beginPath(); g.moveTo(0, r * ch); g.lineTo(600, r * ch); g.stroke(); }
+            g.globalAlpha = 1;
+            g.restore();
+          };
 
-          // Thread from the core above, and leader lines from the polygon to the card.
-          document.getElementById(`${id}-thread`).innerHTML =
-            '<path d="M736 0 L736 560" stroke="#1FAFA1" stroke-width="3" fill="none"/>' +
-            '<circle cx="736" cy="560" r="8" fill="#1FAFA1" stroke="#FFFFFF" stroke-width="2"/>' +
-            '<path d="M744 560 C900 560, 930 430, 1040 430" stroke="#1FAFA1" stroke-opacity="0.6" stroke-width="2" stroke-dasharray="4 6" fill="none"/>';
+          // Outline drawn as SVG (stroke-dash), in the canvas's 720/600 frame placed at (180, 260).
+          $('outline').innerHTML = `<g transform="translate(180 260) scale(1.2)"><path d="${GV.RIAU_SVG.match(/ d="([^"]+)"/)[1]}" fill="none" stroke="#1FAFA1" stroke-width="2.9"/></g>`;
+          const outlinePath = $('outline').querySelector('path');
+          const outlineLen = outlinePath.getTotalLength();
+          gsap.set(outlinePath, { strokeDasharray: outlineLen, strokeDashoffset: outlineLen });
+          tl.to(outlinePath, { strokeDashoffset: 0, duration: 1.6, ease: 'power2.inOut' }, A(40));
 
-          const tl = gsap.timeline({ paused: true });
-          window.__timelines["act07-enrichment"] = tl;
-        })();
+          $('thread').innerHTML =
+            '<path id="act07-enrichment-down" d="M736 0 L736 560" stroke="#1FAFA1" stroke-width="3" fill="none"/>' +
+            '<circle id="act07-enrichment-node" cx="736" cy="560" r="8" fill="#1FAFA1" stroke="#FFFFFF" stroke-width="2"/>' +
+            '<path id="act07-enrichment-lead" d="M744 560 C900 560, 930 430, 1040 430" stroke="#1FAFA1" stroke-opacity="0.6" stroke-width="2" stroke-dasharray="4 6" fill="none"/>';
+          const down = $('down');
+          gsap.set(down, { strokeDasharray: 560, strokeDashoffset: 560 });
+          tl.to(down, { strokeDashoffset: 0, duration: 1.0, ease: 'power2.in' }, A(40));
+          gsap.set([$('node'), $('lead')], { opacity: 0 });
+          tl.to($('node'), { opacity: 1, duration: 0.2 }, A(40) + 1.0);
+          tl.to($('lead'), { opacity: 1, duration: 0.4 }, A(41));
+
+          // Bar 39: title. Bars 41-42: one attribute row every 0.4 s while the mosaic resolves.
+          gsap.set([$('tag'), $('sub')], { opacity: 0, y: 16 });
+          tl.to([$('tag'), $('sub')], { opacity: 1, y: 0, duration: 0.5, stagger: 0.15 }, A(39));
+          gsap.set(card, { opacity: 0, x: 40 });
+          tl.to(card, { opacity: 1, x: 0, duration: 0.5, ease: 'power3.out' }, A(41) - 0.3);
+          gsap.set(rows, { opacity: 0, x: 24 });
+          rows.forEach((row, i) => tl.to(row, { opacity: 1, x: 0, duration: 0.3 }, A(41) + i * 0.4));
+
+          // Bars 43-44: the camera pulls back — one place becomes thousands across the region.
+          const region = $('region').getContext('2d');
+          const rnd = GV.seeded(7);
+          const pts = GV.SEA_POINTS.map(([x, y]) => ({ x, y, at: A(43) + 0.3 + rnd() * 2.6 }));
+          const drawRegion = (t) => {
+            region.clearRect(0, 0, 1920, 1080);
+            region.save();
+            const RS = 0.72;
+            region.translate(960 - (1920 * RS) / 2, 6);
+            region.scale(RS, RS);
+            region.strokeStyle = 'rgba(3,39,80,0.35)';
+            region.lineWidth = 1.4 / RS;
+            for (const [, d] of GV.SEA_SVG.matchAll(/ d="([^"]+)"/g)) region.stroke(new Path2D(d));
+            region.fillStyle = '#1FAFA1';
+            for (const p of pts) {
+              const k = Math.min(1, (t - p.at) / 0.25);
+              if (k > 0) { region.globalAlpha = k; region.fillRect(p.x - 2.5, p.y - 2.5, 5, 5); }
+            }
+            region.restore();
+          };
+          const flow = $('flow');
+          const chevron = '<svg viewBox="0 0 24 24"><path d="M8 4l8 8-8 8" fill="none" stroke="#1FAFA1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+          GV.COPY['enrichment.flow'].forEach((step, i) => {
+            if (i) flow.insertAdjacentHTML('beforeend', `<span class="${id}-chev">${chevron}</span>`);
+            const span = document.createElement('span');
+            span.className = `${id}-step`;
+            span.textContent = step;
+            flow.append(span);
+          });
+          const flowParts = [...flow.children];
+
+          let lastKey = '';
+          const apply = (t) => {
+            cells.forEach((c) => {
+              const r = Math.min(1, Math.max(0, (t - c.at) / 0.35));
+              if (Math.abs(r - c.resolve) > 1e-3) { c.resolve = r; c.layer.set({ resolve: r }); c.layer.draw(); }
+            });
+            const fill = t < A(40) ? 0 : t < A(41) ? 0.35 * Math.min(1, (t - A(40)) / 1.5) : Math.min(1, 0.35 + (t - A(41)) / 1.2);
+            const key = cells.map((c) => c.resolve.toFixed(3)).join() + fill.toFixed(3);
+            if (key !== lastKey) { compose(fill); lastKey = key; }
+            drawRegion(t);
+          };
+          const clock = { t: 0 };
+          tl.to(clock, { t: 14, duration: 14, ease: 'none', onUpdate: () => apply(clock.t) }, 0);
+          apply(0);
+
+          gsap.set($('wide'), { opacity: 0 });
+          tl.to($('close'), { opacity: 0, duration: 0.6 }, A(43));
+          tl.to([$('tag'), $('sub')], { opacity: 0, duration: 0.4 }, A(43));
+          tl.to($('wide'), { opacity: 1, duration: 0.6 }, A(43));
+          gsap.set(flowParts, { opacity: 0, y: 12 });
+          flowParts.forEach((p, i) => tl.to(p, { opacity: 1, y: 0, duration: 0.3 }, A(43, 2) + i * 0.3));
+          gsap.set($('position'), { opacity: 0, y: 16 });
+          tl.to(flow, { opacity: 0, duration: 0.3 }, A(45) - 0.2);
+          tl.to($('position'), { opacity: 1, y: 0, duration: 0.5 }, A(45));
+        }, 14);
       </script>
     </template>
   </body>
