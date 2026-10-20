@@ -1,0 +1,94 @@
+/* Reconstructed GALVIS UI (movee-fe, simplified). Sizes are canvas px at 1920x1080. */
+
+.gv-window {
+  position: absolute; inset: 0; overflow: hidden;
+  border-radius: 16px; background: #fff;
+  box-shadow: 0 24px 64px rgba(3, 39, 80, 0.2);
+  font-family: var(--font-text); color: var(--text-body);
+  display: grid; grid-template-rows: 46px 1fr;
+}
+.gv-topbar {
+  background: var(--navy); display: flex; align-items: center; gap: 18px; padding: 0 18px;
+}
+.gv-topbar .gv-wordmark { width: 93px; height: 26px; display: block; }
+.gv-topbar .gv-wordmark svg { width: 100%; height: 100%; }
+.gv-topbar .gv-platform { color: rgba(255, 255, 255, 0.8); font-size: 14px; font-weight: 600; }
+.gv-topbar .gv-sep { width: 1px; height: 20px; background: rgba(255, 255, 255, 0.2); }
+.gv-topbar .gv-spacer { flex: 1; }
+.gv-topbar .gv-pill { color: #fff; font-size: 13px; font-weight: 600; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; padding: 6px 12px; }
+.gv-topbar .gv-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--teal); }
+
+.gv-body { display: grid; grid-template-columns: 296px 1fr; min-height: 0; }
+.gv-left { border-right: 1px solid var(--cool-gray); padding: 16px 14px; background: #fff; }
+.gv-left h4 { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--navy); margin: 0 4px 10px; }
+.gv-layer { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 8px; border-radius: 8px; font-size: 14px; color: var(--navy); }
+.gv-layer.flash { background: #EAF1FB; }
+.gv-layer .gv-glyph { width: 22px; height: 22px; border-radius: 5px; flex: none; }
+.gv-glyph.raster { background: linear-gradient(135deg, var(--teal), var(--green)); }
+.gv-glyph.vector { border: 2px solid var(--bright-navy); background: #fff; }
+.gv-glyph.point { background: radial-gradient(circle, var(--bright-navy) 35%, transparent 38%); border: 1px solid var(--cool-gray); }
+.gv-layer .gv-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gv-layer .gv-eye { width: 16px; height: 10px; border: 2px solid var(--text-muted); border-radius: 50% / 60%; }
+.gv-left .gv-section { margin-top: 22px; }
+.gv-region { font-size: 13px; color: var(--text-muted); margin: 0 4px 12px; }
+
+.gv-map { position: relative; overflow: hidden; background: var(--light-gray); }
+.gv-toolbar {
+  position: absolute; left: calc((100% - 536px) / 2); bottom: 18px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 6px; padding: 6px; background: #fff; border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2); font-size: 13px; color: var(--navy); font-weight: 600;
+}
+.gv-toolbar span { padding: 7px 12px; border-radius: 8px; }
+.gv-toolbar .gv-ai { background: var(--bright-navy); color: #fff; }
+
+.gv-agent {
+  position: absolute; right: 18px; bottom: 18px; width: 500px; height: 560px;
+  background: #fff; border-radius: 26px; box-shadow: 0 18px 60px #03275024; padding: 22px 22px 0;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.gv-agent-head { display: flex; align-items: center; gap: 12px; }
+.gv-agent-head .gv-mascot { width: 38px; height: 38px; }
+.gv-agent-head .gv-mascot svg { width: 100%; height: 100%; }
+.gv-agent-head b { font-family: var(--font-display); font-size: 19px; color: var(--navy); }
+.gv-tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--cool-gray); padding-bottom: 10px; font-size: 14px; color: var(--text-muted); }
+.gv-tabs .on { color: var(--bright-navy); font-weight: 600; }
+.gv-bubble { align-self: flex-end; max-width: 400px; background: #EAF1FB; border-radius: 16px 16px 4px 16px; padding: 12px 16px; font-size: 15px; line-height: 1.5; color: var(--navy); }
+.gv-plan { font-size: 14px; color: var(--navy); }
+.gv-plan b { font-weight: 700; margin-right: 8px; }
+.gv-plan span { color: var(--text-muted); }
+.gv-steps { display: flex; flex-direction: column; gap: 8px; }
+.gv-step { display: flex; align-items: center; gap: 12px; height: 42px; padding: 0 12px; border: 1px solid var(--cool-gray); border-radius: 21px; font-size: 14px; color: var(--navy); font-weight: 600; }
+.gv-step .gv-dot { width: 24px; height: 24px; border-radius: 50%; flex: none; display: grid; place-items: center; font-family: var(--font-mono); font-size: 12px; }
+.gv-step.done .gv-dot { background: var(--teal); }
+.gv-step.done .gv-dot::after { content: ""; width: 10px; height: 5px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
+.gv-step.running .gv-dot { border: 2px solid var(--cool-gray); border-top-color: var(--bright-navy); color: var(--bright-navy); }
+.gv-step.pending { color: var(--text-muted); }
+.gv-step.pending .gv-dot { border: 1.5px solid var(--cool-gray); color: var(--text-muted); }
+.gv-step .gv-badge { margin-left: auto; font-size: 12px; color: #1F5E43; background: #E8F5EE; border-radius: 10px; padding: 3px 9px; font-weight: 600; }
+.gv-step .gv-running { margin-left: auto; font-size: 12px; color: var(--bright-navy); font-weight: 600; }
+
+.gv-insight {
+  position: absolute; left: 18px; top: 18px; width: 300px; padding: 14px 16px;
+  background: #fff; border-radius: 14px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.gv-insight h5 { font-size: 13px; color: var(--navy); margin: 0 0 10px; font-weight: 700; }
+.gv-bar { display: grid; grid-template-columns: 64px 1fr 42px; align-items: center; gap: 8px; font-size: 12px; color: var(--text-body); margin-top: 6px; }
+.gv-bar i { display: block; height: 8px; border-radius: 4px; background: var(--bright-navy); }
+.gv-bar em { font-style: normal; font-family: var(--font-mono); text-align: right; color: var(--navy); }
+
+.gv-legend {
+  width: 300px; background: #fff; border-radius: 14px; padding: 14px 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2); font-family: var(--font-text); color: var(--navy);
+}
+.gv-legend h5 { font-size: 14px; font-weight: 700; margin: 0 0 10px; }
+.gv-legend .gv-ramp { height: 12px; border-radius: 6px; }
+.gv-legend .gv-ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-body); margin-top: 6px; }
+.gv-legend .gv-cat { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-top: 6px; color: var(--text-body); }
+.gv-legend .gv-cat i { width: 14px; height: 14px; border-radius: 4px; }
+
+.gv-label {
+  display: inline-flex; flex-direction: column; gap: 2px; background: #fff; border-radius: 10px;
+  padding: 8px 14px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2); font-family: var(--font-text);
+}
+.gv-label b { font-size: 15px; color: var(--navy); font-weight: 700; }
+.gv-label span { font-size: 12px; color: var(--text-muted); }

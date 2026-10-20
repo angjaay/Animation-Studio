@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <link rel="stylesheet" href="shared/tokens.css" />
+    <link rel="stylesheet" href="shared/ui/ui.css" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="shared/gv.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--cool-gray); }
+      #main { position: relative; width: 100%; height: 100%; }
+      #ws { position: absolute; left: 40px; top: 40px; width: 1440px; height: 810px; }
+      #legend-a { position: absolute; left: 1520px; top: 40px; }
+      #legend-b { position: absolute; left: 1520px; top: 240px; }
+      #label { position: absolute; left: 1520px; top: 480px; }
+      #map { position: absolute; inset: 0; background: url(assets/sentinel/riau-plantation.jpg) center / cover; }
+    </style>
+  </head>
+  <body>
+    <div id="main" data-composition-id="main" data-start="0" data-duration="1" data-width="1920" data-height="1080">
+      <div id="ws"></div>
+      <div id="legend-a"></div>
+      <div id="legend-b"></div>
+      <div id="label"></div>
+    </div>
+    <script>
+      (() => {
+        const map = document.createElement('div');
+        map.id = 'map';
+        GV.renderWorkspace(document.getElementById('ws'), {
+          platform: 'Kampar Expansion Study',
+          region: 'Kabupaten Kampar, Riau',
+          layers: [
+            { name: 'Sentinel-2 True Color', glyph: 'raster', active: true },
+            { name: 'Admin Boundary', glyph: 'vector', active: true },
+            { name: 'Road Network', glyph: 'vector', active: true },
+            { name: 'Suitability Result', glyph: 'raster', active: true, flash: true },
+          ],
+          prompt: 'Analyze potential development areas within this region.',
+          steps: [
+            { label: 'Identify region', status: 'done' },
+            { label: 'Activate datasets', status: 'done' },
+            { label: 'Run spatial analysis', status: 'done' },
+            { label: 'Generate suitability', status: 'running' },
+            { label: 'Summarize findings', status: 'pending' },
+          ],
+          insight: { title: 'Suitable area by class', bars: [
+            { label: 'High', value: 0.42 }, { label: 'Medium', value: 0.33 }, { label: 'Low', value: 0.25 },
+          ] },
+          map,
+        });
+        GV.renderLegend(document.getElementById('legend-a'), { title: 'Forest Fire Risk', kind: 'gradient', stops: [
+          { color: '#86C36A', label: 'Low' }, { color: '#F2D15C' }, { color: '#E8705B', label: 'High' },
+        ] });
+        GV.renderLegend(document.getElementById('legend-b'), { title: 'Land Use 2030', kind: 'categorical', stops: [
+          { color: '#2E7D32', label: 'Forest' }, { color: '#E3A008', label: 'Crops' }, { color: '#D6455A', label: 'Built Area' },
+        ] });
+        GV.renderLabel(document.getElementById('label'), { title: 'Kabupaten Kampar', subtitle: 'Riau, Indonesia' });
+        const tl = gsap.timeline({ paused: true });
+        window.__timelines['main'] = tl;
+      })();
+    </script>
+  </body>
+</html>

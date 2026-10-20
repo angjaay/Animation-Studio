@@ -6,3 +6,6 @@ export { mountDither } from './dither/dither-layer.js';
 export { ditherCell, ditherPixel, BAYER4, BRAND_RAMP } from './dither/reference.js';
 export { branchGeometry } from './thread.js';
 export { logoParts } from './logo.js';
+export { renderWorkspace } from './ui/workspace.js';
+export { renderLegend } from './ui/legend.js';
+export { renderLabel } from './ui/label.js';

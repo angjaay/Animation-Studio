@@ -39,6 +39,11 @@
     "license": "public domain (Natural Earth)",
     "attribution": "Made with Natural Earth"
   },
+  "logo/agent-avatar.svg": {
+    "source": "N0iire/movee-fe src/lib/galvis-motion (idle still)",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
   "logo/galvis-full.svg": {
     "source": "N0iire/movee-fe public/logo/galvis-full.svg",
     "license": "internal (GISACT)",
