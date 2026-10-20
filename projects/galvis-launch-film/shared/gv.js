@@ -452,18 +452,22 @@ var GV = (() => {
     if (l.active) row.append(el("i", "gv-eye"));
     return row;
   }
-  function stepRow(s, i) {
-    const row = el("div", `gv-step ${s.status}`);
-    row.append(el("span", "gv-dot", s.status === "done" ? "" : String(i + 1)), el("span", "", esc(s.label)));
+  function paintStep(row, s, i) {
+    row.className = `gv-step ${s.status}`;
+    row.replaceChildren(el("span", "gv-dot", s.status === "done" ? "" : String(i + 1)), el("span", "", esc(s.label)));
     if (s.status === "done") row.append(el("span", "gv-badge", "Done"));
     if (s.status === "running") row.append(el("span", "gv-running", "running\u2026"));
+  }
+  function stepRow(s, i) {
+    const row = el("div");
+    paintStep(row, s, i);
     return row;
   }
-  function renderWorkspace(host, state) {
+  function renderWorkspace(host, state, { prefix = "" } = {}) {
     const win = el("div", "gv-window");
     const top = el("div", "gv-topbar");
     top.append(
-      el("span", "gv-wordmark", galvis_wordmark_dark_default),
+      el("span", "gv-wordmark", scopeIds(galvis_wordmark_dark_default, prefix && `${prefix}-wm`)),
       el("i", "gv-sep"),
       el("span", "gv-platform", esc(state.platform ?? state.region)),
       el("span", "gv-spacer"),
@@ -472,12 +476,13 @@ var GV = (() => {
     );
     const left = el("div", "gv-left");
     left.append(el("h4", "", "Layers"), el("div", "gv-region", esc(state.region)));
-    state.layers.forEach((l) => left.append(layerRow(l)));
+    const layerRows = state.layers.map((l) => left.appendChild(layerRow(l)));
     const map = el("div", "gv-map");
     if (state.map instanceof HTMLElement) map.append(state.map);
     else if (state.map) map.innerHTML = state.map;
+    let card = null;
     if (state.insight) {
-      const card = el("div", "gv-insight");
+      card = el("div", "gv-insight");
       card.append(el("h5", "", esc(state.insight.title)));
       for (const b of state.insight.bars) {
         const row = el("div", "gv-bar");
@@ -493,19 +498,42 @@ var GV = (() => {
     map.append(toolbar);
     const agent = el("div", "gv-agent");
     const head = el("div", "gv-agent-head");
-    head.append(el("span", "gv-mascot", agent_avatar_default), el("b", "", "GALVIS Agent"));
+    head.append(el("span", "gv-mascot", scopeIds(agent_avatar_default, prefix && `${prefix}-ag`)), el("b", "", "GALVIS Agent"));
     const tabs = el("div", "gv-tabs", '<span class="on">Conversation</span><span>History</span>');
-    const done = state.steps.filter((s) => s.status === "done").length;
-    const plan = el("div", "gv-plan", `<b>Plan</b><span>${state.steps.length} steps \xB7 ${done} of ${state.steps.length} done</span>`);
+    const plan = el("div", "gv-plan");
+    const paintPlan = () => {
+      const done = state.steps.filter((s) => s.status === "done").length;
+      plan.innerHTML = `<b>Plan</b><span>${state.steps.length} steps \xB7 ${done} of ${state.steps.length} done</span>`;
+    };
+    paintPlan();
     const steps = el("div", "gv-steps");
-    state.steps.forEach((s, i) => steps.append(stepRow(s, i)));
-    agent.append(head, tabs, el("div", "gv-bubble", esc(state.prompt)), plan, steps);
+    const stepRows = state.steps.map((s, i) => steps.appendChild(stepRow(s, i)));
+    const bubble = el("div", "gv-bubble", esc(state.prompt));
+    agent.append(head, tabs, bubble, plan, steps);
     map.append(agent);
     const body = el("div", "gv-body");
     body.append(left, map);
     win.append(top, body);
     host.replaceChildren(win);
-    return win;
+    return {
+      win,
+      setStep(i, status) {
+        if (state.steps[i].status === status) return;
+        state.steps[i].status = status;
+        paintStep(stepRows[i], state.steps[i], i);
+        paintPlan();
+      },
+      setTyped(n) {
+        bubble.textContent = state.prompt.slice(0, n);
+        bubble.style.visibility = n > 0 ? "visible" : "hidden";
+      },
+      flashLayer(i, on) {
+        layerRows[i].classList.toggle("flash", on);
+      },
+      setInsight(visible) {
+        if (card) card.style.opacity = visible ? "1" : "0";
+      }
+    };
   }
 
   // shared/ui/legend.js

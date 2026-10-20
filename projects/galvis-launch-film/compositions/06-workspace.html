@@ -11,31 +11,44 @@
           letter-spacing: 0.18em; color: var(--navy);
         }
         #act06-workspace-tag i { display: block; width: 64px; height: 4px; border-radius: 2px; background: var(--bright-navy); margin-top: 12px; }
-        #act06-workspace-word {
-          position: absolute; left: 150px; top: 945px; transform-origin: 0 0; transform: rotate(-90deg);
-          font-family: var(--font-display); font-weight: 700; font-size: 104px; letter-spacing: 0.04em; color: var(--bright-navy); white-space: nowrap;
+        .act06-workspace-note {
+          position: absolute; left: 96px; top: 190px; width: 270px; font-family: var(--font-text); font-weight: 600; font-size: 20px;
+          line-height: 1.35; color: var(--text-body);
+        }
+        .act06-workspace-word {
+          position: absolute; left: 140px; top: 945px; transform-origin: 0 0;
+          font-family: var(--font-display); font-weight: 700; font-size: 86px; letter-spacing: 0.04em; color: var(--bright-navy); white-space: nowrap;
         }
         .act06-workspace-map { position: absolute; inset: 0; }
         .act06-workspace-map canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
       </style>
       <div id="act06-workspace-root" data-composition-id="act06-workspace" data-width="1920" data-height="1080">
         <div id="act06-workspace-tag"></div>
-        <div id="act06-workspace-word"></div>
+        <div id="act06-workspace-sub" class="act06-workspace-note"></div>
+        <div id="act06-workspace-position" class="act06-workspace-note"></div>
+        <div id="act06-workspace-w0" class="act06-workspace-word"></div>
+        <div id="act06-workspace-w1" class="act06-workspace-word"></div>
+        <div id="act06-workspace-w2" class="act06-workspace-word"></div>
+        <div id="act06-workspace-w3" class="act06-workspace-word"></div>
         <div id="act06-workspace-win"></div>
       </div>
       <script>
-        (async () => {
+        GV.register('act06-workspace', async (tl) => {
           const id = 'act06-workspace';
-          const tag = document.getElementById(`${id}-tag`);
-          tag.textContent = GV.COPY['products.workspace'];
-          tag.append(document.createElement('i'));
-          document.getElementById(`${id}-word`).textContent = GV.COPY['workspace.words'][3];
+          const A = (bar, beat) => GV.at(id, bar, beat);
+          const $ = (s) => document.getElementById(`${id}-${s}`);
+          $('tag').textContent = GV.COPY['products.workspace'];
+          $('tag').append(document.createElement('i'));
+          $('sub').textContent = GV.COPY['workspace.sub'];
+          $('position').textContent = GV.COPY['workspace.position'];
+          const words = GV.COPY['workspace.words'].map((w, i) => { $(`w${i}`).textContent = w; return $(`w${i}`); });
 
           // Map area of the window is 1144x764 (1440 minus the 296 px layer panel, minus the 46 px top bar).
           const W = 1144, H = 764;
           const map = document.createElement('div');
           map.className = `${id}-map`;
-          map.append(await GV.ditheredCanvas('assets/sentinel/riau-plantation.jpg', W, H, { palette: 'brand', cell: 3, resolve: 0.72 }));
+          const base = await GV.ditheredCanvas('assets/sentinel/riau-plantation.jpg', W, H, { palette: 'brand', cell: 3, resolve: 0.3 });
+          map.append(base);
 
           // Suitability surface painted over the plantation belt: seeded blobs in three classes.
           const surf = document.createElement('canvas');
@@ -58,19 +71,57 @@
           g.strokeRect(24, 280, 600, 470);
           map.append(surf);
 
-          GV.renderWorkspace(document.getElementById(`${id}-win`), {
+          const steps = GV.COPY['workspace.steps'].map((label) => ({ label, status: 'pending' }));
+          const ui = GV.renderWorkspace($('win'), {
             platform: GV.COPY['workspace.platform'],
             region: GV.COPY['workspace.region'],
-            layers: GV.COPY['workspace.layers'].map((name, i) => ({ name, glyph: i === 0 || i === 3 ? 'raster' : 'vector', active: true, flash: i === 3 })),
+            layers: GV.COPY['workspace.layers'].map((name, i) => ({ name, glyph: i === 0 || i === 3 ? 'raster' : 'vector', active: true })),
             prompt: GV.COPY['workspace.prompt'],
-            steps: GV.COPY['workspace.steps'].map((label, i) => ({ label, status: i < 4 ? 'done' : 'running' })),
+            steps,
             insight: { title: GV.COPY['workspace.insight'].title, bars: GV.COPY['workspace.insight'].classes.map((label, i) => ({ label, value: [0.42, 0.33, 0.25][i] })) },
             map,
-          });
+          }, { prefix: id });
 
-          const tl = gsap.timeline({ paused: true });
-          window.__timelines["act06-workspace"] = tl;
-        })();
+          // The agent's run, as a function of time: typing, then five steps finishing at 70, 71, 72, 73, 74.5 s.
+          const prompt = GV.COPY['workspace.prompt'];
+          const typeFrom = A(34), typeTo = A(34) + prompt.length * 0.025;
+          const doneAt = [A(36), A(36, 2), A(37), A(37, 2), A(38, 1)];
+          let lastResolve = -1;
+          const apply = (t) => {
+            ui.setTyped(Math.max(0, Math.min(prompt.length, Math.round((t - typeFrom) / 0.025))));
+            doneAt.forEach((d, i) => {
+              const start = i === 0 ? typeTo : doneAt[i - 1];
+              ui.setStep(i, t >= d ? 'done' : t >= start ? 'running' : 'pending');
+            });
+            ui.flashLayer(3, t >= doneAt[3] && t < doneAt[3] + 1.5);
+            ui.setInsight(t >= A(37));
+            const resolve = 0.3 + 0.42 * Math.min(1, Math.max(0, (t - A(35)) / (A(37) - A(35))));
+            if (Math.abs(resolve - lastResolve) > 1e-3) { base.layer.set({ resolve }); base.layer.draw(); lastResolve = resolve; }
+            surf.style.opacity = String(Math.min(1, Math.max(0, (t - A(36)) / 1.5)));
+          };
+          const clock = { t: 0 };
+          tl.to(clock, { t: 14, duration: 14, ease: 'none', onUpdate: () => apply(clock.t) }, 0);
+          apply(0);
+
+          // The window opens from the Workspace branch (bottom-left) with a clip, never a scale (the map is dithered).
+          const closed = 'inset(94% 96% 0% 0% round 16px)', open = 'inset(0% 0% 0% 0% round 16px)';
+          gsap.set($('win'), { clipPath: closed });
+          tl.to($('win'), { clipPath: open, duration: 1.2, ease: 'power3.inOut' }, A(32));
+          tl.to($('win'), { clipPath: closed, duration: 0.9, ease: 'power3.in' }, A(38, 2));
+
+          gsap.set([$('tag'), $('sub'), $('position')], { opacity: 0, y: 16 });
+          tl.to([$('tag'), $('sub')], { opacity: 1, y: 0, duration: 0.5, stagger: 0.15 }, A(33));
+          tl.to($('sub'), { opacity: 0, duration: 0.3 }, A(38));
+          tl.to($('position'), { opacity: 1, y: 0, duration: 0.5 }, A(38));
+
+          // Ask, analyse, visualise, understand: one word per bar, sliding along the vertical.
+          words.forEach((w, i) => {
+            gsap.set(w, { rotation: -90, x: 0, y: 60, opacity: 0 });
+            tl.to(w, { y: 0, opacity: 1, duration: 0.45, ease: 'power3.out' }, A(34 + i));
+            if (i < 3) tl.to(w, { y: -60, opacity: 0, duration: 0.35, ease: 'power2.in' }, A(35 + i) - 0.3);
+          });
+          tl.to(words[3], { opacity: 0, duration: 0.4 }, A(38, 2));
+        }, 14);
       </script>
     </template>
   </body>
