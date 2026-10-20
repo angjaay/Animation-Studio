@@ -4,15 +4,134 @@
   <body>
     <template>
       <style>
-        #act04-core-root { position: absolute; inset: 0; display: grid; place-items: center; background: var(--navy); }
-        #act04-core-title { font-family: var(--font-display); font-weight: 700; font-size: 72px; color: var(--white); }
+        #act04-core-root { position: absolute; inset: 0; overflow: hidden; background: var(--navy); }
+        #act04-core-glow { position: absolute; inset: 0; background: radial-gradient(circle at 960px 600px, rgba(2, 74, 188, 0.55), rgba(3, 39, 80, 0) 520px); }
+        #act04-core-wires { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+        #act04-core-name {
+          position: absolute; left: 0; right: 0; top: 40px; text-align: center;
+          font-family: var(--font-display); font-weight: 700; font-size: 40px; letter-spacing: 0.2em; padding-left: 0.2em; color: var(--white);
+        }
+        #act04-core-label {
+          position: absolute; left: 0; right: 0; top: 102px; text-align: center;
+          font-family: var(--font-text); font-weight: 600; font-size: 24px; letter-spacing: 0.3em; padding-left: 0.3em; color: var(--cool-gray);
+        }
+        #act04-core-heart { position: absolute; left: 887px; top: 520px; width: 146px; height: 160px; filter: drop-shadow(0 0 28px rgba(255, 255, 255, 0.55)); }
+        #act04-core-heart > div { position: absolute; inset: 0; }
+        #act04-core-heart svg { width: 100%; height: 100%; display: block; }
+        .act04-core-mod { position: absolute; width: 124px; height: 124px; margin: -62px 0 0 -62px; }
+        .act04-core-disc {
+          position: absolute; inset: 0; border-radius: 50%; overflow: hidden; background: #0A3366;
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55), 0 0 24px rgba(31, 175, 161, 0.35);
+        }
+        .act04-core-disc canvas, .act04-core-disc svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+        .act04-core-name {
+          position: absolute; left: 50%; width: 260px; margin-left: -130px; text-align: center;
+          font-family: var(--font-text); font-weight: 600; font-size: 19px; color: var(--white); line-height: 1.25;
+        }
       </style>
       <div id="act04-core-root" data-composition-id="act04-core" data-width="1920" data-height="1080">
-        <h1 id="act04-core-title">act04-core</h1>
+        <div id="act04-core-glow"></div>
+        <svg id="act04-core-wires" viewBox="0 0 1920 1080"></svg>
+        <div id="act04-core-name"></div>
+        <div id="act04-core-label"></div>
+        <div id="act04-core-heart"></div>
       </div>
       <script>
-        const tl = gsap.timeline({ paused: true });
-        window.__timelines["act04-core"] = tl;
+        (async () => {
+          const id = 'act04-core';
+          const root = document.getElementById(`${id}-root`);
+          document.getElementById(`${id}-name`).textContent = GV.COPY['reveal.name'];
+          document.getElementById(`${id}-label`).textContent = GV.COPY['core.label'];
+
+          const parts = GV.logoParts('act04');
+          const heart = document.getElementById(`${id}-heart`);
+          for (const key of ['hexagon', 'arrow', 'plates']) {
+            const layer = document.createElement('div');
+            layer.innerHTML = parts[key];
+            heart.append(layer);
+          }
+
+          const CX = 960, CY = 600, R = 318;
+          const order = ['ai', 'data', 'eo', 'analytics', 'ml', 'decision'];
+          const pos = order.map((_, i) => {
+            const a = -Math.PI / 2 + (i * Math.PI) / 3;
+            return [CX + R * Math.cos(a), CY + R * Math.sin(a), a];
+          });
+
+          // Wires: every module to the core, and a ring through all modules.
+          const wires = document.getElementById(`${id}-wires`);
+          wires.innerHTML =
+            `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="1.5"/>` +
+            pos.map(([x, y]) => `<line x1="${CX}" y1="${CY}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="1.5" stroke-dasharray="2 6"/>`).join('') +
+            pos.map(([x, y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="80" fill="none" stroke="#1FAFA1" stroke-opacity="0.25" stroke-width="1"/>`).join('');
+
+          const svg = (inner) => `<svg viewBox="0 0 124 124">${inner}</svg>`;
+          const rnd = GV.seeded(4);
+          const visuals = {
+            ai: () => svg(['Where', 'expansion', 'low risk'].map((w, i) =>
+              `<rect x="${14 + i * 6}" y="${30 + i * 24}" width="${w.length * 8 + 14}" height="18" rx="9" fill="${i === 1 ? '#1FAFA1' : '#FFFFFF'}" fill-opacity="${i === 1 ? 1 : 0.9}"/>` +
+              `<text x="${21 + i * 6}" y="${43 + i * 24}" font-family="Mulish" font-weight="700" font-size="11" fill="#032750">${w}</text>`).join('')),
+            data: () => svg(Array.from({ length: 16 }, (_, k) => {
+              const x = 22 + (k % 4) * 21, y = 22 + Math.floor(k / 4) * 21;
+              return `<rect x="${x}" y="${y}" width="17" height="17" rx="3" fill="${['#024ABC', '#1FAFA1', '#86C36A', '#FFFFFF'][k % 4]}" fill-opacity="${(0.45 + rnd() * 0.55).toFixed(2)}"/>`;
+            }).join('')),
+            eo: async () => {
+              // Left half true colour, right half a greenness index from the same pixels.
+              const img = await GV.loadImage('assets/sentinel/riau-plantation.jpg');
+              const c = document.createElement('canvas');
+              c.width = 124; c.height = 124;
+              const g = c.getContext('2d');
+              g.drawImage(img, 700, 900, 520, 520, 0, 0, 124, 124);
+              const d = g.getImageData(62, 0, 62, 124);
+              for (let i = 0; i < d.data.length; i += 4) {
+                const [r, gr] = [d.data[i], d.data[i + 1]];
+                // Index ramp: dry yellow (#E8C860) to dense green (#3E8E4A).
+                const v = Math.max(0, Math.min(1, ((gr - r) / (gr + r + 1)) * 3 + 0.3));
+                d.data[i] = 232 - v * 170; d.data[i + 1] = 200 - v * 58; d.data[i + 2] = 96 - v * 22;
+              }
+              g.putImageData(d, 62, 0);
+              g.fillStyle = '#FFFFFF';
+              g.fillRect(61, 0, 2, 124);
+              return c;
+            },
+            analytics: () => svg(
+              [44, 34, 24].map((r, i) => `<circle cx="62" cy="62" r="${r}" fill="#1FAFA1" fill-opacity="${0.12 + i * 0.12}" stroke="#1FAFA1" stroke-width="1.2"/>`).join('') +
+              [0, 1, 2, 3].map((k) => `<path d="M${8 + k * 4} ${86 - k * 18} C40 ${70 - k * 18}, 80 ${100 - k * 18}, 120 ${80 - k * 18}" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.2"/>`).join('') +
+              '<circle cx="62" cy="62" r="5" fill="#FFFFFF"/>'),
+            ml: () => svg(
+              '<defs><linearGradient id="act04-core-prob" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#86C36A"/><stop offset="0.5" stop-color="#F2D15C"/><stop offset="1" stop-color="#E8705B"/></linearGradient></defs>' +
+              [0, 1, 2].map((k) => `<path d="M24 ${46 - k * 9} L62 ${30 - k * 9} L100 ${46 - k * 9} L62 ${62 - k * 9} Z" fill="none" stroke="#FFFFFF" stroke-opacity="${0.4 + k * 0.2}" stroke-width="1.2"/>`).join('') +
+              '<path d="M18 82 L62 62 L106 82 L62 102 Z" fill="url(#act04-core-prob)"/>'),
+            decision: () => svg(
+              '<path d="M14 92 L44 70 L70 84 L58 108 L22 108 Z" fill="#86C36A" fill-opacity="0.8"/>' +
+              '<path d="M50 40 L84 30 L104 56 L76 70 Z" fill="#1FAFA1" fill-opacity="0.9"/>' +
+              '<path d="M80 80 L108 74 L112 100 L88 104 Z" fill="#024ABC"/>' +
+              '<text x="62" y="58" text-anchor="middle" font-family="JetBrains Mono" font-weight="700" font-size="26" fill="#FFFFFF">87</text>'),
+          };
+
+          for (const [i, key] of order.entries()) {
+            const [x, y, a] = pos[i];
+            const mod = document.createElement('div');
+            mod.className = `${id}-mod`;
+            mod.style.left = `${x}px`;
+            mod.style.top = `${y}px`;
+            const disc = document.createElement('div');
+            disc.className = `${id}-disc`;
+            const v = await visuals[key]();
+            if (typeof v === 'string') disc.innerHTML = v; else disc.append(v);
+            const name = document.createElement('div');
+            name.className = `${id}-name`;
+            name.textContent = GV.COPY[`core.mod.${key}`];
+            // Labels sit outside the ring: above the top module, below the others' outer side.
+            const below = Math.sin(a) > -0.9;
+            name.style.top = below ? '136px' : '-56px';
+            mod.append(disc, name);
+            root.append(mod);
+          }
+
+          const tl = gsap.timeline({ paused: true });
+          window.__timelines["act04-core"] = tl;
+        })();
       </script>
     </template>
   </body>

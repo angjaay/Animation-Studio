@@ -28,3 +28,11 @@ test('each part keeps the gradients it references', () => {
     for (const [, id] of svg.matchAll(/url\(#([^)]+)\)/g)) assert.ok(svg.includes(`id="${id}"`), `${p}: ${id}`);
   }
 });
+
+test('scopeIds prefixes gradient ids and their references', async () => {
+  const { scopeIds } = await import('../shared/svg-scope.js');
+  const plates = scopeIds(read('parts/plates.svg'), 'act04');
+  const ids = [...plates.matchAll(/id="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(ids.length > 0 && ids.every((i) => i.startsWith('act04-')));
+  for (const [, ref] of plates.matchAll(/url\(#([^)]+)\)/g)) assert.ok(ids.includes(ref), ref);
+});

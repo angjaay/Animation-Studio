@@ -2,8 +2,9 @@
 import plates from '../assets/logo/parts/plates.svg';
 import hexagon from '../assets/logo/parts/hexagon.svg';
 import arrow from '../assets/logo/parts/arrow.svg';
+import { scopeIds } from './svg-scope.js';
 
-export function logoParts() {
+export function logoParts(prefix = '') {
   const viewBox = hexagon.match(/viewBox="([^"]+)"/)[1];
-  return { plates, hexagon, arrow, viewBox };
+  return { plates: scopeIds(plates, prefix), hexagon: scopeIds(hexagon, prefix), arrow: scopeIds(arrow, prefix), viewBox };
 }

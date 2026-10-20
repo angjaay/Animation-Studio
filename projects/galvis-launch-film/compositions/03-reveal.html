@@ -4,15 +4,73 @@
   <body>
     <template>
       <style>
-        #act03-reveal-root { position: absolute; inset: 0; display: grid; place-items: center; background: var(--light-gray); }
-        #act03-reveal-title { font-family: var(--font-display); font-weight: 700; font-size: 72px; color: var(--navy); }
+        #act03-reveal-root { position: absolute; inset: 0; overflow: hidden; background: var(--white); }
+        #act03-reveal-dust { position: absolute; inset: 0; }
+        #act03-reveal-dust canvas { display: block; width: 100%; height: 100%; }
+        #act03-reveal-keylines { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+        #act03-reveal-mark { position: absolute; left: 840px; top: 160px; width: 240px; height: 263px; }
+        #act03-reveal-mark > div { position: absolute; inset: 0; }
+        #act03-reveal-mark svg { width: 100%; height: 100%; display: block; }
+        #act03-reveal-name {
+          position: absolute; left: 0; right: 0; top: 586px; text-align: center;
+          font-family: var(--font-display); font-weight: 700; font-size: 120px; letter-spacing: 0.2em;
+          padding-left: 0.2em; color: var(--navy); line-height: 1;
+        }
+        #act03-reveal-full {
+          position: absolute; left: 0; right: 0; top: 744px; text-align: center;
+          font-family: var(--font-text); font-weight: 600; font-size: 32px; color: var(--text-body);
+        }
       </style>
       <div id="act03-reveal-root" data-composition-id="act03-reveal" data-width="1920" data-height="1080">
-        <h1 id="act03-reveal-title">act03-reveal</h1>
+        <div id="act03-reveal-dust"></div>
+        <svg id="act03-reveal-keylines" viewBox="0 0 1920 1080"></svg>
+        <div id="act03-reveal-mark"></div>
+        <div id="act03-reveal-name"></div>
+        <div id="act03-reveal-full"></div>
       </div>
       <script>
-        const tl = gsap.timeline({ paused: true });
-        window.__timelines["act03-reveal"] = tl;
+        (async () => {
+          const id = 'act03-reveal';
+          document.getElementById(`${id}-name`).textContent = GV.COPY['reveal.name'];
+          document.getElementById(`${id}-full`).textContent = GV.COPY['reveal.full'];
+
+          // Logo assembled from its anatomy (stacked parts reproduce the original mark).
+          const parts = GV.logoParts('act03');
+          const mark = document.getElementById(`${id}-mark`);
+          for (const key of ['hexagon', 'arrow', 'plates']) {
+            const layer = document.createElement('div');
+            layer.innerHTML = parts[key];
+            mark.append(layer);
+          }
+
+          // Three keylines echo the hexagon (pointy-top) around the mark.
+          const cx = 960, cy = 291;
+          const hex = (r) => Array.from({ length: 6 }, (_, i) => {
+            const a = (Math.PI / 3) * i - Math.PI / 2;
+            return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`;
+          }).join(' ');
+          document.getElementById(`${id}-keylines`).innerHTML = [[168, 0.32], [204, 0.2], [240, 0.1]]
+            .map(([r, o]) => `<polygon points="${hex(r)}" fill="none" stroke="#024ABC" stroke-opacity="${o}" stroke-width="1.5" stroke-linejoin="round"/>`)
+            .join('');
+
+          // Left-over dither "dust" at the edges: a dithered radial ramp, clear in the middle.
+          const src = document.createElement('canvas');
+          src.width = 640; src.height = 360;
+          const g = src.getContext('2d');
+          const grad = g.createRadialGradient(320, 150, 120, 320, 180, 420);
+          grad.addColorStop(0, '#FFFFFF');
+          grad.addColorStop(0.55, '#FFFFFF');
+          grad.addColorStop(1, '#AFCBEF');
+          g.fillStyle = grad;
+          g.fillRect(0, 0, 640, 360);
+          const dust = document.createElement('canvas');
+          dust.width = 1920; dust.height = 1080;
+          GV.mountDither(dust, src, { palette: 'landing', cell: 3 }).draw();
+          document.getElementById(`${id}-dust`).append(dust);
+
+          const tl = gsap.timeline({ paused: true });
+          window.__timelines["act03-reveal"] = tl;
+        })();
       </script>
     </template>
   </body>
