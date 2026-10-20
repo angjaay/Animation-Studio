@@ -213,7 +213,9 @@
             const c = document.createElement('canvas');
             c.width = 400; c.height = 125;
             c.getContext('2d').drawImage(sec.clearC, 0, 0, 1920, 600, 0, 0, 400, 125);
-            card.append(c, document.createTextNode(SECTORS[k].name));
+            const label = document.createElement('span');
+            label.textContent = SECTORS[k].name;
+            card.append(c, label);
             return card;
           });
           gsap.set(thumbs, { opacity: 0, y: 30 });
