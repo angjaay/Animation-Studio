@@ -5,8 +5,23 @@
     <template>
       <style>
         #act09-reunify-root { position: absolute; inset: 0; overflow: hidden; background: var(--navy); }
+        #act09-reunify-light { position: absolute; inset: 0; background: var(--light-gray); }
+        #act09-reunify-curtain, #act09-reunify-map, #act09-reunify-nodes { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; }
         #act09-reunify-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 1100px 560px at 960px 420px, rgba(2, 74, 188, 0.45), rgba(3, 39, 80, 0)); }
-        #act09-reunify-map { position: absolute; inset: 0; }
+        #act09-reunify-diagram { position: absolute; inset: 0; }
+        #act09-reunify-net, #act09-reunify-dots { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+        #act09-reunify-mark { position: absolute; left: 885px; top: 120px; width: 150px; height: 164px; }
+        #act09-reunify-mark > div { position: absolute; inset: 0; }
+        #act09-reunify-mark svg { width: 100%; height: 100%; display: block; }
+        #act09-reunify-core {
+          position: absolute; left: 760px; top: 532px; width: 400px; height: 56px; box-sizing: border-box; border-radius: 28px;
+          border: 1.5px solid rgba(255, 255, 255, 0.6); background: var(--navy); display: flex; align-items: center; justify-content: center;
+          font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: 0.16em; color: var(--white);
+        }
+        .act09-reunify-product {
+          position: absolute; top: 856px; width: 460px; margin-left: -230px; text-align: center;
+          font-family: var(--font-display); font-weight: 700; font-size: 24px; letter-spacing: 0.08em; color: var(--white);
+        }
         #act09-reunify-one {
           position: absolute; left: 0; right: 0; top: 842px; text-align: center;
           font-family: var(--font-display); font-weight: 700; font-size: 72px; letter-spacing: 0.06em; color: var(--white);
@@ -19,17 +34,82 @@
       <div id="act09-reunify-root" data-composition-id="act09-reunify" data-width="1920" data-height="1080">
         <div id="act09-reunify-glow"></div>
         <canvas id="act09-reunify-map" width="1920" height="1080"></canvas>
+        <canvas id="act09-reunify-nodes" width="1920" height="1080"></canvas>
+        <div id="act09-reunify-diagram">
+          <svg id="act09-reunify-net" viewBox="0 0 1920 1080"></svg>
+          <canvas id="act09-reunify-dots" width="1920" height="1080"></canvas>
+          <div id="act09-reunify-mark"></div>
+          <div id="act09-reunify-core"></div>
+          <div id="act09-reunify-products"></div>
+        </div>
         <div id="act09-reunify-one"></div>
         <div id="act09-reunify-many"></div>
+        <canvas id="act09-reunify-curtain" width="1920" height="1080"></canvas>
       </div>
       <script>
-        (() => {
+        GV.register('act09-reunify', async (tl) => {
           const id = 'act09-reunify';
-          document.getElementById(`${id}-one`).textContent = GV.COPY['reunify.line1'];
-          document.getElementById(`${id}-many`).textContent = GV.COPY['reunify.line2'];
+          const A = (bar, beat) => GV.at(id, bar, beat);
+          const $ = (s) => document.getElementById(`${id}-${s}`);
+          $('one').textContent = GV.COPY['reunify.line1'];
+          $('many').textContent = GV.COPY['reunify.line2'];
+          $('core').textContent = GV.COPY['core.label'];
 
-          // Map shrunk into the upper two thirds so the statement owns the bottom.
-          const g = document.getElementById(`${id}-map`).getContext('2d');
+          // Bar 54 opens on the light frame act 08 left, and a navy Bayer curtain closes over it.
+          const curtain = GV.mountCurtain($('curtain'), '#F5F6F8');
+
+          // The architecture, with the same geometry as the split in act 05.
+          const SPLIT = [960, 560];
+          const ENDS = [[420, 820], [960, 820], [1500, 820]];
+          const PRODUCTS = [['products.workspace', '#024ABC'], ['products.enrichment', '#1FAFA1'], ['products.enterprise', '#86C36A']];
+          const geo = GV.branchGeometry({ top: [960, 300], split: SPLIT, ends: ENDS });
+          let net = `<path d="${geo.trunk}" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="2.5" fill="none"/>`;
+          net += geo.branches.map((d, i) => `<path d="${d}" stroke="${PRODUCTS[i][1]}" stroke-width="2.5" fill="none"/>`).join('');
+          net += ENDS.map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="9" fill="${PRODUCTS[i][1]}" stroke="#FFFFFF" stroke-width="2"/>`).join('');
+          $('net').innerHTML = net;
+          const branches = [...$('net').querySelectorAll('path')].slice(1);
+          const parts = GV.logoParts('act09');
+          for (const key of ['hexagon', 'arrow', 'plates']) {
+            const layer = document.createElement('div');
+            layer.innerHTML = parts[key];
+            $('mark').append(layer);
+          }
+          const names = PRODUCTS.map(([key], i) => {
+            const el = document.createElement('div');
+            el.className = `${id}-product`;
+            el.style.left = `${ENDS[i][0]}px`;
+            el.textContent = GV.COPY[key];
+            $('products').append(el);
+            return el;
+          });
+
+          // Each product's light leaves its branch end on its bell (106.0 / 106.5 / 107.0 s) and climbs back to the core.
+          const TRAVEL = 0.9;
+          const departs = [A(54), A(54, 1), A(54, 2)];
+          const dctx = $('dots').getContext('2d');
+          const lengths = branches.map((p) => p.getTotalLength());
+          const drawDots = (t) => {
+            dctx.clearRect(0, 0, 1920, 1080);
+            branches.forEach((p, i) => {
+              const k = (t - departs[i]) / TRAVEL;
+              if (k < 0 || k > 1.25) return;
+              const e = 1 - Math.pow(1 - Math.min(1, k), 3);
+              const pt = p.getPointAtLength(lengths[i] * (1 - e));
+              const fade = k > 1 ? 1 - (k - 1) / 0.25 : 1;
+              const halo = dctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, 30);
+              halo.addColorStop(0, PRODUCTS[i][1]);
+              halo.addColorStop(1, `${PRODUCTS[i][1]}00`);
+              dctx.globalAlpha = fade;
+              dctx.fillStyle = halo;
+              dctx.beginPath(); dctx.arc(pt.x, pt.y, 30, 0, Math.PI * 2); dctx.fill();
+              dctx.fillStyle = '#FFFFFF';
+              dctx.beginPath(); dctx.arc(pt.x, pt.y, 6, 0, Math.PI * 2); dctx.fill();
+              dctx.globalAlpha = 1;
+            });
+          };
+
+          // Bar 56: the region, with links drawn once and nodes lighting one after another.
+          const g = $('map').getContext('2d');
           const S = 0.72, OX = (1920 - 1920 * S) / 2, OY = 20;
           const at = ([x, y]) => [OX + x * S, OY + y * S];
           g.save();
@@ -39,10 +119,8 @@
           g.lineWidth = 1.4 / S;
           for (const [, d] of GV.SEA_SVG.matchAll(/ d="([^"]+)"/g)) g.stroke(new Path2D(d));
           g.restore();
-
-          // Intelligence nodes in the three product colours, linked to their nearest neighbours.
           const rnd = GV.seeded(9);
-          const COLORS = ['#024ABC', '#1FAFA1', '#86C36A'];
+          const COLORS = PRODUCTS.map(([, c]) => c);
           const nodes = Array.from({ length: 60 }, () => at(GV.SEA_POINTS[Math.floor(rnd() * GV.SEA_POINTS.length)]));
           g.strokeStyle = 'rgba(255,255,255,0.22)';
           g.lineWidth = 1.2;
@@ -50,23 +128,61 @@
             const near = nodes.map((b, j) => [Math.hypot(a[0] - b[0], a[1] - b[1]), j]).filter(([, j]) => j !== i).sort((p, q) => p[0] - q[0]).slice(0, 2);
             for (const [, j] of near) { g.beginPath(); g.moveTo(...a); g.lineTo(...nodes[j]); g.stroke(); }
           }
-          for (const [i, [x, y]] of nodes.entries()) {
-            const c = COLORS[i % 3];
-            const halo = g.createRadialGradient(x, y, 0, x, y, 22);
-            halo.addColorStop(0, `${c}AA`);
-            halo.addColorStop(1, `${c}00`);
-            g.fillStyle = halo;
-            g.beginPath(); g.arc(x, y, 22, 0, Math.PI * 2); g.fill();
-            g.fillStyle = '#FFFFFF';
-            g.beginPath(); g.arc(x, y, 3.2, 0, Math.PI * 2); g.fill();
-            g.strokeStyle = c;
-            g.lineWidth = 2;
-            g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.stroke();
-          }
+          const nctx = $('nodes').getContext('2d');
+          const lightFrom = A(56);
+          const drawNodes = (t) => {
+            nctx.clearRect(0, 0, 1920, 1080);
+            for (const [i, [x, y]] of nodes.entries()) {
+              const k = Math.min(1, (t - lightFrom - i * 0.02) / 0.25);
+              if (k <= 0) continue;
+              const c = COLORS[i % 3];
+              nctx.globalAlpha = k;
+              const halo = nctx.createRadialGradient(x, y, 0, x, y, 22);
+              halo.addColorStop(0, `${c}AA`);
+              halo.addColorStop(1, `${c}00`);
+              nctx.fillStyle = halo;
+              nctx.beginPath(); nctx.arc(x, y, 22, 0, Math.PI * 2); nctx.fill();
+              nctx.fillStyle = '#FFFFFF';
+              nctx.beginPath(); nctx.arc(x, y, 3.2, 0, Math.PI * 2); nctx.fill();
+              nctx.strokeStyle = c;
+              nctx.lineWidth = 2;
+              nctx.beginPath(); nctx.arc(x, y, 6, 0, Math.PI * 2); nctx.stroke();
+            }
+            nctx.globalAlpha = 1;
+          };
 
-          const tl = gsap.timeline({ paused: true });
-          window.__timelines["act09-reunify"] = tl;
-        })();
+          const apply = (t) => {
+            const open = Math.min(1, Math.max(0, t / 0.6));
+            curtain.set(open);
+            $('curtain').style.visibility = open >= 1 ? 'hidden' : 'visible';
+            drawDots(t);
+            drawNodes(t);
+          };
+          const clock = { t: 0 };
+          tl.to(clock, { t: 6, duration: 6, ease: 'none', onUpdate: () => apply(clock.t) }, 0);
+          apply(0);
+
+          // The core answers each arrival; bar 55 holds the whole architecture.
+          gsap.set($('net'), { opacity: 0.35 });
+          gsap.set([$('mark'), ...names], { opacity: 0, y: 12 });
+          gsap.set($('core'), { opacity: 0.6 });
+          departs.forEach((d) => {
+            tl.fromTo($('core'), { boxShadow: '0 0 0 0 rgba(255,255,255,0.0)' }, { boxShadow: '0 0 36px 8px rgba(255,255,255,0.55)', duration: 0.12, immediateRender: false }, d + TRAVEL - 0.05);
+            tl.to($('core'), { boxShadow: '0 0 0 0 rgba(255,255,255,0.0)', duration: 0.35 }, d + TRAVEL + 0.07);
+          });
+          tl.to($('core'), { opacity: 1, duration: 0.3 }, A(55));
+          tl.to($('net'), { opacity: 1, duration: 0.4 }, A(55));
+          tl.to([$('mark'), ...names], { opacity: 1, y: 0, duration: 0.45, stagger: 0.08, ease: 'power3.out' }, A(55));
+
+          // Bar 56: the diagram dissolves into the map.
+          gsap.set([$('map'), $('glow')], { opacity: 0 });
+          tl.to($('diagram'), { opacity: 0, duration: 0.5, ease: 'power2.in' }, A(56) - 0.2);
+          tl.to([$('map'), $('glow')], { opacity: 1, duration: 0.6 }, A(56));
+          gsap.set([$('one'), $('many')], { opacity: 0, y: 20, filter: 'blur(10px)' });
+          const sharp = { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power3.out' };
+          tl.to($('one'), sharp, A(56) + 0.2);
+          tl.to($('many'), sharp, A(56) + 0.8);
+        }, 6);
       </script>
     </template>
   </body>
