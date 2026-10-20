@@ -24,10 +24,13 @@ export function mountDither(canvas, source, initial = {}) {
     }
     sctx.imageSmoothingEnabled = true;
     sctx.clearRect(0, 0, cw, ch);
-    const sw = source.naturalWidth || source.width;
-    const sh = source.naturalHeight || source.height;
+    const fullW = source.naturalWidth || source.width;
+    const fullH = source.naturalHeight || source.height;
+    // Optional source crop in fractions [x, y, w, h], e.g. to drop UI cards baked into a map.
+    const [fx, fy, fw, fh] = opts.crop ?? [0, 0, 1, 1];
+    const [sx, sy, sw, sh] = [fx * fullW, fy * fullH, fw * fullW, fh * fullH];
     const [x, y, w, h] = opts.fit === 'cover' ? coverRect(sw, sh, cw, ch) : [0, 0, cw, ch];
-    sctx.drawImage(source, x, y, w, h);
+    sctx.drawImage(source, sx, sy, sw, sh, x, y, w, h);
 
     const img = sctx.getImageData(0, 0, cw, ch);
     const d = img.data;

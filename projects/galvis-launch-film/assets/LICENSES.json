@@ -29,10 +29,20 @@
     "license": "SIL Open Font License 1.1",
     "attribution": null
   },
+  "geo/idn-adm1-bold.svg": {
+    "source": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/IDN/ADM1/geoBoundaries-IDN-ADM1_simplified.geojson",
+    "license": "Open Data Commons Open Database License 1.0",
+    "attribution": "© OpenStreetMap contributors (geoBoundaries)"
+  },
   "geo/idn-adm1.svg": {
     "source": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/IDN/ADM1/geoBoundaries-IDN-ADM1_simplified.geojson",
     "license": "Open Data Commons Open Database License 1.0",
-    "attribution": "\u00a9 OpenStreetMap contributors (geoBoundaries)"
+    "attribution": "© OpenStreetMap contributors (geoBoundaries)"
+  },
+  "geo/sea-points.json": {
+    "source": "derived from Natural Earth (scripts/build-geo.mjs, seed 1)",
+    "license": "public domain (Natural Earth)",
+    "attribution": "Made with Natural Earth"
   },
   "geo/sea.svg": {
     "source": "https://naciscdn.org/naturalearth/50m/cultural/ne_50m_admin_0_countries.zip",

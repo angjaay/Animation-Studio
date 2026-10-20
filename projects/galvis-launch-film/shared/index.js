@@ -9,3 +9,6 @@ export { logoParts } from './logo.js';
 export { renderWorkspace } from './ui/workspace.js';
 export { renderLegend } from './ui/legend.js';
 export { renderLabel } from './ui/label.js';
+export { loadImage, ditheredCanvas, seeded } from './media.js';
+export { default as SEA_POINTS } from '../assets/geo/sea-points.json' with { type: 'json' };
+export { default as SEA_SVG } from '../assets/geo/sea.svg';
