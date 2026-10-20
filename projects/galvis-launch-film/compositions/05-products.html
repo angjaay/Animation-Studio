@@ -4,15 +4,92 @@
   <body>
     <template>
       <style>
-        #act05-products-root { position: absolute; inset: 0; display: grid; place-items: center; background: var(--navy); }
-        #act05-products-title { font-family: var(--font-display); font-weight: 700; font-size: 72px; color: var(--white); }
+        #act05-products-root { position: absolute; inset: 0; overflow: hidden; background: var(--navy); }
+        #act05-products-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 900px 520px at 960px 360px, rgba(2, 74, 188, 0.5), rgba(3, 39, 80, 0)); }
+        #act05-products-net { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+        #act05-products-mark { position: absolute; left: 905px; top: 90px; width: 110px; height: 121px; filter: drop-shadow(0 0 22px rgba(255, 255, 255, 0.45)); }
+        #act05-products-mark > div { position: absolute; inset: 0; }
+        #act05-products-mark svg { width: 100%; height: 100%; display: block; }
+        #act05-products-core {
+          position: absolute; left: 0; right: 0; top: 268px; text-align: center;
+          font-family: var(--font-text); font-weight: 700; font-size: 22px; letter-spacing: 0.3em; padding-left: 0.3em; color: var(--cool-gray);
+        }
+        .act05-products-lockup { position: absolute; top: 858px; width: 460px; margin-left: -230px; text-align: center; }
+        .act05-products-lockup b {
+          display: block; font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: 0.06em; color: var(--white);
+        }
+        .act05-products-lockup i { display: block; width: 120px; height: 4px; margin: 14px auto 0; border-radius: 2px; }
       </style>
       <div id="act05-products-root" data-composition-id="act05-products" data-width="1920" data-height="1080">
-        <h1 id="act05-products-title">act05-products</h1>
+        <div id="act05-products-glow"></div>
+        <svg id="act05-products-net" viewBox="0 0 1920 1080"></svg>
+        <div id="act05-products-mark"></div>
+        <div id="act05-products-core"></div>
       </div>
       <script>
-        const tl = gsap.timeline({ paused: true });
-        window.__timelines["act05-products"] = tl;
+        (async () => {
+          const id = 'act05-products';
+          const root = document.getElementById(`${id}-root`);
+          document.getElementById(`${id}-core`).textContent = GV.COPY['core.label'];
+
+          const mount = (host, prefix) => {
+            const parts = GV.logoParts(prefix);
+            for (const key of ['hexagon', 'arrow', 'plates']) {
+              const layer = document.createElement('div');
+              layer.innerHTML = parts[key];
+              host.append(layer);
+            }
+          };
+          mount(document.getElementById(`${id}-mark`), `${id}-main`);
+
+          const SPLIT = [960, 560];
+          const ENDS = [[420, 820], [960, 820], [1500, 820]];
+          const BRANCHES = [
+            ['products.workspace', '#024ABC'],
+            ['products.enrichment', '#1FAFA1'],
+            ['products.enterprise', '#86C36A'],
+          ];
+          const geo = GV.branchGeometry({ top: [960, 318], split: SPLIT, ends: ENDS });
+
+          const defs = BRANCHES.map(([, color], i) =>
+            `<linearGradient id="${id}-g${i}" gradientUnits="userSpaceOnUse" x1="${SPLIT[0]}" y1="${SPLIT[1]}" x2="${ENDS[i][0]}" y2="${ENDS[i][1]}">` +
+            `<stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="${color}"/></linearGradient>`).join('');
+          const glow = `<filter id="${id}-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+          let net = `<defs>${defs}${glow}</defs>`;
+          net += `<path d="${geo.trunk}" stroke="#FFFFFF" stroke-width="3" fill="none" filter="url(#${id}-glow)"/>`;
+          net += geo.branches.map((d, i) => `<path d="${d}" stroke="url(#${id}-g${i})" stroke-width="3" fill="none" filter="url(#${id}-glow)"/>`).join('');
+          net += `<circle cx="${SPLIT[0]}" cy="${SPLIT[1]}" r="7" fill="#FFFFFF" filter="url(#${id}-glow)"/>`;
+          net += ENDS.map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="9" fill="${BRANCHES[i][1]}" stroke="#FFFFFF" stroke-width="2"/>`).join('');
+          const svg = document.getElementById(`${id}-net`);
+          svg.innerHTML = net;
+
+          // Particles riding each branch: evidence that all three draw from one core.
+          const rnd = GV.seeded(5);
+          const dots = [];
+          for (const path of svg.querySelectorAll('path')) {
+            const len = path.getTotalLength();
+            for (let k = 0; k < 14; k++) {
+              const p = path.getPointAtLength(rnd() * len);
+              dots.push(`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${(1.5 + rnd() * 2.2).toFixed(1)}" fill="#FFFFFF" fill-opacity="${(0.5 + rnd() * 0.5).toFixed(2)}"/>`);
+            }
+          }
+          svg.insertAdjacentHTML('beforeend', dots.join(''));
+
+          for (const [i, [key, color]] of BRANCHES.entries()) {
+            const lock = document.createElement('div');
+            lock.className = `${id}-lockup`;
+            lock.style.left = `${ENDS[i][0]}px`;
+            const name = document.createElement('b');
+            name.textContent = GV.COPY[key];
+            const bar = document.createElement('i');
+            bar.style.background = color;
+            lock.append(name, bar);
+            root.append(lock);
+          }
+
+          const tl = gsap.timeline({ paused: true });
+          window.__timelines["act05-products"] = tl;
+        })();
       </script>
     </template>
   </body>

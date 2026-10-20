@@ -14,6 +14,7 @@ writeFileSync('index.html', `<!doctype html>
     <meta name="viewport" content="width=1920, height=1080" />
     <title>GALVIS Launch Film</title>
     <link rel="stylesheet" href="shared/tokens.css" />
+    <link rel="stylesheet" href="shared/ui/ui.css" />
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <script src="shared/gv.js"></script>
     <style>
