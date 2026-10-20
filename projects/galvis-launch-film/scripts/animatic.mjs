@@ -14,7 +14,7 @@ mkdirSync('review', { recursive: true });
 rmSync(OUT, { force: true });
 
 // The render runs in its own process group so a stopped shell cannot take Chrome down with it.
-const child = spawn('npx', ['--yes', 'hyperframes@0.8.181', 'render', '--quality', 'draft', '--fps', '30', '--output', OUT], {
+const child = spawn('npx', ['--yes', 'hyperframes@0.8.181', 'render', '--quality', 'draft', '--fps', '30', '--no-browser-gpu', '--output', OUT], {
   stdio: 'inherit',
   detached: true,
   env: { ...process.env, HYPERFRAMES_RENDER_DETACHED: '1' },

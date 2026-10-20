@@ -673,7 +673,6 @@ var GV = (() => {
       }
       tl.set({}, {}, duration);
       window.__timelines[id] = tl;
-      return tl;
     })();
     window.__hf = window.__hf || {};
     window.__hf.buildReady = window.__hf.buildReady || {};

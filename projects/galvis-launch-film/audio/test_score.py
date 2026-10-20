@@ -1,5 +1,7 @@
 """Checks for the temporary score. Run: python3 -m unittest audio/test_score.py (from the project root)."""
 import json
+import re
+import subprocess
 import unittest
 import wave
 from pathlib import Path
@@ -21,6 +23,14 @@ def load():
 
 def db(x):
     return 20 * np.log10(max(x, 1e-9))
+
+
+def ebur128(path):
+    """Integrated loudness (LUFS) and true peak (dBTP) of a file as ffmpeg decodes it."""
+    out = subprocess.run(['ffmpeg', '-hide_banner', '-nostats', '-i', str(path), '-map', '0:a', '-af', 'ebur128=peak=true',
+                          '-f', 'null', '-'], capture_output=True, text=True).stderr
+    summary = out[out.rindex('Summary:'):]
+    return float(re.search(r'I:\s+(-?[\d.]+) LUFS', summary).group(1)), float(re.search(r'Peak:\s+(-?[\d.]+) dBFS', summary).group(1))
 
 
 def rms(mono, rate, t0, t1):
@@ -67,6 +77,16 @@ class Score(unittest.TestCase):
         lufs = pyloudnorm.Meter(self.rate).integrated_loudness(self.data)
         self.assertLessEqual(abs(lufs + 14), 1, f'{lufs:.2f} LUFS')
         self.assertLessEqual(db(float(np.abs(self.data).max())), -1.0)
+
+    def test_true_peak_of_the_wav(self):
+        _, tp = ebur128(WAV)
+        self.assertLessEqual(tp, -1.0, f'WAV true peak {tp} dBTP')
+
+    def test_the_committed_m4a_meets_loudness_and_true_peak(self):
+        # index.html plays the m4a, and the render mixes it: AAC must not push it over.
+        lufs, tp = ebur128(WAV.with_suffix('.m4a'))
+        self.assertLessEqual(abs(lufs + 14), 1, f'm4a {lufs} LUFS')
+        self.assertLessEqual(tp, -1.0, f'm4a true peak {tp} dBTP')
 
     def test_sound_from_the_first_frame(self):
         self.assertGreater(db(rms(self.mono, self.rate, 0, 0.1)), -50)

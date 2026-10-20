@@ -6,12 +6,14 @@ audio/temp-score.m4a (AAC 192 kbps, committed, used by index.html).
 Requires: pip install numpy pyloudnorm
 """
 import json
+import re
 import subprocess
 import wave
 from pathlib import Path
 
 import numpy as np
 import pyloudnorm
+from scipy.signal import butter, resample_poly, sosfiltfilt
 
 ROOT = Path(__file__).resolve().parent.parent
 CUES = json.loads((ROOT / 'cues.json').read_text())
@@ -207,9 +209,16 @@ def gate(n):
     return g
 
 
+def true_peak_env(x):
+    """Per-sample true-peak estimate: the largest |x| over 4x oversampling around each sample."""
+    up = resample_poly(x, 4, 1, axis=0)
+    env = np.abs(up).max(axis=1)[:4 * len(x)].reshape(-1, 4).max(axis=1)
+    return np.maximum(env, np.abs(x).max(axis=1))
+
+
 def limit(x, ceiling):
-    """Peak limiter: smooth gain reduction wherever |x| exceeds the ceiling."""
-    peak = np.abs(x).max(axis=1)
+    """True-peak limiter: smooth gain reduction wherever the oversampled peak exceeds the ceiling."""
+    peak = true_peak_env(x)
     need = np.minimum(1.0, ceiling / np.maximum(peak, 1e-9))
     w = int(0.005 * RATE)
     kernel = np.ones(w) / w
@@ -219,32 +228,52 @@ def limit(x, ceiling):
     return x * np.minimum(g, need)[:, None]
 
 
-def master(mono_music, mono_hits):
+def master(mono_music, mono_hits, ceiling_db=-2.0):
     g = gate(N)
     music = reverb(mono_music * g) * g  # gate again so reverb tails do not fill the stop-downs
     mono = music + reverb(mono_hits, 0.15)
     stereo = np.stack([mono * 0.98 + np.roll(mono, 240) * 0.02, mono * 0.98 + np.roll(mono, -240) * 0.02], axis=1)
     out = stereo * fade(N, 0.0, 0.8)[:, None]
+    # Band-limit to what AAC keeps: content above ~16 kHz (hats, ticks) is dropped by the encoder,
+    # and dropping it after limiting pushes the encoded peaks several dB over the ceiling.
+    out = sosfiltfilt(butter(8, 15000, fs=RATE, output='sos'), out, axis=0)
     meter = pyloudnorm.Meter(RATE)
-    ceiling = 10 ** (-1.2 / 20)
+    ceiling = 10 ** (ceiling_db / 20)
     for _ in range(4):
         gain = 10 ** ((-14.0 - meter.integrated_loudness(out)) / 20)
         out = limit(out * gain, ceiling)
     return out
 
 
+def ebur128(path):
+    """Integrated loudness (LUFS) and true peak (dBTP) of a file as ffmpeg decodes it."""
+    err = subprocess.run(['ffmpeg', '-hide_banner', '-nostats', '-i', str(path), '-map', '0:a', '-af', 'ebur128=peak=true',
+                          '-f', 'null', '-'], capture_output=True, text=True).stderr
+    summary = err[err.rindex('Summary:'):]
+    return float(re.search(r'I:\s+(-?[\d.]+) LUFS', summary).group(1)), float(re.search(r'Peak:\s+(-?[\d.]+) dBFS', summary).group(1))
+
+
 def main():
     music, hits = arrange()
-    out = master(music, hits)
-    pcm = np.clip(np.round(out * 32767), -32768, 32767).astype('<i2')
     path = ROOT / 'audio' / 'temp-score.wav'
-    with wave.open(str(path), 'wb') as w:
-        w.setnchannels(2)
-        w.setsampwidth(2)
-        w.setframerate(RATE)
-        w.writeframes(pcm.tobytes())
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(path), '-c:a', 'aac', '-b:a', '192k',
-                    str(path.with_suffix('.m4a'))], check=True)
+    m4a = path.with_suffix('.m4a')
+    # The m4a is what plays and what the render mixes, so its true peak is the one that must hold:
+    # lower the limiter's ceiling until the encoded file stays at or under -1.2 dBTP.
+    ceiling_db = -2.0
+    for _ in range(6):
+        out = master(music, hits, ceiling_db)
+        pcm = np.clip(np.round(out * 32767), -32768, 32767).astype('<i2')
+        with wave.open(str(path), 'wb') as w:
+            w.setnchannels(2)
+            w.setsampwidth(2)
+            w.setframerate(RATE)
+            w.writeframes(pcm.tobytes())
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(path), '-c:a', 'aac', '-b:a', '192k', str(m4a)], check=True)
+        lufs, tp = ebur128(m4a)
+        print(f'ceiling {ceiling_db:.1f} dBTP -> m4a {lufs:.1f} LUFS, true peak {tp:.1f} dBTP')
+        if tp <= -1.2:
+            break
+        ceiling_db -= tp + 1.2 + 0.2
     meter = pyloudnorm.Meter(RATE)
     print(f'{path.name}: {len(pcm) / RATE:.3f} s, {meter.integrated_loudness(out):.2f} LUFS, peak {20 * np.log10(np.abs(out).max()):.2f} dBFS')
 

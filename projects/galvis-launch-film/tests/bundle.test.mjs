@@ -5,20 +5,19 @@ import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-// Compositions load shared/gv.js directly; `hyperframes check/preview/render` never build it.
-test('shared/gv.js is committed', () => {
-  assert.doesNotThrow(() => execFileSync('git', ['ls-files', '--error-unmatch', 'shared/gv.js'], { stdio: 'ignore' }));
-});
+// Compositions load the committed bundles directly; `hyperframes check/preview/render` never build them.
+// `npm test` rebuilds them first (pretest), so compare a fresh build with what is committed at HEAD,
+// not with the working tree.
+const BUNDLES = [
+  ['shared/gv.js', ['shared/index.js', '--bundle', '--format=iife', '--global-name=GV', '--loader:.svg=text']],
+  ['shared/gv3d.js', ['shared/three/index.js', '--bundle', '--format=iife', '--global-name=GV3D', '--minify']],
+];
 
-test('shared/gv.js matches a fresh build of shared/', () => {
-  const out = join(mkdtempSync(join(tmpdir(), 'gv-')), 'gv.js');
-  execFileSync('npx', ['esbuild', 'shared/index.js', '--bundle', '--format=iife', '--global-name=GV', '--loader:.svg=text', `--outfile=${out}`, '--log-level=warning']);
-  assert.equal(readFileSync('shared/gv.js', 'utf8'), readFileSync(out, 'utf8'), 'run `npm run build` and commit shared/gv.js');
-});
-
-test('shared/gv3d.js is committed and matches a fresh build of shared/three/', () => {
-  assert.doesNotThrow(() => execFileSync('git', ['ls-files', '--error-unmatch', 'shared/gv3d.js'], { stdio: 'ignore' }));
-  const out = join(mkdtempSync(join(tmpdir(), 'gv3d-')), 'gv3d.js');
-  execFileSync('npx', ['esbuild', 'shared/three/index.js', '--bundle', '--format=iife', '--global-name=GV3D', '--minify', `--outfile=${out}`, '--log-level=warning']);
-  assert.equal(readFileSync('shared/gv3d.js', 'utf8'), readFileSync(out, 'utf8'), 'run `npm run build` and commit shared/gv3d.js');
-});
+for (const [path, args] of BUNDLES) {
+  test(`${path} is committed and matches a fresh build of its sources`, () => {
+    const committed = execFileSync('git', ['show', `HEAD:./${path}`], { encoding: 'utf8', maxBuffer: 1 << 26 });
+    const out = join(mkdtempSync(join(tmpdir(), 'bundle-')), 'out.js');
+    execFileSync('npx', ['esbuild', ...args, `--outfile=${out}`, '--log-level=warning']);
+    assert.ok(committed === readFileSync(out, 'utf8'), `${path} at HEAD is stale: run \`npm run build\` and commit ${path}`);
+  });
+}

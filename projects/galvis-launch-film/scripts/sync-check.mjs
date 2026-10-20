@@ -1,5 +1,5 @@
 // Audio/visual sync on the rendered animatic: each hit (24.0 reveal, 56.0 split, 112.0 sting) must land
-// on the frame where the picture changes, within one frame.
+// on the frame where the picture visibly changes: the same frame, and a change of at least 2 grey levels.
 // Usage: node scripts/sync-check.mjs [renders/animatic-v1.mp4]
 import { execFileSync } from 'node:child_process';
 import { CUES } from '../shared/cues.js';
@@ -37,7 +37,7 @@ const visualChange = (t) => {
   for (let f = from - 6; f < from; f++) quiet.push(diff(f));
   quiet.sort((a, b) => a - b);
   const floor = quiet[Math.floor(quiet.length / 2)];
-  for (let f = from; f <= to; f++) if (diff(f) > Math.max(0.5, floor * 3)) return f / FPS;
+  for (let f = from; f <= to; f++) if (diff(f) > Math.max(2, floor * 3)) return f / FPS;
   return NaN;
 };
 
@@ -45,7 +45,7 @@ let failed = false;
 for (const t of HITS) {
   const a = audioOnset(t), v = visualChange(t);
   const off = v - a;
-  const ok = Math.abs(a - t) <= 0.05 && Math.abs(off) <= FRAME + 1e-3;
+  const ok = Math.abs(a - t) <= 0.05 && Math.abs(off) < FRAME / 2;
   failed ||= !ok;
   console.log(`${ok ? 'PASS' : 'FAIL'} hit ${t.toFixed(1)} s: audio onset ${a.toFixed(3)} s, picture change ${v.toFixed(3)} s, offset ${(off * 1000).toFixed(0)} ms`);
 }

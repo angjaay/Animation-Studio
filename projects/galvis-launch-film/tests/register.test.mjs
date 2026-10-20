@@ -4,7 +4,8 @@ import { register } from '../shared/register.js';
 
 function fakeEnv() {
   const errors = [];
-  const tl = { _d: 0, set(_t, _v, pos) { this._d = Math.max(this._d, pos ?? 0); return this; }, duration() { return this._d; } };
+  // Like a real GSAP timeline, the fake is a thenable that settles only when it finishes playing (never, here).
+  const tl = { _d: 0, set(_t, _v, pos) { this._d = Math.max(this._d, pos ?? 0); return this; }, duration() { return this._d; }, then() {} };
   globalThis.window = { __timelines: {} };
   globalThis.gsap = { timeline: () => tl };
   const orig = console.error;
@@ -44,8 +45,8 @@ test('the build is announced to the runtime synchronously and resolves once regi
   assert.ok(hold && typeof hold.then === 'function', 'no buildReady hold registered before the first await');
   assert.equal(window.__timelines['act99-test'], undefined);
   release();
-  await hold;
+  const settled = await Promise.race([hold.then(() => true), new Promise((r) => setTimeout(() => r(false), 200))]);
+  assert.ok(settled, 'buildReady hold never settled (it must not adopt the thenable timeline)');
   env.restore();
   assert.ok(window.__timelines['act99-test']);
-  await pending;
 });
