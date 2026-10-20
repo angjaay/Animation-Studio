@@ -4,70 +4,98 @@
   <body>
     <template>
       <style>
-        #act01-world-root { position: absolute; inset: 0; overflow: hidden; background: var(--light-gray); }
-        #act01-world-dawn { position: absolute; inset: 0; }
-        #act01-world-dawn canvas { width: 100%; height: 100%; display: block; }
+        #act01-world-root { position: absolute; inset: 0; overflow: hidden; background: #000; }
+        #act01-world-dawn, #act01-world-curtain { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; }
         #act01-world-stage { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 50% 30%; }
         #act01-world-plane {
-          position: absolute; left: -140px; top: -170px; width: 2200px; height: 1240px;
-          transform-origin: 50% 100%; transform: rotateX(48deg);
+          position: absolute; left: -140px; top: -170px; width: 2200px; height: 1240px; transform-origin: 50% 100%;
           -webkit-mask-image: linear-gradient(to top, #000 50%, transparent 78%);
           mask-image: linear-gradient(to top, #000 50%, transparent 78%);
         }
         #act01-world-signals { position: absolute; inset: 0; width: 100%; height: 100%; }
-        #act01-world-line {
+        .act01-world-line {
           position: absolute; left: 0; right: 0; top: 392px; text-align: center;
-          font-family: var(--font-display); font-weight: 700; font-size: 64px; letter-spacing: 0.02em;
-          color: var(--navy);
+          font-family: var(--font-display); font-weight: 700; font-size: 64px; letter-spacing: 0.02em; color: var(--navy);
         }
       </style>
       <div id="act01-world-root" data-composition-id="act01-world" data-width="1920" data-height="1080">
-        <div id="act01-world-dawn"></div>
+        <canvas id="act01-world-dawn" width="1920" height="1080"></canvas>
         <div id="act01-world-stage">
           <div id="act01-world-plane">
             <canvas id="act01-world-signals" width="2200" height="1240"></canvas>
           </div>
         </div>
-        <div id="act01-world-line"></div>
+        <canvas id="act01-world-curtain" width="1920" height="1080"></canvas>
+        <div id="act01-world-line1" class="act01-world-line"></div>
+        <div id="act01-world-line2" class="act01-world-line"></div>
       </div>
       <script>
-        (async () => {
+        GV.register('act01-world', async (tl) => {
           const id = 'act01-world';
-          document.getElementById(`${id}-line`).textContent = GV.COPY['world.line2'];
+          const A = (bar, beat) => GV.at(id, bar, beat);
+          const $ = (s) => document.getElementById(`${id}-${s}`);
+          $('line1').textContent = GV.COPY['world.line1'];
+          $('line2').textContent = GV.COPY['world.line2'];
 
-          const dawn = await GV.ditheredCanvas('assets/earth/dawn.png', 1920, 1080, { palette: 'landing', cell: 3 });
-          document.getElementById(`${id}-dawn`).append(dawn);
+          // Dawn in the landing dither: drawn once, screen-locked; the black curtain opens over it.
+          const dawnImg = await GV.loadImage('assets/earth/dawn.png');
+          GV.mountDither($('dawn'), dawnImg, { palette: 'landing', cell: 3 }).draw();
+          const curtain = GV.mountCurtain($('curtain'), '#000000');
 
-          // Signal points share the 1920x1080 frame of sea.svg; the plane is 2200x1240
-          // and the coast mask is fitted with `contain`, so scale both the same way.
-          const canvas = document.getElementById(`${id}-signals`);
-          const ctx = canvas.getContext('2d');
-          const s = Math.min(2200 / 1920, 1240 / 1080);
-          const ox = (2200 - 1920 * s) / 2, oy = (1240 - 1080 * s) / 2;
-          ctx.save();
-          ctx.translate(ox, oy);
-          ctx.scale(s, s);
-          ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-          ctx.lineWidth = 2.2 / s;
-          ctx.shadowColor = 'rgba(255,255,255,0.8)';
-          ctx.shadowBlur = 6;
-          for (const [, d] of GV.SEA_SVG.matchAll(/ d="([^"]+)"/g)) ctx.stroke(new Path2D(d));
-          ctx.restore();
+          // Coast and signals are pre-rendered once; each frame copies what has been revealed so far.
+          const W = 2200, H = 1240;
+          const s = Math.min(W / 1920, H / 1080), ox = (W - 1920 * s) / 2, oy = (H - 1080 * s) / 2;
+          const coast = document.createElement('canvas');
+          coast.width = W; coast.height = H;
+          const cg = coast.getContext('2d');
+          cg.translate(ox, oy);
+          cg.scale(s, s);
+          cg.strokeStyle = 'rgba(255,255,255,0.85)';
+          cg.lineWidth = 2.2 / s;
+          cg.shadowColor = 'rgba(255,255,255,0.8)';
+          cg.shadowBlur = 6;
+          for (const [, d] of GV.SEA_SVG.matchAll(/ d="([^"]+)"/g)) cg.stroke(new Path2D(d));
 
+          const sprite = (color, r) => {
+            const c = document.createElement('canvas');
+            c.width = c.height = 32;
+            const g = c.getContext('2d');
+            g.shadowColor = color; g.shadowBlur = 10; g.fillStyle = color;
+            g.beginPath(); g.arc(16, 16, r, 0, Math.PI * 2); g.fill();
+            return c;
+          };
+          const WHITE = sprite('#FFFFFF', 3.4), TEAL = sprite('#1FAFA1', 4.6);
           const rnd = GV.seeded(1);
-          ctx.shadowBlur = 10;
-          for (const [x, y] of GV.SEA_POINTS) {
-            const teal = rnd() < 0.22;
-            ctx.shadowColor = teal ? 'rgba(31,175,161,0.9)' : 'rgba(255,255,255,0.9)';
-            ctx.fillStyle = teal ? '#1FAFA1' : '#FFFFFF';
-            ctx.beginPath();
-            ctx.arc(ox + x * s, oy + y * s, teal ? 4.6 : 3.4, 0, Math.PI * 2);
-            ctx.fill();
-          }
+          const signals = GV.SEA_POINTS.map(([x, y]) => ({ x: ox + x * s, y: oy + y * s, teal: rnd() < 0.22, at: A(4) + rnd() * (A(6, 3) - A(4)) }));
 
-          const tl = gsap.timeline({ paused: true });
-          window.__timelines["act01-world"] = tl;
-        })();
+          const ctx = $('signals').getContext('2d');
+          const coastFrom = A(3), coastTo = A(5);
+          const draw = (t) => {
+            curtain.set(Math.min(1, Math.max(0, (t - A(1, 3)) / (A(3, 1) - A(1, 3)))));
+            ctx.clearRect(0, 0, W, H);
+            const sweep = Math.min(1, Math.max(0, (t - coastFrom) / (coastTo - coastFrom)));
+            if (sweep > 0) ctx.drawImage(coast, 0, 0, W * sweep, H, 0, 0, W * sweep, H);
+            for (const p of signals) {
+              const k = Math.min(1, (t - p.at) / 0.3);
+              if (k <= 0) continue;
+              const size = 32 * k;
+              ctx.drawImage(p.teal ? TEAL : WHITE, p.x - size / 2, p.y - size / 2, size, size);
+            }
+          };
+          const clock = { t: 0 };
+          tl.to(clock, { t: 12, duration: 12, ease: 'none', onUpdate: () => draw(clock.t) }, 0);
+          draw(0);
+
+          gsap.set($('plane'), { rotationX: 54 });
+          tl.to($('plane'), { rotationX: 48, duration: 12, ease: 'sine.inOut' }, 0);
+
+          const blurIn = { opacity: 0, y: 24, filter: 'blur(12px)' };
+          const sharp = { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.6, ease: 'power3.out' };
+          gsap.set([$('line1'), $('line2')], blurIn);
+          tl.to($('line1'), sharp, A(3));
+          tl.to($('line1'), { opacity: 0, filter: 'blur(8px)', duration: 0.4 }, A(4, 3));
+          tl.to($('line2'), sharp, A(5));
+        }, 12);
       </script>
     </template>
   </body>

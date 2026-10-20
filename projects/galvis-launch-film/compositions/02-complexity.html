@@ -5,7 +5,7 @@
     <template>
       <style>
         #act02-complexity-root { position: absolute; inset: 0; overflow: hidden; background: var(--light-gray); }
-        #act02-complexity-line {
+        .act02-complexity-line {
           position: absolute; left: 0; right: 0; top: 84px; text-align: center;
           font-family: var(--font-display); font-weight: 700; font-size: 56px; letter-spacing: 0.02em; color: var(--navy);
         }
@@ -23,15 +23,26 @@
         }
         .act02-complexity-label::before { content: ""; display: inline-block; width: 36px; height: 1px; background: var(--navy); vertical-align: middle; margin-right: 10px; opacity: 0.5; }
         #act02-complexity-admin { background: var(--navy); -webkit-mask: url(assets/geo/idn-adm1-bold.svg) center / 100% 100% no-repeat; mask: url(assets/geo/idn-adm1-bold.svg) center / 100% 100% no-repeat; }
+        #act02-complexity-node {
+          position: absolute; left: 945px; top: 585px; width: 30px; height: 30px; border-radius: 50%; background: #fff;
+          box-shadow: 0 0 30px 12px rgba(255, 255, 255, 0.95), 0 0 80px 30px rgba(2, 74, 188, 0.35);
+        }
+        #act02-complexity-flash { position: absolute; inset: 0; background: #fff; }
       </style>
       <div id="act02-complexity-root" data-composition-id="act02-complexity" data-width="1920" data-height="1080">
         <div id="act02-complexity-stack"></div>
-        <div id="act02-complexity-line"></div>
+        <div id="act02-complexity-line1" class="act02-complexity-line"></div>
+        <div id="act02-complexity-line2" class="act02-complexity-line"></div>
+        <div id="act02-complexity-node"></div>
+        <div id="act02-complexity-flash"></div>
       </div>
       <script>
-        (async () => {
+        GV.register('act02-complexity', async (tl) => {
           const id = 'act02-complexity';
-          document.getElementById(`${id}-line`).textContent = GV.COPY['complexity.line1'];
+          const A = (bar, beat) => GV.at(id, bar, beat);
+          const $ = (s) => document.getElementById(`${id}-${s}`);
+          $('line1').textContent = GV.COPY['complexity.line1'];
+          $('line2').textContent = GV.COPY['complexity.line2'];
 
           const image = (src, crop) => () => GV.ditheredCanvas(src, 940, 600, { palette: 'brand', cell: 3, crop });
           const grid = () => {
@@ -53,20 +64,23 @@
           };
 
           // Bottom to top. Opacity rises with the stack so the top reads as a muddle.
+          const P = GV.COPY['complexity.plates'];
           const plates = [
-            [GV.COPY['complexity.plates'][0], image('assets/sentinel/riau-plantation.jpg'), 1],
-            [GV.COPY['complexity.plates'][1], image('assets/solution/WRWS/desktop/WaterResource-Desktop.jpg', GV.cleanCrop('assets/solution/WRWS/desktop/WaterResource-Desktop.jpg')), 0.7],
-            [GV.COPY['complexity.plates'][2], image('assets/solution/ESC/desktop/biodiversity.jpg', GV.cleanCrop('assets/solution/ESC/desktop/biodiversity.jpg')), 0.6],
-            [GV.COPY['complexity.plates'][3], image('assets/solution/ESRE/desktop/Network-Desktop.jpg', GV.cleanCrop('assets/solution/ESRE/desktop/Network-Desktop.jpg')), 0.6],
-            [GV.COPY['complexity.plates'][4], grid, 0.75],
-            [GV.COPY['complexity.plates'][5], admin, 0.9],
-            [GV.COPY['complexity.plates'][6], image('assets/solution/DMR/desktop/risk.jpg', GV.cleanCrop('assets/solution/DMR/desktop/risk.jpg')), 0.55],
+            [P[0], image('assets/sentinel/riau-plantation.jpg'), 1],
+            [P[1], image('assets/solution/WRWS/desktop/WaterResource-Desktop.jpg', GV.cleanCrop('assets/solution/WRWS/desktop/WaterResource-Desktop.jpg')), 0.7],
+            [P[2], image('assets/solution/ESC/desktop/biodiversity.jpg', GV.cleanCrop('assets/solution/ESC/desktop/biodiversity.jpg')), 0.6],
+            [P[3], image('assets/solution/ESRE/desktop/Network-Desktop.jpg', GV.cleanCrop('assets/solution/ESRE/desktop/Network-Desktop.jpg')), 0.6],
+            [P[4], grid, 0.75],
+            [P[5], admin, 0.9],
+            [P[6], image('assets/solution/DMR/desktop/risk.jpg', GV.cleanCrop('assets/solution/DMR/desktop/risk.jpg')), 0.55],
           ];
-          const stack = document.getElementById(`${id}-stack`);
+          const stack = $('stack');
+          const slots = [];
           for (const [i, [label, make, opacity]] of plates.entries()) {
             const slot = document.createElement('div');
             slot.className = `${id}-slot`;
-            slot.style.top = `${880 - i * 66}px`;
+            const top = 880 - i * 66;
+            slot.style.top = `${top}px`;
             const plate = document.createElement('div');
             plate.className = `${id}-plate`;
             plate.style.opacity = opacity;
@@ -76,11 +90,33 @@
             tag.textContent = label;
             slot.append(plate, tag);
             stack.append(slot);
+            slots.push({ slot, top });
           }
 
-          const tl = gsap.timeline({ paused: true });
-          window.__timelines["act02-complexity"] = tl;
-        })();
+          // Plates drop in one by one from bar 7, beat 1 (slots move; the dithered canvases are never scaled).
+          slots.forEach(({ slot }, i) => {
+            gsap.set(slot, { y: -180, opacity: 0 });
+            tl.to(slot, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }, A(7, 1) + i * 0.75);
+          });
+
+          const blurIn = { opacity: 0, y: 20, filter: 'blur(10px)' };
+          const sharp = { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.6, ease: 'power3.out' };
+          const out = { opacity: 0, filter: 'blur(8px)', duration: 0.4 };
+          gsap.set([$('line1'), $('line2')], blurIn);
+          tl.to($('line1'), sharp, A(8));
+          tl.to($('line1'), out, A(9, 3));
+          tl.to($('line2'), sharp, A(10));
+          tl.to($('line2'), out, A(11, 3));
+
+          // Bar 12: everything is pulled into one node, then the frame goes white (stop-down).
+          slots.forEach(({ slot, top }, i) => {
+            tl.to(slot, { y: 600 - top, opacity: 0, duration: 0.9, ease: 'power3.in' }, A(12) + i * 0.04);
+          });
+          gsap.set($('node'), { scale: 0, opacity: 0 });
+          tl.to($('node'), { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(2)' }, A(12, 2));
+          gsap.set($('flash'), { opacity: 0 });
+          tl.to($('flash'), { opacity: 1, duration: 0.15 }, A(12, 3));
+        }, 12);
       </script>
     </template>
   </body>

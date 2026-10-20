@@ -30,6 +30,6 @@ for (const act of ACTS) {
     const html = read(`compositions/${act.file}`);
     assert.match(html, /<template>/);
     assert.ok(html.includes(`data-composition-id="${act.id}"`));
-    assert.ok(html.includes(`window.__timelines["${act.id}"]`));
+    assert.ok(html.includes(`window.__timelines["${act.id}"]`) || html.includes(`GV.register('${act.id}'`));
   });
 }
