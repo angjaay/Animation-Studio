@@ -66,10 +66,16 @@ writeFileSync('assets/geo/sea-points.json', JSON.stringify(landPoints(sea, 2500,
 writeFileSync('assets/geo/idn-adm1.svg', toSvg(idn.features, (f) => f.properties.shapeName));
 writeFileSync('assets/geo/idn-adm1-bold.svg', toSvg(idn.features, (f) => f.properties.shapeName, 4));
 
+// One province on its own 600x600 frame, for the enrichment shot.
+const riau = idn.features.filter((f) => f.properties.shapeName === 'Riau');
+const riauPath = geoPath(geoMercator().fitExtent([[20, 20], [580, 580]], { type: 'FeatureCollection', features: riau })).digits(1);
+writeFileSync('assets/geo/province-riau.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none" stroke="currentColor"><path data-name="Riau" d="${riauPath(riau[0])}"/></svg>\n`);
+
 const ledger = JSON.parse(readFileSync('assets/LICENSES.json', 'utf8'));
 ledger['geo/sea-points.json'] = { source: 'derived from Natural Earth (scripts/build-geo.mjs, seed 1)', license: 'public domain (Natural Earth)', attribution: 'Made with Natural Earth' };
 ledger['geo/sea.svg'] = { source: NE_URL, license: 'public domain (Natural Earth)', attribution: 'Made with Natural Earth' };
 ledger['geo/idn-adm1-bold.svg'] = { source: meta.simplifiedGeometryGeoJSON, license: meta.boundaryLicense, attribution: '© OpenStreetMap contributors (geoBoundaries)' };
+ledger['geo/province-riau.svg'] = { source: meta.simplifiedGeometryGeoJSON, license: meta.boundaryLicense, attribution: '© OpenStreetMap contributors (geoBoundaries)' };
 ledger['geo/idn-adm1.svg'] = { source: meta.simplifiedGeometryGeoJSON, license: meta.boundaryLicense, attribution: '© OpenStreetMap contributors (geoBoundaries)' };
 writeFileSync('assets/LICENSES.json', JSON.stringify(Object.fromEntries(Object.entries(ledger).sort()), null, 2) + '\n');
 console.log(`sea: ${sea.length} countries, idn: ${idn.features.length} provinces`);

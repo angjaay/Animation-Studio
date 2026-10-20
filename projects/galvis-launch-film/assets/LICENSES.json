@@ -39,6 +39,11 @@
     "license": "Open Data Commons Open Database License 1.0",
     "attribution": "© OpenStreetMap contributors (geoBoundaries)"
   },
+  "geo/province-riau.svg": {
+    "source": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/IDN/ADM1/geoBoundaries-IDN-ADM1_simplified.geojson",
+    "license": "Open Data Commons Open Database License 1.0",
+    "attribution": "© OpenStreetMap contributors (geoBoundaries)"
+  },
   "geo/sea-points.json": {
     "source": "derived from Natural Earth (scripts/build-geo.mjs, seed 1)",
     "license": "public domain (Natural Earth)",

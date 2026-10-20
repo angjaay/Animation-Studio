@@ -12,3 +12,4 @@ export { renderLabel } from './ui/label.js';
 export { loadImage, ditheredCanvas, seeded } from './media.js';
 export { default as SEA_POINTS } from '../assets/geo/sea-points.json' with { type: 'json' };
 export { default as SEA_SVG } from '../assets/geo/sea.svg';
+export { default as RIAU_SVG } from '../assets/geo/province-riau.svg';

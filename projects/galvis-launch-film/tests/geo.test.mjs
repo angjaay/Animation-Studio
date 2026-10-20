@@ -8,3 +8,9 @@ test('signal points: 2500 deterministic land points inside the 1920x1080 frame',
   assert.equal(pts.length, 2500);
   for (const [x, y] of pts) assert.ok(x >= 0 && x <= 1920 && y >= 0 && y <= 1080, `${x},${y}`);
 });
+
+test('Riau province outline is a single 600x600 path', () => {
+  const svg = readFileSync(new URL('../assets/geo/province-riau.svg', import.meta.url), 'utf8');
+  assert.match(svg, /viewBox="0 0 600 600"/);
+  assert.equal((svg.match(/<path\b/g) || []).length, 1);
+});

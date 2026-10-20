@@ -4,15 +4,77 @@
   <body>
     <template>
       <style>
-        #act08-enterprise-root { position: absolute; inset: 0; display: grid; place-items: center; background: var(--light-gray); }
-        #act08-enterprise-title { font-family: var(--font-display); font-weight: 700; font-size: 72px; color: var(--navy); }
+        #act08-enterprise-root { position: absolute; inset: 0; overflow: hidden; background: var(--light-gray); }
+        #act08-enterprise-tag {
+          position: absolute; left: 96px; top: 80px; font-family: var(--font-text); font-weight: 700; font-size: 18px;
+          letter-spacing: 0.18em; color: var(--navy);
+        }
+        #act08-enterprise-tag i { display: block; width: 64px; height: 4px; border-radius: 2px; background: var(--green); margin-top: 12px; }
+        #act08-enterprise-sector { position: absolute; left: 96px; top: 128px; font-family: var(--font-display); font-weight: 700; font-size: 60px; color: var(--navy); }
+        #act08-enterprise-count { position: absolute; right: 96px; top: 150px; font-family: var(--font-mono); font-size: 20px; color: var(--text-muted); }
+        #act08-enterprise-strip { position: absolute; left: 0; top: 236px; width: 1920px; height: 600px; overflow: hidden; }
+        #act08-enterprise-strip canvas { position: absolute; left: 0; top: 0; display: block; }
+        #act08-enterprise-beam { position: absolute; left: 1098px; top: 0; width: 4px; height: 600px; background: #fff; box-shadow: 0 0 18px 6px rgba(255, 255, 255, 0.85), 0 0 60px 18px rgba(134, 195, 106, 0.55); }
+        #act08-enterprise-label { position: absolute; left: 1140px; top: 48px; }
+        #act08-enterprise-legend { position: absolute; right: 60px; bottom: 36px; }
+        #act08-enterprise-chain {
+          position: absolute; left: 96px; right: 96px; top: 872px; height: 96px; background: #fff; border-radius: 16px;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12); display: flex; align-items: center; justify-content: center; gap: 28px;
+          font-family: var(--font-text); font-weight: 600; font-size: 26px; color: var(--navy);
+        }
+        #act08-enterprise-chain span { display: inline-flex; align-items: center; gap: 14px; color: var(--text-muted); }
+        #act08-enterprise-chain span.on { color: var(--navy); }
+        #act08-enterprise-chain span::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--cool-gray); }
+        #act08-enterprise-chain span.done::before { background: var(--navy); border-color: var(--navy); }
+        #act08-enterprise-chain span.on::before { background: var(--green); border-color: var(--green); box-shadow: 0 0 0 5px rgba(134, 195, 106, 0.25); }
+        #act08-enterprise-chain b { color: var(--text-muted); font-weight: 400; }
       </style>
       <div id="act08-enterprise-root" data-composition-id="act08-enterprise" data-width="1920" data-height="1080">
-        <h1 id="act08-enterprise-title">act08-enterprise</h1>
+        <div id="act08-enterprise-tag"></div>
+        <div id="act08-enterprise-sector"></div>
+        <div id="act08-enterprise-count">02 / 04</div>
+        <div id="act08-enterprise-strip">
+          <div id="act08-enterprise-beam"></div>
+          <div id="act08-enterprise-label"></div>
+          <div id="act08-enterprise-legend"></div>
+        </div>
+        <div id="act08-enterprise-chain"></div>
       </div>
       <script>
-        const tl = gsap.timeline({ paused: true });
-        window.__timelines["act08-enterprise"] = tl;
+        (async () => {
+          const id = 'act08-enterprise';
+          const tag = document.getElementById(`${id}-tag`);
+          tag.textContent = GV.COPY['products.enterprise'];
+          tag.append(document.createElement('i'));
+          const sector = GV.COPY['enterprise.sectors'][1];
+          document.getElementById(`${id}-sector`).textContent = sector.name;
+
+          // Each side gets its own crop of map body, clear of the pin, labels, legend and chart baked into the source.
+          const W = 1920, H = 600, BEAM = 1100;
+          const strip = document.getElementById(`${id}-strip`);
+          const before = await GV.ditheredCanvas('assets/solution/ESC/desktop/biodiversity.jpg', BEAM, H, { palette: 'brand', cell: 3, resolve: 1, crop: [0.40, 0.30, 0.26, 0.40] });
+          // Behind the beam the next layer is still raw; ahead of it the current layer is resolved.
+          const after = await GV.ditheredCanvas('assets/solution/DMR/desktop/risk.jpg', W - BEAM, H, { palette: 'brand', cell: 3, resolve: 0, crop: [0.55, 0.05, 0.27, 0.62] });
+          after.style.left = `${BEAM}px`;
+          strip.prepend(before, after);
+
+          GV.renderLabel(document.getElementById(`${id}-label`), { title: 'Teluk Meranti, Riau', subtitle: 'Forest concession · monitored' });
+          GV.renderLegend(document.getElementById(`${id}-legend`), { title: 'Forest Fire Risk', kind: 'gradient', stops: [
+            { color: '#86C36A', label: 'Low' }, { color: '#F2D15C' }, { color: '#E8705B', label: 'High' },
+          ] });
+
+          const chain = document.getElementById(`${id}-chain`);
+          sector.chain.forEach((step, i) => {
+            if (i) chain.insertAdjacentHTML('beforeend', '<b>→</b>');
+            const s = document.createElement('span');
+            s.className = i === 0 ? 'done' : i === 1 ? 'on' : '';
+            s.textContent = step;
+            chain.append(s);
+          });
+
+          const tl = gsap.timeline({ paused: true });
+          window.__timelines["act08-enterprise"] = tl;
+        })();
       </script>
     </template>
   </body>

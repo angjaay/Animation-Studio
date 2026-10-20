@@ -4,15 +4,126 @@
   <body>
     <template>
       <style>
-        #act07-enrichment-root { position: absolute; inset: 0; display: grid; place-items: center; background: var(--light-gray); }
-        #act07-enrichment-title { font-family: var(--font-display); font-weight: 700; font-size: 72px; color: var(--navy); }
+        #act07-enrichment-root { position: absolute; inset: 0; overflow: hidden; background: var(--light-gray); }
+        #act07-enrichment-tag {
+          position: absolute; left: 96px; top: 96px; font-family: var(--font-text); font-weight: 700; font-size: 18px;
+          letter-spacing: 0.18em; color: var(--navy);
+        }
+        #act07-enrichment-tag i { display: block; width: 64px; height: 4px; border-radius: 2px; background: var(--teal); margin-top: 12px; }
+        #act07-enrichment-sub { position: absolute; left: 96px; top: 150px; font-family: var(--font-display); font-weight: 700; font-size: 40px; color: var(--navy); }
+        #act07-enrichment-thread { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+        #act07-enrichment-shape { position: absolute; left: 180px; top: 260px; width: 720px; height: 720px; }
+        #act07-enrichment-card {
+          position: absolute; left: 1040px; top: 150px; width: 700px; background: #fff; border-radius: 18px;
+          box-shadow: 0 24px 64px rgba(3, 39, 80, 0.14); padding: 28px 32px 22px; font-family: var(--font-text);
+        }
+        #act07-enrichment-card h3 { font-family: var(--font-display); font-size: 26px; color: var(--navy); margin: 0 0 4px; }
+        #act07-enrichment-card p { font-size: 15px; color: var(--text-muted); margin: 0 0 16px; }
+        .act07-enrichment-row { display: grid; grid-template-columns: 64px 220px 1fr 60px; align-items: center; gap: 16px; height: 66px; border-top: 1px solid var(--cool-gray); }
+        .act07-enrichment-row canvas { width: 64px; height: 42px; border-radius: 6px; display: block; }
+        .act07-enrichment-row b { font-size: 17px; color: var(--navy); font-weight: 700; }
+        .act07-enrichment-row .act07-enrichment-bar { height: 8px; border-radius: 4px; background: var(--cool-gray); position: relative; }
+        .act07-enrichment-row .act07-enrichment-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--teal); }
+        .act07-enrichment-row em { font-style: normal; font-family: var(--font-mono); font-size: 16px; color: var(--navy); text-align: right; }
       </style>
       <div id="act07-enrichment-root" data-composition-id="act07-enrichment" data-width="1920" data-height="1080">
-        <h1 id="act07-enrichment-title">act07-enrichment</h1>
+        <svg id="act07-enrichment-thread" viewBox="0 0 1920 1080"></svg>
+        <div id="act07-enrichment-tag"></div>
+        <div id="act07-enrichment-sub"></div>
+        <canvas id="act07-enrichment-shape" width="720" height="720"></canvas>
+        <div id="act07-enrichment-card"><h3>Spatial Intelligence Profile</h3><p>Riau · polygon 1 of many</p></div>
       </div>
       <script>
-        const tl = gsap.timeline({ paused: true });
-        window.__timelines["act07-enrichment"] = tl;
+        (async () => {
+          const id = 'act07-enrichment';
+          const tag = document.getElementById(`${id}-tag`);
+          tag.textContent = GV.COPY['products.enrichment'];
+          tag.append(document.createElement('i'));
+          document.getElementById(`${id}-sub`).textContent = GV.COPY['enrichment.sub'];
+
+          // Each attribute is one solution map from gisact.io (content checked against the files).
+          const S = 'assets/solution';
+          const MAPS = {
+            'Earth Observation': `${S}/ESC/desktop/biodiversity.jpg`,
+            'Environment': `${S}/ESC/desktop/environmental.jpg`,
+            'Terrain': `${S}/WRWS/desktop/WaterResource-Desktop.jpg`,
+            'Infrastructure': `${S}/UIC/desktop/Transport-Desktop.jpg`,
+            'Accessibility': `${S}/EBG/desktop/Geomarketing-Desktop.jpg`,
+            'Land Use': `${S}/AFS/desktop/foodsecurity.jpg`,
+            'Demographics': `${S}/EBG/desktop/UrbanPlanning-Desktop.jpg`,
+            'Economic Activity': `${S}/EBG/desktop/SiteSelection-Desktop.jpg`,
+            'Climate': `${S}/UIC/desktop/Urban-Desktop.jpg`,
+            'Risk Indicators': `${S}/DMR/desktop/risk.jpg`,
+          };
+          const VALUES = [0.81, 0.64, 0.42, 0.57, 0.73, 0.38, 0.49, 0.66, 0.71, 0.27];
+          const CROP = [0.05, 0.25, 0.45, 0.45]; // map body only, clear of the baked-in legend and label
+          const attrs = GV.COPY['enrichment.attrs'];
+          const images = await Promise.all(attrs.map((a) => GV.loadImage(MAPS[a])));
+
+          // Thumbnails in the profile card.
+          const card = document.getElementById(`${id}-card`);
+          attrs.forEach((name, i) => {
+            const row = document.createElement('div');
+            row.className = `${id}-row`;
+            const thumb = document.createElement('canvas');
+            thumb.width = 128; thumb.height = 84;
+            const img = images[i];
+            thumb.getContext('2d').drawImage(img, CROP[0] * img.width, CROP[1] * img.height, CROP[2] * img.width, CROP[3] * img.height * 0.66, 0, 0, 128, 84);
+            const label = document.createElement('b');
+            label.textContent = name;
+            const bar = document.createElement('div');
+            bar.className = `${id}-bar`;
+            const fill = document.createElement('i');
+            fill.style.width = `${VALUES[i] * 100}%`;
+            bar.append(fill);
+            const val = document.createElement('em');
+            val.textContent = VALUES[i].toFixed(2);
+            row.append(thumb, label, bar, val);
+            card.append(row);
+          });
+
+          // The polygon: a mosaic of attribute maps clipped to Riau; the last cells are still raw (dithered).
+          const shape = document.getElementById(`${id}-shape`);
+          const g = shape.getContext('2d');
+          const d = GV.RIAU_SVG.match(/ d="([^"]+)"/)[1];
+          const outline = new Path2D(d);
+          g.save();
+          g.scale(720 / 600, 720 / 600);
+          g.clip(outline);
+          const cols = 4, rows = 3, cw = 600 / cols, ch = 600 / rows;
+          for (let k = 0; k < cols * rows; k++) {
+            const img = images[k % images.length];
+            const cell = document.createElement('canvas');
+            cell.width = Math.ceil(cw * 1.2); cell.height = Math.ceil(ch * 1.2);
+            const raw = k >= 8;
+            const layer = GV.mountDither(cell, img, { palette: 'brand', cell: 3, resolve: raw ? 0 : 1, crop: CROP });
+            layer.draw();
+            g.drawImage(cell, (k % cols) * cw, Math.floor(k / cols) * ch, cw, ch);
+          }
+          g.restore();
+          g.save();
+          g.scale(720 / 600, 720 / 600);
+          g.save();
+          g.clip(outline);
+          g.strokeStyle = 'rgba(255,255,255,0.9)';
+          g.lineWidth = 1;
+          for (let c = 1; c < cols; c++) { g.beginPath(); g.moveTo(c * cw, 0); g.lineTo(c * cw, 600); g.stroke(); }
+          for (let r = 1; r < rows; r++) { g.beginPath(); g.moveTo(0, r * ch); g.lineTo(600, r * ch); g.stroke(); }
+          g.restore();
+          g.strokeStyle = '#1FAFA1';
+          g.lineWidth = 3.5;
+          g.stroke(outline);
+          g.restore();
+
+          // Thread from the core above, and leader lines from the polygon to the card.
+          document.getElementById(`${id}-thread`).innerHTML =
+            '<path d="M736 0 L736 560" stroke="#1FAFA1" stroke-width="3" fill="none"/>' +
+            '<circle cx="736" cy="560" r="8" fill="#1FAFA1" stroke="#FFFFFF" stroke-width="2"/>' +
+            '<path d="M744 560 C900 560, 930 430, 1040 430" stroke="#1FAFA1" stroke-opacity="0.6" stroke-width="2" stroke-dasharray="4 6" fill="none"/>';
+
+          const tl = gsap.timeline({ paused: true });
+          window.__timelines["act07-enrichment"] = tl;
+        })();
       </script>
     </template>
   </body>
