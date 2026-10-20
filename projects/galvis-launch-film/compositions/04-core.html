@@ -24,6 +24,15 @@
           box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55), 0 0 24px rgba(31, 175, 161, 0.35);
         }
         .act04-core-disc canvas, .act04-core-disc svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+        #act04-core-question {
+          position: absolute; left: 50%; top: 52px; transform: translateX(-50%); white-space: nowrap;
+          padding: 16px 28px; border-radius: 32px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.35);
+          font-family: var(--font-text); font-weight: 600; font-size: 26px; color: var(--white);
+        }
+        #act04-core-packet {
+          position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff;
+          box-shadow: 0 0 14px 6px rgba(255, 255, 255, 0.9), 0 0 40px 14px rgba(31, 175, 161, 0.6);
+        }
         .act04-core-name {
           position: absolute; left: 50%; width: 260px; margin-left: -130px; text-align: center;
           font-family: var(--font-text); font-weight: 600; font-size: 19px; color: var(--white); line-height: 1.25;
@@ -35,10 +44,14 @@
         <div id="act04-core-name"></div>
         <div id="act04-core-label"></div>
         <div id="act04-core-heart"></div>
+        <div id="act04-core-question"></div>
+        <div id="act04-core-packet"></div>
       </div>
       <script>
-        (async () => {
+        GV.register('act04-core', async (tl) => {
           const id = 'act04-core';
+          const A = (bar, beat) => GV.at(id, bar, beat);
+          const $ = (s) => document.getElementById(`${id}-${s}`);
           const root = document.getElementById(`${id}-root`);
           document.getElementById(`${id}-name`).textContent = GV.COPY['reveal.name'];
           document.getElementById(`${id}-label`).textContent = GV.COPY['core.label'];
@@ -109,6 +122,7 @@
               '<text x="62" y="58" text-anchor="middle" font-family="JetBrains Mono" font-weight="700" font-size="26" fill="#FFFFFF">87</text>'),
           };
 
+          const mods = [];
           for (const [i, key] of order.entries()) {
             const [x, y, a] = pos[i];
             const mod = document.createElement('div');
@@ -127,11 +141,47 @@
             name.style.top = below ? '136px' : '-56px';
             mod.append(disc, name);
             root.append(mod);
+            mods.push({ mod, disc });
           }
 
-          const tl = gsap.timeline({ paused: true });
-          window.__timelines["act04-core"] = tl;
-        })();
+          // Bar 18: from inside the hexagon the core settles; the header follows.
+          gsap.set($('heart'), { scale: 6, opacity: 0.6 });
+          tl.to($('heart'), { scale: 1, opacity: 1, duration: 1.4, ease: 'power3.out' }, A(18));
+          gsap.set([$('name'), $('label')], { opacity: 0, y: -16 });
+          tl.to([$('name'), $('label')], { opacity: 1, y: 0, duration: 0.5, stagger: 0.1 }, A(18, 2));
+
+          // Bar 19: the header gives way to the question, typed; ring and modules arrive.
+          tl.to([$('name'), $('label')], { opacity: 0, duration: 0.3 }, A(19));
+          const q = GV.COPY['core.question'];
+          const typed = { n: 0 };
+          $('question').textContent = '';
+          gsap.set($('question'), { opacity: 0 });
+          tl.to($('question'), { opacity: 1, duration: 0.2 }, A(19));
+          tl.to(typed, { n: q.length, duration: q.length * 0.03, ease: 'none', onUpdate: () => { $('question').textContent = q.slice(0, Math.round(typed.n)); } }, A(19));
+          gsap.set($('wires'), { opacity: 0 });
+          tl.to($('wires'), { opacity: 1, duration: 0.6 }, A(19, 2));
+          gsap.set(mods.map((m) => m.mod), { scale: 0.4, opacity: 0 });
+          tl.to(mods.map((m) => m.mod), { scale: 1, opacity: 1, duration: 0.5, stagger: 0.1, ease: 'back.out(1.6)' }, A(19, 2));
+
+          // Bars 20-25: one question runs the engine, one module per bar, then down into the core.
+          const packet = $('packet');
+          gsap.set(packet, { x: CX, y: 110, opacity: 0 });
+          pos.forEach(([x, y], k) => {
+            const t0 = A(20 + k);
+            tl.set(packet, { x: CX, y: 110, opacity: 1 }, t0);
+            tl.to(packet, { x, y, duration: 0.5, ease: 'power2.inOut' }, t0);
+            tl.to(mods[k].mod, { scale: 1.15, duration: 0.3, ease: 'back.out(2)' }, t0 + 0.45);
+            tl.to(mods[k].disc, { boxShadow: '0 0 0 3px #1FAFA1, 0 0 40px rgba(31,175,161,0.8)', duration: 0.3 }, t0 + 0.45);
+            tl.to(packet, { x: CX, y: CY, duration: 0.45, ease: 'power2.in' }, t0 + 1.1);
+            tl.set(packet, { opacity: 0 }, t0 + 1.55);
+            tl.to(mods[k].mod, { scale: 1, duration: 0.3 }, t0 + 1.7);
+          });
+
+          // Bar 26: every module lit together; the question leaves and the header returns.
+          tl.to(mods.map((m) => m.mod), { scale: 1.06, duration: 0.4, stagger: 0.04 }, A(26));
+          tl.to($('question'), { opacity: 0, duration: 0.3 }, A(26));
+          tl.to([$('name'), $('label')], { opacity: 1, duration: 0.5, stagger: 0.1 }, A(26, 1));
+        }, 18);
       </script>
     </template>
   </body>

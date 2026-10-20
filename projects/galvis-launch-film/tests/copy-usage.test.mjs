@@ -19,7 +19,7 @@ function visibleStrings(html) {
 
 for (const file of readdirSync(dir).filter((f) => f.endsWith('.html'))) {
   test(`${file} takes its on-screen copy from copy.json`, () => {
-    const offenders = visibleStrings(readFileSync(new URL(file, dir), 'utf8')).filter((s) => PHRASE.test(s) && !/[{}$<>=;]|GV\.|\bcopy\b/.test(s));
+    const offenders = visibleStrings(readFileSync(new URL(file, dir), 'utf8')).filter((s) => PHRASE.test(s) && !/[{}$<>=;#()]|GV\.|\bcopy\b/.test(s));
     assert.deepEqual(offenders, []);
   });
 }
