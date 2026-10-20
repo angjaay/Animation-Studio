@@ -1,0 +1,222 @@
+{
+  "earth/black-marble.jpg": {
+    "source": "https://eoimages.gsfc.nasa.gov/images/imagerecords/144000/144898/BlackMarble_2016_3km.jpg",
+    "license": "public domain (NASA Visible Earth)",
+    "attribution": "NASA Earth Observatory"
+  },
+  "earth/blue-marble.jpg": {
+    "source": "https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74092/world.200407.3x5400x2700.jpg",
+    "license": "public domain (NASA Visible Earth)",
+    "attribution": "NASA Earth Observatory"
+  },
+  "earth/dawn.png": {
+    "source": "N0iire/movee-fe public/assets/e27de72b696ea9d4c6b8379b613c7da3854b7c43.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "fonts/jetbrains-mono.woff2": {
+    "source": "npm @fontsource-variable/jetbrains-mono",
+    "license": "SIL Open Font License 1.1",
+    "attribution": null
+  },
+  "fonts/mulish.woff2": {
+    "source": "npm @fontsource-variable/mulish",
+    "license": "SIL Open Font License 1.1",
+    "attribution": null
+  },
+  "fonts/plus-jakarta-sans.woff2": {
+    "source": "npm @fontsource-variable/plus-jakarta-sans",
+    "license": "SIL Open Font License 1.1",
+    "attribution": null
+  },
+  "geo/idn-adm1.svg": {
+    "source": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/IDN/ADM1/geoBoundaries-IDN-ADM1_simplified.geojson",
+    "license": "Open Data Commons Open Database License 1.0",
+    "attribution": "© OpenStreetMap contributors (geoBoundaries)"
+  },
+  "geo/sea.svg": {
+    "source": "https://naciscdn.org/naturalearth/50m/cultural/ne_50m_admin_0_countries.zip",
+    "license": "public domain (Natural Earth)",
+    "attribution": "Made with Natural Earth"
+  },
+  "logo/galvis-full.svg": {
+    "source": "N0iire/movee-fe public/logo/galvis-full.svg",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "logo/galvis-main.svg": {
+    "source": "N0iire/movee-fe public/logo/galvis-main.svg",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "logo/galvis-wordmark-dark.svg": {
+    "source": "N0iire/movee-fe public/logo/galvis-wordmark-dark.svg",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "sentinel/morowali-mining.jpg": {
+    "source": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2C_51MVS_20260907_0_L2A",
+    "license": "Copernicus Sentinel data terms (free, attribution)",
+    "attribution": "Contains modified Copernicus Sentinel data 2026"
+  },
+  "sentinel/riau-plantation.jpg": {
+    "source": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_47NQA_20251004_0_L2A",
+    "license": "Copernicus Sentinel data terms (free, attribution)",
+    "attribution": "Contains modified Copernicus Sentinel data 2025"
+  },
+  "solution/AFS/desktop/foodsecurity.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/AFS/desktop/foodsecurity.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/AFS/desktop/foodsupply.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/AFS/desktop/foodsupply.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/AFS/desktop/precision.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/AFS/desktop/precision.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/AFS/desktop/waternutrient.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/AFS/desktop/waternutrient.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/DMR/desktop/exposure.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/DMR/desktop/exposure.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/DMR/desktop/hazard.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/DMR/desktop/hazard.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/DMR/desktop/risk-based.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/DMR/desktop/risk-based.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/DMR/desktop/risk.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/DMR/desktop/risk.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/EBG/desktop/Geomarketing-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/EBG/desktop/Geomarketing-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/EBG/desktop/SiteSelection-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/EBG/desktop/SiteSelection-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/EBG/desktop/SmartCity-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/EBG/desktop/SmartCity-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/EBG/desktop/UrbanPlanning-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/EBG/desktop/UrbanPlanning-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/ESC/desktop/biodiversity.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/ESC/desktop/biodiversity.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/ESC/desktop/environmental.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/ESC/desktop/environmental.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/ESC/desktop/sitesuitability.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/ESC/desktop/sitesuitability.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/ESRE/desktop/EnergyPotential-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/ESRE/desktop/EnergyPotential-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/ESRE/desktop/Network-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/ESRE/desktop/Network-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/ESRE/desktop/SolarProperty-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/ESRE/desktop/SolarProperty-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/HAQ/desktop/AirQuality-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/HAQ/desktop/AirQuality-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/HAQ/desktop/DeseaseSpread-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/HAQ/desktop/DeseaseSpread-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/HAQ/desktop/Healthcare-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/HAQ/desktop/Healthcare-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/HAQ/desktop/PublicRisk-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/HAQ/desktop/PublicRisk-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/UIC/desktop/Community-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/UIC/desktop/Community-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/UIC/desktop/HumanPerceptionAnalysis.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/UIC/desktop/HumanPerceptionAnalysis.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/UIC/desktop/Smart-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/UIC/desktop/Smart-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/UIC/desktop/Transport-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/UIC/desktop/Transport-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/UIC/desktop/Urban-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/UIC/desktop/Urban-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/WRWS/desktop/Floodplain-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/WRWS/desktop/Floodplain-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/WRWS/desktop/Sanitation-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/WRWS/desktop/Sanitation-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/WRWS/desktop/WasteManagement-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/WRWS/desktop/WasteManagement-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "solution/WRWS/desktop/WaterResource-Desktop.jpg": {
+    "source": "N0iire/gisact-website public/illustration/solution/WRWS/desktop/WaterResource-Desktop.png",
+    "license": "internal (GISACT)",
+    "attribution": null
+  }
+}

@@ -17,6 +17,9 @@
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource-variable/mulish": "^5.3.0",
     "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
-    "esbuild": "^0.25.10"
+    "@turf/rewind": "^7.4.0",
+    "d3-geo": "^3.1.1",
+    "esbuild": "^0.25.10",
+    "shapefile": "^0.6.6"
   }
 }
