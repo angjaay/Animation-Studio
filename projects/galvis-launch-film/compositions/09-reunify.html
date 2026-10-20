@@ -4,15 +4,69 @@
   <body>
     <template>
       <style>
-        #act09-reunify-root { position: absolute; inset: 0; display: grid; place-items: center; background: var(--navy); }
-        #act09-reunify-title { font-family: var(--font-display); font-weight: 700; font-size: 72px; color: var(--white); }
+        #act09-reunify-root { position: absolute; inset: 0; overflow: hidden; background: var(--navy); }
+        #act09-reunify-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 1100px 560px at 960px 420px, rgba(2, 74, 188, 0.45), rgba(3, 39, 80, 0)); }
+        #act09-reunify-map { position: absolute; inset: 0; }
+        #act09-reunify-one {
+          position: absolute; left: 0; right: 0; top: 842px; text-align: center;
+          font-family: var(--font-display); font-weight: 700; font-size: 72px; letter-spacing: 0.06em; color: var(--white);
+        }
+        #act09-reunify-many {
+          position: absolute; left: 0; right: 0; top: 944px; text-align: center;
+          font-family: var(--font-text); font-weight: 600; font-size: 30px; letter-spacing: 0.04em; color: var(--cool-gray);
+        }
       </style>
       <div id="act09-reunify-root" data-composition-id="act09-reunify" data-width="1920" data-height="1080">
-        <h1 id="act09-reunify-title">act09-reunify</h1>
+        <div id="act09-reunify-glow"></div>
+        <canvas id="act09-reunify-map" width="1920" height="1080"></canvas>
+        <div id="act09-reunify-one"></div>
+        <div id="act09-reunify-many"></div>
       </div>
       <script>
-        const tl = gsap.timeline({ paused: true });
-        window.__timelines["act09-reunify"] = tl;
+        (() => {
+          const id = 'act09-reunify';
+          document.getElementById(`${id}-one`).textContent = GV.COPY['reunify.line1'];
+          document.getElementById(`${id}-many`).textContent = GV.COPY['reunify.line2'];
+
+          // Map shrunk into the upper two thirds so the statement owns the bottom.
+          const g = document.getElementById(`${id}-map`).getContext('2d');
+          const S = 0.72, OX = (1920 - 1920 * S) / 2, OY = 20;
+          const at = ([x, y]) => [OX + x * S, OY + y * S];
+          g.save();
+          g.translate(OX, OY);
+          g.scale(S, S);
+          g.strokeStyle = 'rgba(228,232,239,0.32)';
+          g.lineWidth = 1.4 / S;
+          for (const [, d] of GV.SEA_SVG.matchAll(/ d="([^"]+)"/g)) g.stroke(new Path2D(d));
+          g.restore();
+
+          // Intelligence nodes in the three product colours, linked to their nearest neighbours.
+          const rnd = GV.seeded(9);
+          const COLORS = ['#024ABC', '#1FAFA1', '#86C36A'];
+          const nodes = Array.from({ length: 60 }, () => at(GV.SEA_POINTS[Math.floor(rnd() * GV.SEA_POINTS.length)]));
+          g.strokeStyle = 'rgba(255,255,255,0.22)';
+          g.lineWidth = 1.2;
+          for (const [i, a] of nodes.entries()) {
+            const near = nodes.map((b, j) => [Math.hypot(a[0] - b[0], a[1] - b[1]), j]).filter(([, j]) => j !== i).sort((p, q) => p[0] - q[0]).slice(0, 2);
+            for (const [, j] of near) { g.beginPath(); g.moveTo(...a); g.lineTo(...nodes[j]); g.stroke(); }
+          }
+          for (const [i, [x, y]] of nodes.entries()) {
+            const c = COLORS[i % 3];
+            const halo = g.createRadialGradient(x, y, 0, x, y, 22);
+            halo.addColorStop(0, `${c}AA`);
+            halo.addColorStop(1, `${c}00`);
+            g.fillStyle = halo;
+            g.beginPath(); g.arc(x, y, 22, 0, Math.PI * 2); g.fill();
+            g.fillStyle = '#FFFFFF';
+            g.beginPath(); g.arc(x, y, 3.2, 0, Math.PI * 2); g.fill();
+            g.strokeStyle = c;
+            g.lineWidth = 2;
+            g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.stroke();
+          }
+
+          const tl = gsap.timeline({ paused: true });
+          window.__timelines["act09-reunify"] = tl;
+        })();
       </script>
     </template>
   </body>

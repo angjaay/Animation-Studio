@@ -4,15 +4,57 @@
   <body>
     <template>
       <style>
-        #act10-final-root { position: absolute; inset: 0; display: grid; place-items: center; background: var(--navy); }
-        #act10-final-title { font-family: var(--font-display); font-weight: 700; font-size: 72px; color: var(--white); }
+        #act10-final-root { position: absolute; inset: 0; overflow: hidden; background: var(--navy); }
+        #act10-final-dawn {
+          position: absolute; left: 0; right: 0; bottom: 0; height: 420px;
+          -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 75%);
+          mask-image: linear-gradient(to bottom, transparent 0%, #000 75%);
+          opacity: 0.85;
+        }
+        #act10-final-dawn canvas { display: block; width: 100%; height: 100%; }
+        #act10-final-contours { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+        #act10-final-logo { position: absolute; left: 50%; top: 230px; width: 432px; height: 121px; margin-left: -216px; }
+        #act10-final-logo svg { width: 100%; height: 100%; display: block; }
+        #act10-final-tagline {
+          position: absolute; left: 0; right: 0; top: 470px; text-align: center;
+          font-family: var(--font-display); font-weight: 700; font-size: 48px; letter-spacing: 0.04em; color: var(--white);
+        }
+        #act10-final-url {
+          position: absolute; left: 0; right: 0; top: 560px; text-align: center;
+          font-family: var(--font-text); font-weight: 600; font-size: 24px; letter-spacing: 0.12em; color: var(--cool-gray);
+        }
       </style>
       <div id="act10-final-root" data-composition-id="act10-final" data-width="1920" data-height="1080">
-        <h1 id="act10-final-title">act10-final</h1>
+        <div id="act10-final-dawn"></div>
+        <svg id="act10-final-contours" viewBox="0 0 1920 1080"></svg>
+        <div id="act10-final-logo"></div>
+        <div id="act10-final-tagline"></div>
+        <div id="act10-final-url"></div>
       </div>
       <script>
-        const tl = gsap.timeline({ paused: true });
-        window.__timelines["act10-final"] = tl;
+        (async () => {
+          const id = 'act10-final';
+          document.getElementById(`${id}-tagline`).textContent = GV.COPY['final.tagline'];
+          document.getElementById(`${id}-url`).textContent = GV.COPY['final.url'];
+          document.getElementById(`${id}-logo`).innerHTML = GV.WORDMARK_DARK.replace(/id="([^"]+)"/g, `id="${id}-$1"`).replace(/url\(#([^)]+)\)/g, `url(#${id}-$1)`);
+
+          // Soft topographic contours: seeded sine stacks, 8% white.
+          const rnd = GV.seeded(10);
+          const lines = [];
+          for (let k = 0; k < 7; k++) {
+            const y0 = 120 + k * 120, amp = 18 + rnd() * 26, f = 0.002 + rnd() * 0.002, ph = rnd() * 6.28;
+            let d = '';
+            for (let x = -20; x <= 1940; x += 20) d += `${x === -20 ? 'M' : 'L'}${x} ${(y0 + amp * Math.sin(x * f + ph) + 8 * Math.sin(x * f * 3.1 + ph * 2)).toFixed(1)} `;
+            lines.push(`<path d="${d}" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1.5"/>`);
+          }
+          document.getElementById(`${id}-contours`).innerHTML = lines.join('');
+
+          const dawn = await GV.ditheredCanvas('assets/earth/dawn.png', 1920, 420, { palette: 'landing', cell: 3, crop: [0, 0.32, 1, 0.42] });
+          document.getElementById(`${id}-dawn`).append(dawn);
+
+          const tl = gsap.timeline({ paused: true });
+          window.__timelines["act10-final"] = tl;
+        })();
       </script>
     </template>
   </body>
