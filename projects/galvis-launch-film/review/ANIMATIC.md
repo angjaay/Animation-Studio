@@ -8,13 +8,17 @@ Kontak sheet: `review/animatic-sheet.jpg`, satu frame tiap 2 s.
 
 | Pemeriksaan | Perintah | Hasil |
 |---|---|---|
-| Format | `npm run test:animatic` | 2/2 lulus: 120,0 s, 1920×1080, 30 fps, AAC |
-| Sinkron gambar–suara | `node scripts/sync-check.mjs` | lulus di 24,0 s (+33 ms, satu frame), 56,0 s (0 ms), 112,0 s (0 ms) |
+| Format dan loudness | `npm run test:animatic` | 3/3 lulus: 120,0 s, 1920×1080, 30 fps, AAC; −14 LUFS, true peak ≤ −1 dBTP |
+| Sinkron gambar–suara | `node scripts/sync-check.mjs` | lulus di 24,0 s, 56,0 s, 112,0 s: perubahan gambar di frame yang sama (0 ms) |
 | Komposisi | `npx hyperframes check` | lulus; kontras AA lulus di semua waktu yang diperiksa |
 | Unit | `npm test` | 86/86 lulus |
 
 Render pertama gagal sinkron di 56,0 s: gambar diam dari 55,87 s sampai 56,37 s karena batang
 cahaya masuk dengan ease-in. Sekarang ada ledakan cahaya dari logo tepat di frame 56,0 s.
+Review akhir menemukan impact 24,0 s jatuh di tengah setengah detik layar putih; stop-down babak 02
+kini meredup ke navy di sekitar node sehingga kilat putih 24,0 s menjadi potongan keras. Skor
+sementara kini dibatasi pita 15 kHz dan true peak, sehingga file AAC tetap −14 LUFS / −1,3 dBTP
+(sebelumnya render turun ke −20,5 LUFS).
 
 ## Rubrik per babak (ambang animatic: 6)
 
@@ -23,7 +27,7 @@ Dimensi dari rubrik mg-styles-15: motion craft, sound sync, concept. Nilai 1–1
 | Babak | Waktu | Motion | Sync | Concept | Catatan |
 |---|---|---|---|---|---|
 | 01 The Spatial World | 0:00–0:12 | 8 | 7 | 8 | Globe 3D Three.js: fajar menyapu Asia Tenggara, pantai, ribuan sinyal; bloom matahari ke act terang |
-| 02 The Complexity | 0:12–0:24 | 6 | 7 | 7 | Tujuh pelat menumpuk lalu tersedot ke satu node; stop-down putih di ketukan terakhir |
+| 02 The Complexity | 0:12–0:24 | 6 | 8 | 7 | Tujuh pelat menumpuk lalu tersedot ke satu node; stop-down meredup ke navy di ketukan terakhir |
 | 03 GALVIS Reveal | 0:24–0:34 | 7 | 8 | 7 | Impact 24,0 s tepat; logo dirakit dari anatominya |
 | 04 Core Technology | 0:34–0:52 | 8 | 7 | 8 | Ruang mesin 3D Three.js: lorong heksagon, orbit miring, paket di sepanjang kabel |
 | 05 Three Products | 0:52–1:02 | 7 | 8 | 8 | Split 56,0 s kini terlihat; tiga nama di tiga nada sonic logo |
