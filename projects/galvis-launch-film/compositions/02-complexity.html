@@ -54,13 +54,13 @@
 
           // Bottom to top. Opacity rises with the stack so the top reads as a muddle.
           const plates = [
-            ['Satellite imagery', image('assets/sentinel/riau-plantation.jpg'), 1],
-            ['Terrain model', image('assets/solution/WRWS/desktop/WaterResource-Desktop.jpg', GV.cleanCrop('assets/solution/WRWS/desktop/WaterResource-Desktop.jpg')), 0.7],
-            ['Environmental variables', image('assets/solution/ESC/desktop/biodiversity.jpg', GV.cleanCrop('assets/solution/ESC/desktop/biodiversity.jpg')), 0.6],
-            ['Infrastructure networks', image('assets/solution/ESRE/desktop/Network-Desktop.jpg', GV.cleanCrop('assets/solution/ESRE/desktop/Network-Desktop.jpg')), 0.6],
-            ['Demographic grids', grid, 0.75],
-            ['Administrative boundaries', admin, 0.9],
-            ['Analytical outputs', image('assets/solution/DMR/desktop/risk.jpg', GV.cleanCrop('assets/solution/DMR/desktop/risk.jpg')), 0.55],
+            [GV.COPY['complexity.plates'][0], image('assets/sentinel/riau-plantation.jpg'), 1],
+            [GV.COPY['complexity.plates'][1], image('assets/solution/WRWS/desktop/WaterResource-Desktop.jpg', GV.cleanCrop('assets/solution/WRWS/desktop/WaterResource-Desktop.jpg')), 0.7],
+            [GV.COPY['complexity.plates'][2], image('assets/solution/ESC/desktop/biodiversity.jpg', GV.cleanCrop('assets/solution/ESC/desktop/biodiversity.jpg')), 0.6],
+            [GV.COPY['complexity.plates'][3], image('assets/solution/ESRE/desktop/Network-Desktop.jpg', GV.cleanCrop('assets/solution/ESRE/desktop/Network-Desktop.jpg')), 0.6],
+            [GV.COPY['complexity.plates'][4], grid, 0.75],
+            [GV.COPY['complexity.plates'][5], admin, 0.9],
+            [GV.COPY['complexity.plates'][6], image('assets/solution/DMR/desktop/risk.jpg', GV.cleanCrop('assets/solution/DMR/desktop/risk.jpg')), 0.55],
           ];
           const stack = document.getElementById(`${id}-stack`);
           for (const [i, [label, make, opacity]] of plates.entries()) {

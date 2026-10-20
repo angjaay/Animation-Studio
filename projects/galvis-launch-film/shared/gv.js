@@ -32,7 +32,9 @@ var GV = (() => {
     SEA_SVG: () => sea_default,
     WORDMARK_DARK: () => galvis_wordmark_dark_default,
     actWindow: () => actWindow,
+    at: () => at,
     barStart: () => barStart,
+    bayerVisible: () => bayerVisible,
     branchGeometry: () => branchGeometry,
     cleanCrop: () => cleanCrop,
     ditherCell: () => ditherCell,
@@ -40,7 +42,9 @@ var GV = (() => {
     ditheredCanvas: () => ditheredCanvas,
     loadImage: () => loadImage,
     logoParts: () => logoParts,
+    mountCurtain: () => mountCurtain,
     mountDither: () => mountDither,
+    register: () => register,
     renderLabel: () => renderLabel,
     renderLegend: () => renderLegend,
     renderWorkspace: () => renderWorkspace,
@@ -111,7 +115,18 @@ var GV = (() => {
           "Satellite Imagery",
           "Plantation Health",
           "Replanting Priority"
-        ]
+        ],
+        label: {
+          title: "Kampar, Riau",
+          subtitle: "Oil palm estate \xB7 monitored"
+        },
+        legend: {
+          title: "Plantation Health",
+          ends: [
+            "Low",
+            "High"
+          ]
+        }
       },
       {
         name: "Forestry",
@@ -119,7 +134,18 @@ var GV = (() => {
           "Forest Monitoring",
           "Disturbance Detection",
           "Conservation Intelligence"
-        ]
+        ],
+        label: {
+          title: "Teluk Meranti, Riau",
+          subtitle: "Forest concession \xB7 monitored"
+        },
+        legend: {
+          title: "Forest Fire Risk",
+          ends: [
+            "Low",
+            "High"
+          ]
+        }
       },
       {
         name: "Mining",
@@ -127,7 +153,18 @@ var GV = (() => {
           "Operational Area",
           "Environmental Pressure",
           "Monitoring & Risk"
-        ]
+        ],
+        label: {
+          title: "Morowali, Central Sulawesi",
+          subtitle: "Nickel processing area"
+        },
+        legend: {
+          title: "Environmental Pressure",
+          ends: [
+            "Low",
+            "High"
+          ]
+        }
       },
       {
         name: "Renewable Energy",
@@ -135,7 +172,18 @@ var GV = (() => {
           "Terrain + Climate + Infrastructure",
           "Suitability",
           "Candidate Sites"
-        ]
+        ],
+        label: {
+          title: "Candidate region",
+          subtitle: "Solar and wind screening"
+        },
+        legend: {
+          title: "Solar Suitability",
+          ends: [
+            "Low",
+            "High"
+          ]
+        }
       }
     ],
     "enterprise.flash": [
@@ -152,7 +200,54 @@ var GV = (() => {
     ],
     "final.tagline": "SEE MORE. UNDERSTAND BETTER. DECIDE SMARTER.",
     "final.url": "galvis.io",
-    "final.credits": "Contains modified Copernicus Sentinel data 2025. Boundaries \xA9 OpenStreetMap contributors (geoBoundaries, ODbL). Made with Natural Earth. Earth imagery: NASA Earth Observatory."
+    "final.credits": "Contains modified Copernicus Sentinel data 2025. Boundaries \xA9 OpenStreetMap contributors (geoBoundaries, ODbL). Made with Natural Earth. Earth imagery: NASA Earth Observatory.",
+    "complexity.plates": [
+      "Satellite imagery",
+      "Terrain model",
+      "Environmental variables",
+      "Infrastructure networks",
+      "Demographic grids",
+      "Administrative boundaries",
+      "Analytical outputs"
+    ],
+    "core.tokens": [
+      "Where",
+      "expansion",
+      "low risk"
+    ],
+    "workspace.platform": "Kampar Expansion Study",
+    "workspace.region": "Kabupaten Kampar, Riau",
+    "workspace.layers": [
+      "Sentinel-2 True Color",
+      "Admin Boundary",
+      "Road Network",
+      "Suitability Result"
+    ],
+    "workspace.steps": [
+      "Identify region",
+      "Activate datasets",
+      "Run spatial analysis",
+      "Generate suitability",
+      "Summarize findings"
+    ],
+    "workspace.insight": {
+      title: "Suitable area by class",
+      classes: [
+        "High",
+        "Medium",
+        "Low"
+      ]
+    },
+    "enrichment.profile": {
+      title: "Spatial Intelligence Profile",
+      subtitle: "Riau \xB7 polygon 1 of many"
+    },
+    "enrichment.flow": [
+      "Location",
+      "GALVIS Data Enrichment",
+      "Hundreds of Spatial Attributes",
+      "Decision-Ready Dataset"
+    ]
   };
 
   // cues.json
@@ -230,6 +325,38 @@ var GV = (() => {
     const cell = opts.cell ?? DEFAULTS.cell;
     return ditherCell(rgb, Math.floor(px / cell), Math.floor(py / cell), opts);
   }
+  function ditherImageData(data, cw, ch, opts = {}) {
+    const { levels, palette, resolve } = { ...DEFAULTS, ...opts };
+    const n = levels - 1;
+    const last = RAMP_RGB.length - 1;
+    const T = new Float64Array(16);
+    for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) T[y * 4 + x] = (BAYER4[y][x] + 0.5) / 16;
+    for (let cy = 0; cy < ch; cy++) {
+      const row = (cy & 3) * 4;
+      for (let cx = 0; cx < cw; cx++) {
+        const i = (cy * cw + cx) * 4;
+        if (data[i + 3] === 0) continue;
+        const t = T[row + (cx & 3)];
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        let dr, dg, db;
+        if (palette === "brand") {
+          const p = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 * last;
+          const k = Math.floor(p);
+          const c = RAMP_RGB[Math.min(k + (p - k > t ? 1 : 0), last)];
+          dr = c[0];
+          dg = c[1];
+          db = c[2];
+        } else {
+          dr = Math.min(1, Math.max(0, Math.floor(r / 255 * n + t) / n)) * 255;
+          dg = Math.min(1, Math.max(0, Math.floor(g / 255 * n + t) / n)) * 255;
+          db = Math.min(1, Math.max(0, Math.floor(b / 255 * n + t) / n)) * 255;
+        }
+        data[i] = Math.round(dr + (r - dr) * resolve);
+        data[i + 1] = Math.round(dg + (g - dg) * resolve);
+        data[i + 2] = Math.round(db + (b - db) * resolve);
+      }
+    }
+  }
 
   // shared/dither/dither-layer.js
   function coverRect(sw, sh, dw, dh) {
@@ -258,17 +385,7 @@ var GV = (() => {
       const [x, y, w, h] = opts.fit === "cover" ? coverRect(sw, sh, cw, ch) : [0, 0, cw, ch];
       sctx.drawImage(source, sx, sy, sw, sh, x, y, w, h);
       const img = sctx.getImageData(0, 0, cw, ch);
-      const d = img.data;
-      for (let cy = 0; cy < ch; cy++) {
-        for (let cx = 0; cx < cw; cx++) {
-          const i = (cy * cw + cx) * 4;
-          if (d[i + 3] === 0) continue;
-          const out = ditherCell([d[i], d[i + 1], d[i + 2]], cx, cy, opts);
-          d[i] = out[0];
-          d[i + 1] = out[1];
-          d[i + 2] = out[2];
-        }
-      }
+      ditherImageData(img.data, cw, ch, opts);
       sctx.putImageData(img, 0, 0);
       ctx.imageSmoothingEnabled = false;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -474,6 +591,50 @@ var GV = (() => {
     const crop = CLEAN_CROPS[path];
     if (!crop) throw new Error(`no measured clean crop for ${path}`);
     return crop;
+  }
+
+  // shared/beats.js
+  var BEAT = cues_default.barSeconds / 4;
+  function at(actId, bar, beat = 0) {
+    const t = (bar - 1) * cues_default.barSeconds + beat * BEAT;
+    const w = actWindow(actId);
+    if (t < w.start || t > w.end) throw new Error(`bar ${bar} beat ${beat} is outside ${actId}`);
+    return t - w.start;
+  }
+
+  // shared/curtain.js
+  function bayerVisible(cx, cy, progress) {
+    return (BAYER4[cy & 3][cx & 3] + 0.5) / 16 < progress;
+  }
+  function mountCurtain(canvas, color, cell = 12) {
+    const ctx = canvas.getContext("2d");
+    return {
+      set(progress) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (progress >= 1) return;
+        ctx.fillStyle = color;
+        const cw = Math.ceil(canvas.width / cell), ch = Math.ceil(canvas.height / cell);
+        for (let cy = 0; cy < ch; cy++) for (let cx = 0; cx < cw; cx++) {
+          if (!bayerVisible(cx, cy, progress)) ctx.fillRect(cx * cell, cy * cell, cell, cell);
+        }
+      }
+    };
+  }
+
+  // shared/register.js
+  async function register(id, build, duration) {
+    const tl = gsap.timeline({ paused: true });
+    try {
+      await build(tl);
+    } catch (err) {
+      console.error(`[galvis] ${id} failed to build: ${err && err.message ? err.message : err}`);
+    }
+    if (tl.duration() > duration + 1e-3) {
+      console.error(`[galvis] ${id} timeline overruns act: ${tl.duration().toFixed(3)} s > ${duration} s`);
+    }
+    tl.set({}, {}, duration);
+    window.__timelines[id] = tl;
+    return tl;
   }
   return __toCommonJS(index_exports);
 })();

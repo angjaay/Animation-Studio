@@ -31,7 +31,7 @@
         <div id="act07-enrichment-tag"></div>
         <div id="act07-enrichment-sub"></div>
         <canvas id="act07-enrichment-shape" width="720" height="720"></canvas>
-        <div id="act07-enrichment-card"><h3>Spatial Intelligence Profile</h3><p>Riau · polygon 1 of many</p></div>
+        <div id="act07-enrichment-card"><h3></h3><p></p></div>
       </div>
       <script>
         (async () => {
@@ -43,25 +43,29 @@
 
           // Each attribute is one solution map from gisact.io (content checked against the files).
           const S = 'assets/solution';
-          const MAPS = {
-            'Earth Observation': `${S}/ESC/desktop/biodiversity.jpg`,
-            'Environment': `${S}/ESC/desktop/environmental.jpg`,
-            'Terrain': `${S}/WRWS/desktop/WaterResource-Desktop.jpg`,
-            'Infrastructure': `${S}/UIC/desktop/Transport-Desktop.jpg`,
-            'Accessibility': `${S}/EBG/desktop/Geomarketing-Desktop.jpg`,
-            'Land Use': `${S}/AFS/desktop/foodsecurity.jpg`,
-            'Demographics': `${S}/EBG/desktop/UrbanPlanning-Desktop.jpg`,
-            'Economic Activity': `${S}/EBG/desktop/SiteSelection-Desktop.jpg`,
-            'Climate': `${S}/UIC/desktop/Urban-Desktop.jpg`,
-            'Risk Indicators': `${S}/DMR/desktop/risk.jpg`,
-          };
+          // In the order of GV.COPY['enrichment.attrs']: Earth Observation, Environment, Terrain, Infrastructure,
+          // Accessibility, Land Use, Demographics, Economic Activity, Climate, Risk Indicators.
+          const MAP_PATHS = [
+            `${S}/ESC/desktop/biodiversity.jpg`,
+            `${S}/ESC/desktop/environmental.jpg`,
+            `${S}/WRWS/desktop/WaterResource-Desktop.jpg`,
+            `${S}/UIC/desktop/Transport-Desktop.jpg`,
+            `${S}/EBG/desktop/Geomarketing-Desktop.jpg`,
+            `${S}/AFS/desktop/foodsecurity.jpg`,
+            `${S}/EBG/desktop/UrbanPlanning-Desktop.jpg`,
+            `${S}/EBG/desktop/SiteSelection-Desktop.jpg`,
+            `${S}/UIC/desktop/Urban-Desktop.jpg`,
+            `${S}/DMR/desktop/risk.jpg`,
+          ];
           const VALUES = [0.81, 0.64, 0.42, 0.57, 0.73, 0.38, 0.49, 0.66, 0.71, 0.27];
           const CROP = [0.05, 0.25, 0.45, 0.45]; // map body only, clear of the baked-in legend and label
           const attrs = GV.COPY['enrichment.attrs'];
-          const images = await Promise.all(attrs.map((a) => GV.loadImage(MAPS[a])));
+          const images = await Promise.all(MAP_PATHS.map((p) => GV.loadImage(p)));
 
           // Thumbnails in the profile card.
           const card = document.getElementById(`${id}-card`);
+          card.querySelector('h3').textContent = GV.COPY['enrichment.profile'].title;
+          card.querySelector('p').textContent = GV.COPY['enrichment.profile'].subtitle;
           attrs.forEach((name, i) => {
             const row = document.createElement('div');
             row.className = `${id}-row`;

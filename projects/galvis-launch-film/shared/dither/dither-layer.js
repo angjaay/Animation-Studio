@@ -1,7 +1,7 @@
 // Canvas layer that draws a source image through the reference Bayer dither.
 // Work happens at cell resolution and is scaled up without smoothing, so the cost
 // depends on the number of cells, not on the output resolution.
-import { ditherCell, DEFAULTS } from './reference.js';
+import { ditherImageData, DEFAULTS } from './reference.js';
 
 function coverRect(sw, sh, dw, dh) {
   const s = Math.max(dw / sw, dh / sh);
@@ -33,17 +33,7 @@ export function mountDither(canvas, source, initial = {}) {
     sctx.drawImage(source, sx, sy, sw, sh, x, y, w, h);
 
     const img = sctx.getImageData(0, 0, cw, ch);
-    const d = img.data;
-    for (let cy = 0; cy < ch; cy++) {
-      for (let cx = 0; cx < cw; cx++) {
-        const i = (cy * cw + cx) * 4;
-        if (d[i + 3] === 0) continue;
-        const out = ditherCell([d[i], d[i + 1], d[i + 2]], cx, cy, opts);
-        d[i] = out[0];
-        d[i + 1] = out[1];
-        d[i + 2] = out[2];
-      }
-    }
+    ditherImageData(img.data, cw, ch, opts);
     sctx.putImageData(img, 0, 0);
 
     ctx.imageSmoothingEnabled = false;

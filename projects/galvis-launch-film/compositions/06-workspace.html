@@ -59,25 +59,12 @@
           map.append(surf);
 
           GV.renderWorkspace(document.getElementById(`${id}-win`), {
-            platform: 'Kampar Expansion Study',
-            region: 'Kabupaten Kampar, Riau',
-            layers: [
-              { name: 'Sentinel-2 True Color', glyph: 'raster', active: true },
-              { name: 'Admin Boundary', glyph: 'vector', active: true },
-              { name: 'Road Network', glyph: 'vector', active: true },
-              { name: 'Suitability Result', glyph: 'raster', active: true, flash: true },
-            ],
+            platform: GV.COPY['workspace.platform'],
+            region: GV.COPY['workspace.region'],
+            layers: GV.COPY['workspace.layers'].map((name, i) => ({ name, glyph: i === 0 || i === 3 ? 'raster' : 'vector', active: true, flash: i === 3 })),
             prompt: GV.COPY['workspace.prompt'],
-            steps: [
-              { label: 'Identify region', status: 'done' },
-              { label: 'Activate datasets', status: 'done' },
-              { label: 'Run spatial analysis', status: 'done' },
-              { label: 'Generate suitability', status: 'done' },
-              { label: 'Summarize findings', status: 'running' },
-            ],
-            insight: { title: 'Suitable area by class', bars: [
-              { label: 'High', value: 0.42 }, { label: 'Medium', value: 0.33 }, { label: 'Low', value: 0.25 },
-            ] },
+            steps: GV.COPY['workspace.steps'].map((label, i) => ({ label, status: i < 4 ? 'done' : 'running' })),
+            insight: { title: GV.COPY['workspace.insight'].title, bars: GV.COPY['workspace.insight'].classes.map((label, i) => ({ label, value: [0.42, 0.33, 0.25][i] })) },
             map,
           });
 

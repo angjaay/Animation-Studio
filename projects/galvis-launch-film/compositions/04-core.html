@@ -68,7 +68,7 @@
           const svg = (inner) => `<svg viewBox="0 0 124 124">${inner}</svg>`;
           const rnd = GV.seeded(4);
           const visuals = {
-            ai: () => svg(['Where', 'expansion', 'low risk'].map((w, i) =>
+            ai: () => svg(GV.COPY['core.tokens'].map((w, i) =>
               `<rect x="${14 + i * 6}" y="${30 + i * 24}" width="${w.length * 8 + 14}" height="18" rx="9" fill="${i === 1 ? '#1FAFA1' : '#FFFFFF'}" fill-opacity="${i === 1 ? 1 : 0.9}"/>` +
               `<text x="${21 + i * 6}" y="${43 + i * 24}" font-family="Mulish" font-weight="700" font-size="11" fill="#032750">${w}</text>`).join('')),
             data: () => svg(Array.from({ length: 16 }, (_, k) => {

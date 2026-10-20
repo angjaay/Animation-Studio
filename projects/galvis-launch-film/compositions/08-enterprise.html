@@ -58,9 +58,9 @@
           after.style.left = `${BEAM}px`;
           strip.prepend(before, after);
 
-          GV.renderLabel(document.getElementById(`${id}-label`), { title: 'Teluk Meranti, Riau', subtitle: 'Forest concession · monitored' });
-          GV.renderLegend(document.getElementById(`${id}-legend`), { title: 'Forest Fire Risk', kind: 'gradient', stops: [
-            { color: '#86C36A', label: 'Low' }, { color: '#F2D15C' }, { color: '#E8705B', label: 'High' },
+          GV.renderLabel(document.getElementById(`${id}-label`), sector.label);
+          GV.renderLegend(document.getElementById(`${id}-legend`), { title: sector.legend.title, kind: 'gradient', stops: [
+            { color: '#86C36A', label: sector.legend.ends[0] }, { color: '#F2D15C' }, { color: '#E8705B', label: sector.legend.ends[1] },
           ] });
 
           const chain = document.getElementById(`${id}-chain`);

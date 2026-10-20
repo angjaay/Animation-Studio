@@ -61,7 +61,18 @@
         "Satellite Imagery",
         "Plantation Health",
         "Replanting Priority"
-      ]
+      ],
+      "label": {
+        "title": "Kampar, Riau",
+        "subtitle": "Oil palm estate · monitored"
+      },
+      "legend": {
+        "title": "Plantation Health",
+        "ends": [
+          "Low",
+          "High"
+        ]
+      }
     },
     {
       "name": "Forestry",
@@ -69,7 +80,18 @@
         "Forest Monitoring",
         "Disturbance Detection",
         "Conservation Intelligence"
-      ]
+      ],
+      "label": {
+        "title": "Teluk Meranti, Riau",
+        "subtitle": "Forest concession · monitored"
+      },
+      "legend": {
+        "title": "Forest Fire Risk",
+        "ends": [
+          "Low",
+          "High"
+        ]
+      }
     },
     {
       "name": "Mining",
@@ -77,7 +99,18 @@
         "Operational Area",
         "Environmental Pressure",
         "Monitoring & Risk"
-      ]
+      ],
+      "label": {
+        "title": "Morowali, Central Sulawesi",
+        "subtitle": "Nickel processing area"
+      },
+      "legend": {
+        "title": "Environmental Pressure",
+        "ends": [
+          "Low",
+          "High"
+        ]
+      }
     },
     {
       "name": "Renewable Energy",
@@ -85,7 +118,18 @@
         "Terrain + Climate + Infrastructure",
         "Suitability",
         "Candidate Sites"
-      ]
+      ],
+      "label": {
+        "title": "Candidate region",
+        "subtitle": "Solar and wind screening"
+      },
+      "legend": {
+        "title": "Solar Suitability",
+        "ends": [
+          "Low",
+          "High"
+        ]
+      }
     }
   ],
   "enterprise.flash": [
@@ -102,5 +146,52 @@
   ],
   "final.tagline": "SEE MORE. UNDERSTAND BETTER. DECIDE SMARTER.",
   "final.url": "galvis.io",
-  "final.credits": "Contains modified Copernicus Sentinel data 2025. Boundaries © OpenStreetMap contributors (geoBoundaries, ODbL). Made with Natural Earth. Earth imagery: NASA Earth Observatory."
+  "final.credits": "Contains modified Copernicus Sentinel data 2025. Boundaries © OpenStreetMap contributors (geoBoundaries, ODbL). Made with Natural Earth. Earth imagery: NASA Earth Observatory.",
+  "complexity.plates": [
+    "Satellite imagery",
+    "Terrain model",
+    "Environmental variables",
+    "Infrastructure networks",
+    "Demographic grids",
+    "Administrative boundaries",
+    "Analytical outputs"
+  ],
+  "core.tokens": [
+    "Where",
+    "expansion",
+    "low risk"
+  ],
+  "workspace.platform": "Kampar Expansion Study",
+  "workspace.region": "Kabupaten Kampar, Riau",
+  "workspace.layers": [
+    "Sentinel-2 True Color",
+    "Admin Boundary",
+    "Road Network",
+    "Suitability Result"
+  ],
+  "workspace.steps": [
+    "Identify region",
+    "Activate datasets",
+    "Run spatial analysis",
+    "Generate suitability",
+    "Summarize findings"
+  ],
+  "workspace.insight": {
+    "title": "Suitable area by class",
+    "classes": [
+      "High",
+      "Medium",
+      "Low"
+    ]
+  },
+  "enrichment.profile": {
+    "title": "Spatial Intelligence Profile",
+    "subtitle": "Riau · polygon 1 of many"
+  },
+  "enrichment.flow": [
+    "Location",
+    "GALVIS Data Enrichment",
+    "Hundreds of Spatial Attributes",
+    "Decision-Ready Dataset"
+  ]
 }
