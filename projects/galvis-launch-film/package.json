@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "esbuild shared/index.js --bundle --format=iife --global-name=GV --loader:.svg=text --outfile=shared/gv.js --log-level=warning",
+    "build": "esbuild shared/index.js --bundle --format=iife --global-name=GV --loader:.svg=text --outfile=shared/gv.js --log-level=warning && npm run build:3d",
     "test": "node --test tests/*.test.mjs",
     "pretest": "npm run build",
     "precheck": "npm run build",
@@ -13,7 +13,8 @@
     "prerender": "npm run build",
     "predev": "npm run build",
     "test:dither": "npm run build && node scripts/compare-dither.mjs",
-    "test:animatic": "node --test checks/*.test.mjs"
+    "test:animatic": "node --test checks/*.test.mjs",
+    "build:3d": "esbuild shared/three/index.js --bundle --format=iife --global-name=GV3D --minify --outfile=shared/gv3d.js --log-level=warning"
   },
   "devDependencies": {
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
@@ -23,6 +24,7 @@
     "d3-geo": "^3.1.1",
     "esbuild": "^0.25.10",
     "pngjs": "^7.0.0",
-    "shapefile": "^0.6.6"
+    "shapefile": "^0.6.6",
+    "three": "^0.181.2"
   }
 }

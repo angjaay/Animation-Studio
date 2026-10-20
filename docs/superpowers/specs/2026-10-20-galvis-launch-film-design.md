@@ -189,6 +189,10 @@ tiga produk maju ke 0:52 supaya jatuh di batas bar.
 - Kontur menggores medan (#476 noise-contour-etch); kota, jalan, vegetasi, air menyala lapis demi
   lapis; akhirnya ribuan titik sinyal seperti konstelasi (#450).
 - Teks: `EVERY DECISION HAS A LOCATION.` (bar 3) → `EVERY LOCATION HOLDS INTELLIGENCE.` (bar 5).
+- **3D (Three.js):** bumi adalah globe 3D (Blue Marble siang, Black Marble malam, garis fajar, atmosfer)
+  yang berputar membawa Asia Tenggara ke cahaya sementara kamera mendekat. Globe dirender pada grid sel
+  dither lalu dilewatkan dither palet landing yang terkunci layar; garis pantai dan titik sinyal
+  digambar tajam di atasnya dari koordinat lon/lat yang diproyeksikan kamera.
 
 ### 2 · The Complexity (bar 7–12)
 
@@ -230,6 +234,11 @@ Satu pertanyaan menjalankan mesin; enam modul bukan kartu fitur.
 
 - Bar 26: kamera mundur; enam modul sejajar mengelilingi inti (#599 orbital-frame-alignment):
   `GALVIS CORE TECHNOLOGY`.
+- **3D (Three.js):** ruang di dalam heksagon adalah adegan 3D: lorong cincin heksagon yang ditembus
+  kamera, cincin orbit miring tempat enam modul duduk di atas alas prisma heksagon, kabel cahaya 3D ke
+  inti, dan paket cahaya yang berjalan di sepanjang kabel. Logo di inti tetap datar menghadap kamera
+  (aturan logo: tanpa distorsi); visual mini dan label modul tetap DOM tajam yang ditempel ke posisi
+  proyeksi 3D-nya.
 
 ### 5 · Three Products (bar 27–31) — momen arsitektur kunci
 
@@ -443,3 +452,4 @@ projects/galvis-launch-film/
 | Latar | campuran: gelap hanya di core (4–5), plugboard, dan penutup (9–10); lainnya terang |
 | Framework | HyperFrames |
 | Repo | `angjaay/Animation-Studio`, proyek di `projects/galvis-launch-film/` |
+| 3D (Three.js) | babak 01 globe fajar dan babak 04 ruang mesin dibangun dengan Three.js (permintaan user, 2026-10-20); lihat §7 babak 1 dan 4 |

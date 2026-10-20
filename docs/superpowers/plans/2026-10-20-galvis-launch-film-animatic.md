@@ -215,6 +215,30 @@ Blocking:
 
 ---
 
+### Task 10b: Adegan 3D Three.js (babak 01 dan 04)
+
+Ditambahkan atas permintaan user (2026-10-20) setelah render animatic pertama; spec §7 babak 1 dan 4 dan §11.
+
+**Files:**
+- Create: `shared/three/geo3d.js`, `shared/three/globe.js`, `shared/three/core-scene.js`, `shared/three/index.js`, `shared/gv3d.js` (bundle IIFE `GV3D`, di-commit), `scripts/build-globe.mjs`, `assets/geo/globe-sea.json`, `tests/geo3d.test.mjs`
+- Modify: `package.json` (build kedua, devDependency `three@0.181.2`), `index.html` (muat `shared/gv3d.js`), `tests/bundle.test.mjs` (gv3d segar), `compositions/01-world.html`, `compositions/04-core.html`
+
+**Interfaces:**
+- `lonLatToVec3(lon, lat, r=1) → [x,y,z]` — sama dengan pemetaan UV `THREE.SphereGeometry` (lon 0 → +x, lon 90 → −z, kutub utara +y).
+- `faceLongitude(lon) → rotY` — rotasi Y yang membuat bujur itu menghadap +z (kamera).
+- `mountGlobe({ gl: HTMLCanvasElement (640×360), day, night }) → { scene, camera, globe, render(state) }`
+- `mountCoreScene({ gl: HTMLCanvasElement (1920×1080) }) → { render(state), project(vec3) → [x,y,depth] }`
+
+- [ ] **Step 1:** `tests/geo3d.test.mjs`: `lonLatToVec3(0,0)` ≈ [1,0,0]; `(90,0)` ≈ [0,0,−1]; `(0,90)` ≈ [0,1,0]; titik `lonLatToVec3(115,2)` yang diputar `faceLongitude(115)` punya z > 0,999. Jalankan → FAIL.
+- [ ] **Step 2:** Implement `geo3d.js` → PASS. `scripts/build-globe.mjs` menulis `globe-sea.json` (`coast`: cincin lon/lat negara SEA dari Natural Earth 50m; `points`: 2500 titik darat seed 1, algoritma sama dengan `sea-points.json`).
+- [ ] **Step 3:** Bundle `GV3D` (three dibundel lokal, tanpa CDN) + tes kesegaran.
+- [ ] **Step 4:** Babak 01: globe siang/malam + atmosfer + garis fajar, dirender ke 640×360 lalu dither landing sel 3 terkunci layar; pantai dan sinyal tajam di kanvas overlay; blocking teks dan tirai tetap.
+- [ ] **Step 5:** Babak 04: lorong heksagon 3D (bar 18 kamera menembus), cincin orbit miring dengan alas prisma, kabel 3D + paket cahaya, bar 26 kamera mundur; DOM logo, pertanyaan, visual mini, label tetap.
+- [ ] **Step 6: Verifikasi** — `npm test`; `check`; snapshot babak 01 dan 04; tidak ada frame kosong (WebGL harus menggambar di render).
+- [ ] **Step 7: Commit** — `feat(galvis-film): three.js globe and core chamber`.
+
+---
+
 ### Task 11: Render animatic, cek sinkron, serahkan
 
 **Files:**

@@ -5,29 +5,26 @@
     <template>
       <style>
         #act01-world-root { position: absolute; inset: 0; overflow: hidden; background: #000; }
-        #act01-world-dawn, #act01-world-curtain { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; }
-        #act01-world-stage { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 50% 30%; }
-        #act01-world-plane {
-          position: absolute; left: -140px; top: -170px; width: 2200px; height: 1240px; transform-origin: 50% 100%;
-          -webkit-mask-image: linear-gradient(to top, #000 50%, transparent 78%);
-          mask-image: linear-gradient(to top, #000 50%, transparent 78%);
+        #act01-world-flare {
+          position: absolute; left: 1010px; top: -550px; width: 1100px; height: 1100px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.8) 10%, rgba(245, 246, 248, 0.42) 32%, rgba(245, 246, 248, 0.12) 52%, rgba(245, 246, 248, 0) 70%);
         }
-        #act01-world-signals { position: absolute; inset: 0; width: 100%; height: 100%; }
+        #act01-world-light { position: absolute; inset: 0; background: var(--light-gray); }
+        #act01-world-globe, #act01-world-overlay, #act01-world-curtain { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; }
         .act01-world-line {
-          position: absolute; left: 0; right: 0; top: 392px; text-align: center;
-          font-family: var(--font-display); font-weight: 700; font-size: 64px; letter-spacing: 0.02em; color: var(--navy);
+          position: absolute; left: 0; right: 0; top: 132px; text-align: center;
+          font-family: var(--font-display); font-weight: 700; font-size: 64px; letter-spacing: 0.02em; color: var(--white);
+          text-shadow: 0 2px 24px rgba(0, 0, 0, 0.55);
         }
       </style>
       <div id="act01-world-root" data-composition-id="act01-world" data-width="1920" data-height="1080">
-        <canvas id="act01-world-dawn" width="1920" height="1080"></canvas>
-        <div id="act01-world-stage">
-          <div id="act01-world-plane">
-            <canvas id="act01-world-signals" width="2200" height="1240"></canvas>
-          </div>
-        </div>
+        <canvas id="act01-world-globe" width="1920" height="1080"></canvas>
+        <canvas id="act01-world-overlay" width="1920" height="1080" data-layout-allow-overflow></canvas>
         <canvas id="act01-world-curtain" width="1920" height="1080"></canvas>
         <div id="act01-world-line1" class="act01-world-line"></div>
         <div id="act01-world-line2" class="act01-world-line"></div>
+        <div id="act01-world-flare" data-layout-allow-overflow></div>
+        <div id="act01-world-light"></div>
       </div>
       <script>
         GV.register('act01-world', async (tl) => {
@@ -37,25 +34,32 @@
           $('line1').textContent = GV.COPY['world.line1'];
           $('line2').textContent = GV.COPY['world.line2'];
 
-          // Dawn in the landing dither: drawn once, screen-locked; the black curtain opens over it.
-          const dawnImg = await GV.loadImage('assets/earth/dawn.png');
-          GV.mountDither($('dawn'), dawnImg, { palette: 'landing', cell: 3 }).draw();
+          // The globe renders at one pixel per dither cell, then goes through the landing dither, screen-locked.
+          const W = 1920, H = 1080, CELL = 3;
+          const gl = document.createElement('canvas');
+          gl.width = W / CELL; gl.height = H / CELL;
+          const [day, night] = await Promise.all([GV.loadImage('assets/earth/blue-marble.jpg'), GV.loadImage('assets/earth/black-marble.jpg')]);
+          const globe = GV3D.mountGlobe({ canvas: gl, day, night });
+          const dither = GV.mountDither($('globe'), gl, { palette: 'landing', cell: CELL });
           const curtain = GV.mountCurtain($('curtain'), '#000000');
 
-          // Coast and signals are pre-rendered once; each frame copies what has been revealed so far.
-          const W = 2200, H = 1240;
-          const s = Math.min(W / 1920, H / 1080), ox = (W - 1920 * s) / 2, oy = (H - 1080 * s) / 2;
-          const coast = document.createElement('canvas');
-          coast.width = W; coast.height = H;
-          const cg = coast.getContext('2d');
-          cg.translate(ox, oy);
-          cg.scale(s, s);
-          cg.strokeStyle = 'rgba(255,255,255,0.85)';
-          cg.lineWidth = 2.2 / s;
-          cg.shadowColor = 'rgba(255,255,255,0.8)';
-          cg.shadowBlur = 6;
-          for (const [, d] of GV.SEA_SVG.matchAll(/ d="([^"]+)"/g)) cg.stroke(new Path2D(d));
+          // Camera and light as functions of time: Southeast Asia turns into the dawn while the camera closes in.
+          const ease = (k) => k * k * (3 - 2 * k);
+          const lerp = (a, b, k) => a + (b - a) * k;
+          const mix3 = (a, b, k) => a.map((v, i) => lerp(v, b[i], k));
+          const view = (t) => {
+            const k = ease(Math.min(1, t / 12));
+            return {
+              rotY: GV3D.faceLongitude(lerp(78, 112, k)),
+              sun: mix3([0.35, 0.2, -0.95], [0.6, 0.35, 0.72], ease(Math.min(1, Math.max(0, (t - 2) / 8)))),
+              eye: mix3([0, 0.35, 5.4], [0, 0.62, 2.35], k),
+              target: mix3([0, 0.95, 0], [0, 0.42, 0.55], k),
+            };
+          };
 
+          // Coast and signals are drawn sharp over the dither, from lon/lat through the same camera.
+          const { coast, points } = GV3D.GLOBE_SEA;
+          const ctx = $('overlay').getContext('2d');
           const sprite = (color, r) => {
             const c = document.createElement('canvas');
             c.width = c.height = 32;
@@ -66,28 +70,49 @@
           };
           const WHITE = sprite('#FFFFFF', 3.4), TEAL = sprite('#1FAFA1', 4.6);
           const rnd = GV.seeded(1);
-          const signals = GV.SEA_POINTS.map(([x, y]) => ({ x: ox + x * s, y: oy + y * s, teal: rnd() < 0.22, at: A(4) + rnd() * (A(6, 3) - A(4)) }));
+          const signals = points.map(([lon, lat]) => ({ lon, lat, teal: rnd() < 0.22, at: A(4) + rnd() * (A(6, 3) - A(4)) }));
+          const coastFrom = A(3), coastTo = A(5), WEST = 92, EAST = 141.5;
 
-          const ctx = $('signals').getContext('2d');
-          const coastFrom = A(3), coastTo = A(5);
-          const draw = (t) => {
-            curtain.set(Math.min(1, Math.max(0, (t - A(1, 3)) / (A(3, 1) - A(1, 3)))));
+          const drawOverlay = (t) => {
             ctx.clearRect(0, 0, W, H);
-            const sweep = Math.min(1, Math.max(0, (t - coastFrom) / (coastTo - coastFrom)));
-            if (sweep > 0) ctx.drawImage(coast, 0, 0, W * sweep, H, 0, 0, W * sweep, H);
-            for (const p of signals) {
-              const k = Math.min(1, (t - p.at) / 0.3);
+            const reach = lerp(WEST, EAST, Math.min(1, Math.max(0, (t - coastFrom) / (coastTo - coastFrom))));
+            if (t >= coastFrom) {
+              ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+              ctx.lineWidth = 1.8;
+              ctx.shadowColor = 'rgba(255,255,255,0.8)';
+              ctx.shadowBlur = 6;
+              ctx.beginPath();
+              for (const ring of coast) {
+                let pen = false;
+                for (const [lon, lat] of ring) {
+                  const p = lon <= reach ? globe.project(lon, lat, W, H) : null;
+                  if (!p) { pen = false; continue; }
+                  if (pen) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]);
+                  pen = true;
+                }
+              }
+              ctx.stroke();
+              ctx.shadowBlur = 0;
+            }
+            for (const s of signals) {
+              const k = Math.min(1, (t - s.at) / 0.3);
               if (k <= 0) continue;
+              const p = globe.project(s.lon, s.lat, W, H);
+              if (!p) continue;
               const size = 32 * k;
-              ctx.drawImage(p.teal ? TEAL : WHITE, p.x - size / 2, p.y - size / 2, size, size);
+              ctx.drawImage(s.teal ? TEAL : WHITE, p[0] - size / 2, p[1] - size / 2, size, size);
             }
           };
-          const clock = { t: 0 };
-          tl.to(clock, { t: 12, duration: 12, ease: 'none', onUpdate: () => draw(clock.t) }, 0);
-          draw(0);
 
-          gsap.set($('plane'), { rotationX: 54 });
-          tl.to($('plane'), { rotationX: 48, duration: 12, ease: 'sine.inOut' }, 0);
+          const apply = (t) => {
+            curtain.set(Math.min(1, Math.max(0, (t - A(1, 3)) / (A(3, 1) - A(1, 3)))));
+            globe.render(view(t));
+            dither.draw();
+            drawOverlay(t);
+          };
+          const clock = { t: 0 };
+          tl.to(clock, { t: 12, duration: 12, ease: 'none', onUpdate: () => apply(clock.t) }, 0);
+          apply(0);
 
           const blurIn = { opacity: 0, y: 24, filter: 'blur(12px)' };
           const sharp = { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.6, ease: 'power3.out' };
@@ -95,6 +120,14 @@
           tl.to($('line1'), sharp, A(3));
           tl.to($('line1'), { opacity: 0, filter: 'blur(8px)', duration: 0.4 }, A(4, 3));
           tl.to($('line2'), sharp, A(5));
+          tl.to($('line2'), { opacity: 0, filter: 'blur(8px)', duration: 0.4 }, A(6, 2));
+
+          // Last beats: the sun clears the limb and its light fills the frame, handing over to the light act 02.
+          gsap.set($('flare'), { opacity: 0, scale: 0.2 });
+          tl.to($('flare'), { opacity: 1, duration: 0.5, ease: 'power2.out' }, A(6, 2));
+          tl.to($('flare'), { scale: 3.2, duration: 0.9, ease: 'power2.in' }, A(6, 2) + 0.1);
+          gsap.set($('light'), { opacity: 0 });
+          tl.to($('light'), { opacity: 1, duration: 0.45, ease: 'power1.in' }, 12 - 0.45);
         }, 12);
       </script>
     </template>

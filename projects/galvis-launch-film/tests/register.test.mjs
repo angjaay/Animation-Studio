@@ -35,3 +35,17 @@ test('a timeline longer than its act is reported', async () => {
   assert.equal(env.errors.length, 1);
   assert.match(env.errors[0], /overruns/);
 });
+
+test('the build is announced to the runtime synchronously and resolves once registered', async () => {
+  const env = fakeEnv();
+  let release;
+  const pending = register('act99-test', () => new Promise((r) => { release = r; }), 6);
+  const hold = window.__hf?.buildReady?.['act99-test'];
+  assert.ok(hold && typeof hold.then === 'function', 'no buildReady hold registered before the first await');
+  assert.equal(window.__timelines['act99-test'], undefined);
+  release();
+  await hold;
+  env.restore();
+  assert.ok(window.__timelines['act99-test']);
+  await pending;
+});

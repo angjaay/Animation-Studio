@@ -29,6 +29,11 @@
     "license": "SIL Open Font License 1.1",
     "attribution": null
   },
+  "geo/globe-sea.json": {
+    "source": "https://naciscdn.org/naturalearth/50m/cultural/ne_50m_admin_0_countries.zip (scripts/build-globe.mjs, seed 1)",
+    "license": "public domain (Natural Earth)",
+    "attribution": "Made with Natural Earth"
+  },
   "geo/idn-adm1-bold.svg": {
     "source": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/IDN/ADM1/geoBoundaries-IDN-ADM1_simplified.geojson",
     "license": "Open Data Commons Open Database License 1.0",
