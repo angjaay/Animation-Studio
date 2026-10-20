@@ -20,6 +20,8 @@ const INTENT = {
   'act10-final': ['Dark', 'Reverse lockup over the dawn dither, as on galvis.io.', 'SEE MORE. UNDERSTAND BETTER. DECIDE SMARTER.'],
 };
 
+// Compositions load the shared/gv.js bundle; rebuild it so edits to shared/ are picked up.
+execFileSync('npm', ['run', 'build'], { stdio: 'inherit' });
 const out = 'styleframes';
 mkdirSync(out, { recursive: true });
 const tmp = mkdtempSync(join(tmpdir(), 'styleframes-'));

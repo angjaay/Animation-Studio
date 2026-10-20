@@ -101,5 +101,6 @@
     "TO DECISION"
   ],
   "final.tagline": "SEE MORE. UNDERSTAND BETTER. DECIDE SMARTER.",
-  "final.url": "galvis.io"
+  "final.url": "galvis.io",
+  "final.credits": "Contains modified Copernicus Sentinel data 2025. Boundaries © OpenStreetMap contributors (geoBoundaries, ODbL). Made with Natural Earth. Earth imagery: NASA Earth Observatory."
 }

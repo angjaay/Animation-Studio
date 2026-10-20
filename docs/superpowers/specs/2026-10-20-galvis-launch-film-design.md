@@ -388,7 +388,7 @@ projects/galvis-launch-film/
 | Bumi fajar (hero landing) | aset internal GALVIS (Figma GISACT Website) | internal |
 | Citra satelit | Sentinel-2 (Copernicus) | gratis, atribusi "Contains modified Copernicus Sentinel data" |
 | DEM | Copernicus GLO-30 | gratis, atribusi |
-| Batas wilayah | geoBoundaries | CC BY 4.0 (bukan GADM: non-komersial) |
+| Batas wilayah | geoBoundaries (turunan OpenStreetMap) | ODbL 1.0, atribusi "© OpenStreetMap contributors" (bukan GADM: non-komersial) |
 | Peta solution | `gisact-website/public/illustration/solution/` | internal |
 | Logo | `movee-fe/public/logo/*.svg` | internal |
 | Font | Plus Jakarta Sans, Mulish, JetBrains Mono | OFL |

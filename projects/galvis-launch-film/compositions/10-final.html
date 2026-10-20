@@ -19,6 +19,11 @@
           position: absolute; left: 0; right: 0; top: 470px; text-align: center;
           font-family: var(--font-display); font-weight: 700; font-size: 48px; letter-spacing: 0.04em; color: var(--white);
         }
+        #act10-final-credits {
+          position: absolute; left: 0; right: 0; bottom: 28px; text-align: center;
+          font-family: var(--font-text); font-weight: 600; font-size: 15px; color: var(--white);
+          text-shadow: 0 1px 6px rgba(3, 39, 80, 0.9);
+        }
         #act10-final-url {
           position: absolute; left: 0; right: 0; top: 560px; text-align: center;
           font-family: var(--font-text); font-weight: 600; font-size: 24px; letter-spacing: 0.12em; color: var(--cool-gray);
@@ -30,12 +35,14 @@
         <div id="act10-final-logo"></div>
         <div id="act10-final-tagline"></div>
         <div id="act10-final-url"></div>
+        <div id="act10-final-credits"></div>
       </div>
       <script>
         (async () => {
           const id = 'act10-final';
           document.getElementById(`${id}-tagline`).textContent = GV.COPY['final.tagline'];
           document.getElementById(`${id}-url`).textContent = GV.COPY['final.url'];
+          document.getElementById(`${id}-credits`).textContent = GV.COPY['final.credits'];
           document.getElementById(`${id}-logo`).innerHTML = GV.WORDMARK_DARK.replace(/id="([^"]+)"/g, `id="${id}-$1"`).replace(/url\(#([^)]+)\)/g, `url(#${id}-$1)`);
 
           // Soft topographic contours: seeded sine stacks, 8% white.

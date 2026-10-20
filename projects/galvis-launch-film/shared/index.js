@@ -14,3 +14,4 @@ export { default as SEA_POINTS } from '../assets/geo/sea-points.json' with { typ
 export { default as SEA_SVG } from '../assets/geo/sea.svg';
 export { default as RIAU_SVG } from '../assets/geo/province-riau.svg';
 export { default as WORDMARK_DARK } from '../assets/logo/galvis-wordmark-dark.svg';
+export { cleanCrop } from './solution-crops.js';

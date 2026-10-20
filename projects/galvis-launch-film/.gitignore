@@ -1,5 +1,4 @@
 node_modules/
 .hyperframes/artifacts/
 renders/
-shared/gv.js
 .hyperframes/video-state.json

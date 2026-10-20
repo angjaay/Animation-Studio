@@ -34,7 +34,6 @@
           document.getElementById(`${id}-line`).textContent = GV.COPY['complexity.line1'];
 
           const image = (src, crop) => () => GV.ditheredCanvas(src, 940, 600, { palette: 'brand', cell: 3, crop });
-          const MAP = [0.04, 0.12, 0.6, 0.6]; // solution maps: skip the baked-in legend and label cards
           const grid = () => {
             const c = document.createElement('canvas');
             c.width = 940; c.height = 600;
@@ -56,12 +55,12 @@
           // Bottom to top. Opacity rises with the stack so the top reads as a muddle.
           const plates = [
             ['Satellite imagery', image('assets/sentinel/riau-plantation.jpg'), 1],
-            ['Terrain model', image('assets/solution/WRWS/desktop/WaterResource-Desktop.jpg', MAP), 0.7],
-            ['Environmental variables', image('assets/solution/ESC/desktop/biodiversity.jpg', MAP), 0.6],
-            ['Infrastructure networks', image('assets/solution/ESRE/desktop/Network-Desktop.jpg', MAP), 0.6],
+            ['Terrain model', image('assets/solution/WRWS/desktop/WaterResource-Desktop.jpg', GV.cleanCrop('assets/solution/WRWS/desktop/WaterResource-Desktop.jpg')), 0.7],
+            ['Environmental variables', image('assets/solution/ESC/desktop/biodiversity.jpg', GV.cleanCrop('assets/solution/ESC/desktop/biodiversity.jpg')), 0.6],
+            ['Infrastructure networks', image('assets/solution/ESRE/desktop/Network-Desktop.jpg', GV.cleanCrop('assets/solution/ESRE/desktop/Network-Desktop.jpg')), 0.6],
             ['Demographic grids', grid, 0.75],
             ['Administrative boundaries', admin, 0.9],
-            ['Analytical outputs', image('assets/solution/DMR/desktop/risk.jpg', MAP), 0.55],
+            ['Analytical outputs', image('assets/solution/DMR/desktop/risk.jpg', GV.cleanCrop('assets/solution/DMR/desktop/risk.jpg')), 0.55],
           ];
           const stack = document.getElementById(`${id}-stack`);
           for (const [i, [label, make, opacity]] of plates.entries()) {

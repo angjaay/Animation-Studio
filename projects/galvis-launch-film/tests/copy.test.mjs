@@ -25,3 +25,12 @@ test('no string has stray whitespace', () => {
   };
   walk(copy);
 });
+
+test('licence notices are on screen in the final act', () => {
+  const credits = copy['final.credits'] ?? '';
+  for (const notice of ['Contains modified Copernicus Sentinel data', 'OpenStreetMap contributors', 'Natural Earth', 'NASA']) {
+    assert.ok(credits.includes(notice), notice);
+  }
+  const html = readFileSync(new URL('../compositions/10-final.html', import.meta.url), 'utf8');
+  assert.ok(html.includes("GV.COPY['final.credits']"));
+});

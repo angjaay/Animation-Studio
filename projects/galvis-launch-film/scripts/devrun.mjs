@@ -5,6 +5,8 @@ import { copyFileSync, mkdtempSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
+// Compositions load the shared/gv.js bundle; rebuild it so edits to shared/ are picked up.
+execFileSync('npm', ['run', 'build'], { stdio: 'inherit' });
 const [name, ...args] = process.argv.slice(2);
 const dir = mkdtempSync(join(tmpdir(), `dev-${name}-`));
 copyFileSync(`dev/${name}/index.html`, join(dir, 'index.html'));
