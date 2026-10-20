@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="gv.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+      #main { position: relative; width: 100%; height: 100%; }
+      .clip { position: absolute; inset: 0; }
+      canvas { position: absolute; left: 0; display: block; }
+    </style>
+  </head>
+  <body>
+    <!-- Run through scripts/compare-dither.mjs, which copies gv.js and dawn.png next to this file. -->
+    <div id="main" data-composition-id="main" data-start="0" data-duration="2" data-width="1920" data-height="1080">
+      <section id="gradients" class="clip" data-start="0" data-duration="1">
+        <canvas id="top" width="1920" height="540" style="top:0"></canvas>
+        <canvas id="bottom" width="1920" height="540" style="top:540px"></canvas>
+      </section>
+      <section id="dawn" class="clip" data-start="1" data-duration="1">
+        <canvas id="dawn-canvas" width="1920" height="1080" style="top:0"></canvas>
+      </section>
+    </div>
+    <script>
+      (() => {
+      // Source at cell resolution, so the cover fit maps one source pixel to one cell.
+      const CELL = 3, CW = 640, CH = 180;
+      function gradient() {
+        const c = document.createElement('canvas');
+        c.width = CW; c.height = CH;
+        const g = c.getContext('2d');
+        const img = g.createImageData(CW, CH);
+        for (let y = 0; y < CH; y++) for (let x = 0; x < CW; x++) {
+          const i = (y * CW + x) * 4;
+          img.data[i] = Math.round((x / (CW - 1)) * 255);
+          img.data[i + 1] = Math.round((y / (CH - 1)) * 255);
+          img.data[i + 2] = 128;
+          img.data[i + 3] = 255;
+        }
+        g.putImageData(img, 0, 0);
+        return c;
+      }
+      const src = gradient();
+      const topLayer = GV.mountDither(document.getElementById('top'), src, { cell: CELL, palette: 'landing' });
+      const bottomLayer = GV.mountDither(document.getElementById('bottom'), src, { cell: CELL, palette: 'brand' });
+      topLayer.draw();
+      bottomLayer.draw();
+
+      const dawnImg = new Image();
+      const dawnLayer = GV.mountDither(document.getElementById('dawn-canvas'), dawnImg, { cell: CELL, palette: 'landing' });
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines['main'] = tl;
+      dawnImg.onload = () => dawnLayer.draw();
+      dawnImg.src = 'dawn.png';
+      })();
+    </script>
+  </body>
+</html>
