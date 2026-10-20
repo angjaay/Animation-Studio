@@ -1,0 +1,16 @@
+{
+  "bpm": 120, "barSeconds": 2, "bars": 60, "fps": 30, "duration": 120,
+  "acts": [
+    {"id": "act01-world",      "file": "01-world.html",      "bars": [1, 6],   "bg": "dark-to-light", "styleframeAt": 9.5},
+    {"id": "act02-complexity", "file": "02-complexity.html", "bars": [7, 12],  "bg": "light",         "styleframeAt": 17.0},
+    {"id": "act03-reveal",     "file": "03-reveal.html",     "bars": [13, 17], "bg": "light",         "styleframeAt": 31.0},
+    {"id": "act04-core",       "file": "04-core.html",       "bars": [18, 26], "bg": "dark",          "styleframeAt": 51.0},
+    {"id": "act05-products",   "file": "05-products.html",   "bars": [27, 31], "bg": "dark",          "styleframeAt": 61.0},
+    {"id": "act06-workspace",  "file": "06-workspace.html",  "bars": [32, 38], "bg": "light",         "styleframeAt": 73.0},
+    {"id": "act07-enrichment", "file": "07-enrichment.html", "bars": [39, 45], "bg": "light",         "styleframeAt": 83.0},
+    {"id": "act08-enterprise", "file": "08-enterprise.html", "bars": [46, 53], "bg": "light",         "styleframeAt": 97.0},
+    {"id": "act09-reunify",    "file": "09-reunify.html",    "bars": [54, 56], "bg": "light-to-dark", "styleframeAt": 111.0},
+    {"id": "act10-final",      "file": "10-final.html",      "bars": [57, 60], "bg": "dark",          "styleframeAt": 117.0}
+  ],
+  "impacts": [{"id": "reveal", "t": 24.0}, {"id": "split", "t": 56.0}]
+}

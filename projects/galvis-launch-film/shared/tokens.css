@@ -1,0 +1,36 @@
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("../assets/fonts/plus-jakarta-sans.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: block;
+}
+@font-face {
+  font-family: "Mulish";
+  src: url("../assets/fonts/mulish.woff2") format("woff2");
+  font-weight: 200 1000;
+  font-display: block;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../assets/fonts/jetbrains-mono.woff2") format("woff2");
+  font-weight: 100 800;
+  font-display: block;
+}
+
+:root {
+  --navy: #032750;
+  --bright-navy: #024ABC;
+  --teal: #1FAFA1;
+  --green: #86C36A;
+  --white: #FFFFFF;
+  --cool-gray: #E4E8EF;
+  --light-gray: #F5F6F8;
+  --text-body: #324966;
+  --text-muted: #667085;
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-text: "Mulish", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+.bg-light { background: var(--light-gray); color: var(--navy); }
+.bg-dark { background: var(--navy); color: var(--white); }

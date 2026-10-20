@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        #act03-reveal-root { position: absolute; inset: 0; display: grid; place-items: center; background: var(--light-gray); }
+        #act03-reveal-title { font-family: var(--font-display); font-weight: 700; font-size: 72px; color: var(--navy); }
+      </style>
+      <div id="act03-reveal-root" data-composition-id="act03-reveal" data-width="1920" data-height="1080">
+        <h1 id="act03-reveal-title">act03-reveal</h1>
+      </div>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        window.__timelines["act03-reveal"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

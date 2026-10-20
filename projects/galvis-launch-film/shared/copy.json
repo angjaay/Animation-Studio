@@ -1,0 +1,105 @@
+{
+  "world.line1": "EVERY DECISION HAS A LOCATION.",
+  "world.line2": "EVERY LOCATION HOLDS INTELLIGENCE.",
+  "complexity.line1": "MORE DATA DOESN’T ALWAYS MEAN MORE CLARITY.",
+  "complexity.line2": "INTELLIGENCE REQUIRES CONNECTION.",
+  "reveal.name": "GALVIS",
+  "reveal.full": "Geospatial Intelligence Virtual Assistant System",
+  "reveal.sub": "The Intelligence Layer for Spatial Decision-Making",
+  "core.label": "CORE TECHNOLOGY",
+  "core.final": "GALVIS CORE TECHNOLOGY",
+  "core.question": "Where are the highest-priority expansion areas with low environmental risk?",
+  "core.mod.ai": "AI Interaction",
+  "core.mod.data": "Geospatial Data Engine",
+  "core.mod.eo": "Earth Observation",
+  "core.mod.analytics": "Spatial Analytics",
+  "core.mod.ml": "Machine Learning",
+  "core.mod.decision": "Decision Intelligence",
+  "products.one": "ONE INTELLIGENCE CORE.",
+  "products.three": "THREE WAYS TO USE IT.",
+  "products.workspace": "GALVIS WORKSPACE",
+  "products.enrichment": "GALVIS DATA ENRICHMENT",
+  "products.enterprise": "GALVIS ENTERPRISE",
+  "workspace.sub": "Geospatial Intelligence at Your Fingertips",
+  "workspace.prompt": "Analyze potential development areas within this region.",
+  "workspace.words": [
+    "ASK",
+    "ANALYZE",
+    "VISUALIZE",
+    "UNDERSTAND"
+  ],
+  "workspace.position": "Self-service Geospatial Intelligence",
+  "enrichment.sub": "Turn Location Into Intelligence",
+  "enrichment.position": "Geospatial Intelligence as Data",
+  "enrichment.attrs": [
+    "Earth Observation",
+    "Environment",
+    "Terrain",
+    "Infrastructure",
+    "Accessibility",
+    "Land Use",
+    "Demographics",
+    "Economic Activity",
+    "Climate",
+    "Risk Indicators"
+  ],
+  "enterprise.sub": "Geospatial Intelligence Built Around Your Organization",
+  "enterprise.position": "Custom Geospatial Intelligence Infrastructure",
+  "enterprise.systems": [
+    "Organization Databases",
+    "Internal Geospatial Data",
+    "Satellite Feeds",
+    "APIs",
+    "Dashboards",
+    "Business Systems",
+    "Analytical Models"
+  ],
+  "enterprise.sectors": [
+    {
+      "name": "Plantation",
+      "chain": [
+        "Satellite Imagery",
+        "Plantation Health",
+        "Replanting Priority"
+      ]
+    },
+    {
+      "name": "Forestry",
+      "chain": [
+        "Forest Monitoring",
+        "Disturbance Detection",
+        "Conservation Intelligence"
+      ]
+    },
+    {
+      "name": "Mining",
+      "chain": [
+        "Operational Area",
+        "Environmental Pressure",
+        "Monitoring & Risk"
+      ]
+    },
+    {
+      "name": "Renewable Energy",
+      "chain": [
+        "Terrain + Climate + Infrastructure",
+        "Suitability",
+        "Candidate Sites"
+      ]
+    }
+  ],
+  "enterprise.flash": [
+    "Industrial & Logistics",
+    "Real Estate / Land Bank",
+    "Infrastructure"
+  ],
+  "reunify.line1": "ONE CORE.",
+  "reunify.line2": "MULTIPLE WAYS TO TURN LOCATION INTO INTELLIGENCE.",
+  "final.chain": [
+    "FROM LOCATION",
+    "TO INTELLIGENCE",
+    "TO DECISION"
+  ],
+  "final.tagline": "SEE MORE. UNDERSTAND BETTER. DECIDE SMARTER.",
+  "final.url": "galvis.io"
+}

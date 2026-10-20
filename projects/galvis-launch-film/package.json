@@ -1,0 +1,22 @@
+{
+  "name": "galvis-launch-film",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild shared/index.js --bundle --format=iife --global-name=GV --outfile=shared/gv.js --log-level=warning",
+    "test": "node --test tests/*.test.mjs",
+    "pretest": "npm run build",
+    "precheck": "npm run build",
+    "dev": "npx --yes hyperframes@0.8.181 preview",
+    "check": "npx --yes hyperframes@0.8.181 check",
+    "render": "npx --yes hyperframes@0.8.181 render",
+    "prerender": "npm run build",
+    "predev": "npm run build"
+  },
+  "devDependencies": {
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/mulish": "^5.3.0",
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
+    "esbuild": "^0.25.10"
+  }
+}
