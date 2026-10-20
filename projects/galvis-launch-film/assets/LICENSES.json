@@ -32,7 +32,7 @@
   "geo/idn-adm1.svg": {
     "source": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/IDN/ADM1/geoBoundaries-IDN-ADM1_simplified.geojson",
     "license": "Open Data Commons Open Database License 1.0",
-    "attribution": "© OpenStreetMap contributors (geoBoundaries)"
+    "attribution": "\u00a9 OpenStreetMap contributors (geoBoundaries)"
   },
   "geo/sea.svg": {
     "source": "https://naciscdn.org/naturalearth/50m/cultural/ne_50m_admin_0_countries.zip",
@@ -51,6 +51,21 @@
   },
   "logo/galvis-wordmark-dark.svg": {
     "source": "N0iire/movee-fe public/logo/galvis-wordmark-dark.svg",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "logo/parts/arrow.svg": {
+    "source": "derived from logo/galvis-main.svg",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "logo/parts/hexagon.svg": {
+    "source": "derived from logo/galvis-main.svg",
+    "license": "internal (GISACT)",
+    "attribution": null
+  },
+  "logo/parts/plates.svg": {
+    "source": "derived from logo/galvis-main.svg",
     "license": "internal (GISACT)",
     "attribution": null
   },

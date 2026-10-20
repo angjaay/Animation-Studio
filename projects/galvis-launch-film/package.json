@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "esbuild shared/index.js --bundle --format=iife --global-name=GV --outfile=shared/gv.js --log-level=warning",
+    "build": "esbuild shared/index.js --bundle --format=iife --global-name=GV --loader:.svg=text --outfile=shared/gv.js --log-level=warning",
     "test": "node --test tests/*.test.mjs",
     "pretest": "npm run build",
     "precheck": "npm run build",
