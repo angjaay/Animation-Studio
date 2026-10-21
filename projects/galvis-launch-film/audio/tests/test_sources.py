@@ -13,6 +13,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import numpy as np
 import soundfile as sf
@@ -94,6 +95,15 @@ class TestManifest(unittest.TestCase):
         for e in IOWA:  # an uncertain Iowa note carries the verdict of the trim it was re-judged on
             if e['earshot']['realness_verdict'] != 'real or pro-produced':
                 self.assertTrue(e['earshot'].get('realness_trim'), e['id'])
+
+    def test_every_mixkit_entry_is_real_or_explicitly_layer_only(self):
+        for e in MIXKIT:
+            ev = e['earshot']
+            self.assertNotEqual(ev['rank_verdict'], 'no match', e['id'])  # a candidate must match its need
+            if ev['realness_verdict'] != 'real or pro-produced':
+                self.assertGreaterEqual(ev['realness'], 0.5, e['id'])
+                self.assertGreater(e['rank'], 1, e['id'])  # never a lead
+                self.assertIn('LAYER ONLY', e['use'], e['id'])
 
     def test_each_need_has_one_primary(self):
         needs = {}
@@ -204,6 +214,79 @@ class TestFetchAndVerify(FixtureCase):
             self.sources['entries'][0]['sha256'] = 'f' * 64
             (self.tmp / 'sources.json').write_text(json.dumps(self.sources), encoding='utf-8')
             self.assertEqual(fetch.main(args), 1)
+
+    def corrupt_flac(self):
+        """same format (48 kHz stereo FLAC, same length), different audio"""
+        flac = self.assets / 'iowa/test-inst/D4.flac'
+        y, rate = sf.read(str(flac), always_2d=True)
+        sf.write(str(flac), np.random.default_rng(3).uniform(-0.2, 0.2, y.shape), rate, subtype='PCM_24', format='FLAC')
+        return flac
+
+    def test_verify_fails_when_the_converted_audio_changed_but_the_format_did_not(self):
+        self.fetch_all()
+        self.corrupt_flac()
+        problems = fetch.verify(self.sources, self.assets)
+        self.assertEqual(len(problems), 1)
+        self.assertIn('iowa-note', problems[0])
+        self.assertIn('audio content differs', problems[0])
+
+    def test_cli_verify_exits_1_for_a_corrupted_flac(self):
+        self.fetch_all()
+        (self.tmp / 'sources.json').write_text(json.dumps(self.sources), encoding='utf-8')
+        args = ['--sources', str(self.tmp / 'sources.json'), '--assets', str(self.assets), '--verify']
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(fetch.main(args), 0)
+            self.corrupt_flac()
+            self.assertEqual(fetch.main(args), 1)
+
+    def test_fetch_repairs_a_corrupted_flac(self):
+        self.fetch_all()
+        good = (self.assets / 'iowa/test-inst/D4.flac').read_bytes()
+        self.corrupt_flac()
+        self.fetch_all()
+        self.assertEqual((self.assets / 'iowa/test-inst/D4.flac').read_bytes(), good)
+        self.assertEqual(fetch.verify(self.sources, self.assets), [])
+
+    def test_a_new_conversion_version_makes_fetch_reconvert(self):
+        self.fetch_all()
+        flac = self.assets / 'iowa/test-inst/D4.flac'
+        with mock.patch.object(fetch, 'CONVERSION_VERSION', fetch.CONVERSION_VERSION + 1):
+            problems = fetch.verify(self.sources, self.assets)
+            self.assertEqual(len(problems), 1)
+            self.assertIn('was made by', problems[0])
+            flac.unlink()  # prove the file really is rebuilt, not just re-stamped
+            self.fetch_all()
+            self.assertTrue(flac.is_file())
+            self.assertEqual(fetch.verify(self.sources, self.assets), [])
+            self.assertIn(f'v{fetch.CONVERSION_VERSION}', json.loads(fetch.stamp_path(self.sources['entries'][1], self.assets).read_text())['conversion'])
+        self.assertEqual(len(fetch.verify(self.sources, self.assets)), 1)  # and back at the old version it is stale again
+
+    def test_changing_the_attack_lead_makes_fetch_reconvert(self):
+        self.fetch_all()
+        before = (self.assets / 'iowa/test-inst/D4.flac').read_bytes()
+        with mock.patch.object(fetch, 'ATTACK_LEAD_MS', 20.0):
+            self.assertEqual(len(fetch.verify(self.sources, self.assets)), 1)
+            self.fetch_all()
+            self.assertEqual(fetch.verify(self.sources, self.assets), [])
+            self.assertNotEqual((self.assets / 'iowa/test-inst/D4.flac').read_bytes(), before)
+
+    def test_missing_stamp_is_a_problem_and_stamp_existing_restores_it_without_touching_the_flac(self):
+        self.fetch_all()
+        flac = self.assets / 'iowa/test-inst/D4.flac'
+        before = flac.read_bytes()
+        fetch.stamp_path(self.sources['entries'][1], self.assets).unlink()
+        self.assertIn('no stamp', fetch.verify(self.sources, self.assets)[0])
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(fetch.stamp_existing(self.sources, self.assets), [])
+        self.assertEqual(flac.read_bytes(), before)
+        self.assertEqual(fetch.verify(self.sources, self.assets), [])
+
+    def test_stamp_existing_refuses_a_file_that_is_not_the_current_conversion(self):
+        self.fetch_all()
+        fetch.stamp_path(self.sources['entries'][1], self.assets).unlink()
+        self.corrupt_flac()
+        self.assertEqual(fetch.stamp_existing(self.sources, self.assets), ['iowa-note'])
+        self.assertFalse(fetch.stamp_path(self.sources['entries'][1], self.assets).exists())
 
     def test_verify_reports_missing_and_stale_derived_files(self):
         self.assertEqual(len(fetch.verify(self.sources, self.assets)), 2)  # nothing fetched yet

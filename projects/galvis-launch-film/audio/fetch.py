@@ -4,6 +4,7 @@
     python audio/fetch.py                 # download what is missing (sequential, 1 s pause), verify sha256, convert Iowa AIFF -> FLAC
     python audio/fetch.py --verify        # no network: every file must be present and match its sha256 (exit 1 otherwise)
     python audio/fetch.py --audit         # --verify, then the real-sound licence audit over audio/assets/manifests (exit 1 on a blocker)
+    python audio/fetch.py --stamp         # maintainers: stamp converted files already on disk (checked against a fresh conversion)
     python audio/fetch.py --pin           # maintainers: fill the empty sha256 of entries (--pin --repin: all of them)
     options: --only ID [ID ...]  --sources FILE  --assets DIR  --pause SECONDS
 
@@ -11,6 +12,7 @@ Layout under audio/assets/:
     mixkit/<id>.wav                         the Mixkit download as is (sha256 is of this file)
     _raw/iowa/<instrument>/<note>.aif       the Iowa AIFF as downloaded (sha256 is of this file)
     iowa/<instrument>/<note>.flac           the note cut from its attack - 5 ms, 48 kHz, 24-bit FLAC, channels kept
+    iowa/<instrument>/<note>.flac.stamp.json  conversion id + AIFF sha256 + sha256 of the decoded audio (verify and fetch check it)
     manifests/recordings.json, audit.json   generated from sources.json for audit.py (one source of truth)
 
 Run it with the audio venv (numpy, scipy, soundfile): it re-executes itself with $AUDIO_PY or audio/.venv/bin/python when the
@@ -24,7 +26,6 @@ import importlib
 import json
 import math
 import os
-import subprocess
 import sys
 import time
 import urllib.request
@@ -117,22 +118,51 @@ def raw_path(e, assets):
     return Path(assets) / '_raw' / Path(e['file']).with_suffix(Path(urlparse(e['url']).path).suffix)
 
 
-def probe(path):
-    p = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'a:0', '-show_entries',
-                        'stream=codec_name,sample_rate,channels', '-of', 'json', str(path)], capture_output=True, text=True)
-    s = (json.loads(p.stdout or '{}').get('streams') or [{}])[0]
-    return s.get('codec_name'), int(s.get('sample_rate') or 0), int(s.get('channels') or 0)
+# Bump when the conversion changes in a way the parameters below do not show (find_onset, resampler, fade shape).
+CONVERSION_VERSION = 1
+
+
+def conversion_id():
+    return f'v{CONVERSION_VERSION} lead={ATTACK_LEAD_MS}ms fade={FADE_IN_MS}ms rate={RATE} flac-pcm24'
+
+
+def stamp_path(e, assets):
+    fin = final_path(e, assets)
+    return fin.with_name(fin.name + '.stamp.json')
+
+
+def pcm_sha256(path):
+    """sha256 of the decoded samples (24-bit, left-justified int32) + rate + channels: the same on any toolchain that decodes FLAC"""
+    import soundfile as sf
+    x, rate = sf.read(str(path), dtype='int32', always_2d=True)
+    h = hashlib.sha256(f'{rate},{x.shape[1]},{x.shape[0]}'.encode())
+    h.update(x.astype('<i4').tobytes())
+    return h.hexdigest()
+
+
+def write_stamp(e, assets):
+    """record what the converted file must be: the conversion, the AIFF it came from and the decoded audio it holds"""
+    stamp = {'conversion': conversion_id(), 'raw_sha256': e['sha256'], 'pcm_sha256': pcm_sha256(final_path(e, assets))}
+    stamp_path(e, assets).write_text(json.dumps(stamp, indent=1) + '\n', encoding='utf-8')
 
 
 def derived_problem(e, assets):
-    """None when the converted Iowa file is there, is FLAC at 48 kHz and has the channel count of the AIFF"""
-    fin = final_path(e, assets)
+    """None when the converted Iowa file matches its stamp: same conversion, same AIFF, same decoded audio"""
+    fin, rel = final_path(e, assets), final_path(e, assets).relative_to(assets)
     if not fin.is_file():
-        return f'{fin.relative_to(assets)} missing (run audio/fetch.py)'
-    codec, rate, ch = probe(fin)
-    _, _, ch_raw = probe(raw_path(e, assets))
-    if (codec, rate) != ('flac', RATE) or ch != ch_raw:
-        return f'{fin.relative_to(assets)} is {codec} {rate} Hz {ch} ch, expected flac {RATE} Hz {ch_raw} ch'
+        return f'{rel} missing (run audio/fetch.py)'
+    sp = stamp_path(e, assets)
+    if not sp.is_file():
+        return f'{rel} has no stamp (run audio/fetch.py)'
+    stamp = json.loads(sp.read_text(encoding='utf-8'))
+    if stamp.get('conversion') != conversion_id():
+        return f"{rel} was made by '{stamp.get('conversion')}', now '{conversion_id()}' (run audio/fetch.py)"
+    if stamp.get('raw_sha256') != e['sha256']:
+        return f'{rel} was cut from a different AIFF than the manifest pins (run audio/fetch.py)'
+    import soundfile as sf
+    info = sf.info(str(fin))
+    if (info.format, info.samplerate) != ('FLAC', RATE) or pcm_sha256(fin) != stamp.get('pcm_sha256'):
+        return f'{rel} audio content differs from its stamp (file changed; run audio/fetch.py)'
     return None
 
 
@@ -215,7 +245,31 @@ def fetch(sources, assets, pause=1.0, only=None):
             say(f"fetched {e['id']} ({len(data) // 1024} KiB)")
         if e['source'] == 'iowa-mis' and derived_problem(e, assets):
             convert_iowa(raw, final_path(e, assets))
+            write_stamp(e, assets)
             say(f"converted {e['id']} -> {e['file']}")
+
+
+def stamp_existing(sources, assets, only=None):
+    """maintainers: stamp the converted files already on disk without replacing them, but only after checking that the current
+    conversion of the pinned AIFF gives exactly the same audio; returns the ids it could not stamp"""
+    import tempfile
+    assets, bad = Path(assets), []
+    for e in selected(sources, only):
+        if e['source'] != 'iowa-mis':
+            continue
+        raw = raw_path(e, assets)
+        if not (raw.is_file() and sha256_file(raw) == e['sha256'] and final_path(e, assets).is_file()):
+            bad.append(e['id'])
+            continue
+        with tempfile.TemporaryDirectory() as t:
+            tmp = Path(t) / 'x.flac'
+            convert_iowa(raw, tmp)
+            same = pcm_sha256(tmp) == pcm_sha256(final_path(e, assets))
+        if same:
+            write_stamp(e, assets)
+        else:
+            bad.append(e['id'])
+    return bad
 
 
 def pin(sources, assets=None, pause=1.0, repin=False, only=None):
@@ -333,6 +387,7 @@ def main(argv=None):
     ap.add_argument('--verify', action='store_true', help='no network: check every file against its sha256')
     ap.add_argument('--audit', action='store_true', help='--verify, then the licence audit')
     ap.add_argument('--pin', action='store_true', help='fill empty sha256 values (maintainers)')
+    ap.add_argument('--stamp', action='store_true', help='maintainers: stamp existing converted files (after checking them)')
     ap.add_argument('--repin', action='store_true', help='with --pin: recompute every sha256')
     ap.add_argument('--only', nargs='+', metavar='ID')
     ap.add_argument('--pause', type=float, default=1.0, help='seconds between requests (default 1)')
@@ -340,6 +395,11 @@ def main(argv=None):
     sources_path, assets = Path(a.sources), Path(a.assets)
     sources = load_sources(sources_path)
     try:
+        if a.stamp:
+            bad = stamp_existing(sources, assets, a.only)
+            for i in bad:
+                say(f'NOT stamped {i}: raw missing/changed or the file differs from a fresh conversion (delete it and run audio/fetch.py)')
+            return 1 if bad else 0
         if a.pin:
             n = pin(sources, assets, a.pause, a.repin, a.only)
             sources_path.write_text(json.dumps(sources, indent=1, ensure_ascii=False) + '\n', encoding='utf-8')

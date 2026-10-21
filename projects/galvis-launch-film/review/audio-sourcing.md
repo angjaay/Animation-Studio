@@ -1,15 +1,15 @@
 # Audio sourcing: recordings, licences, picks (Plan 4, Task 3)
 
-`audio/sources.json` lists 163 recordings (121 University of Iowa MIS, 42 Mixkit), each with `{id, source, url, page, licence, sha256, credit, use}` plus the licence reading (`licence_seen`), the earshot evidence and the pick (`rank`, 1 = primary). Nothing is committed from `audio/assets/` (gitignored, about 685 MB with the raw AIFFs).
+`audio/sources.json` lists 161 recordings (121 University of Iowa MIS, 40 Mixkit), each with `{id, source, url, page, licence, sha256, credit, use}` plus the licence reading (`licence_seen`), the earshot evidence and the pick (`rank`, 1 = primary). Nothing is committed from `audio/assets/` (gitignored, about 685 MB with the raw AIFFs).
 
 ```
 $AUDIO_PY audio/fetch.py            # download missing files (sequential, 1 s pause), sha256 check, Iowa AIFF -> FLAC
-$AUDIO_PY audio/fetch.py --verify   # no network; exit 1 if any file is missing or changed
+$AUDIO_PY audio/fetch.py --verify   # no network; exit 1 if a download or a converted FLAC (stamp: conversion + AIFF sha + decoded-audio sha) is missing or changed
 $AUDIO_PY audio/fetch.py --audit    # verify + real-sound audit.py on a manifest generated from sources.json (exit 0 = no blocker)
 $AUDIO_PY -m unittest audio/tests/test_sources.py
 ```
 
-Result of the audit on this machine: `163 manifest entries, 163 in scope: 163 ok, 0 with warnings, 0 blocked. Licences: iowa-mis 121, mixkit-sfx 42` (exit 0).
+Result of the audit on this machine: `161 manifest entries, 161 in scope: 161 ok, 0 with warnings, 0 blocked. Licences: iowa-mis 121, mixkit-sfx 40` (exit 0).
 
 ## Licences
 
@@ -22,7 +22,7 @@ Consequences: raw Mixkit files are never redistributed and the film is not regis
 
 ## University of Iowa MIS
 
-Files are AIFF. Pitched notes are named by sounding pitch (checked by FFT harmonic-product against the expected frequency for 107 pitched files: 96 within 60 cents, the other 11 exactly one octave low, within 4-11 cents of an octave, all high piano and bell notes where the checker picks a subharmonic). `s` = sharp in file names (`Fs4` = F#4; the site writes `Gb4`). Each file is cut from its attack - 5 ms (onset = first 15 dB jump in 10 ms of the 1 ms envelope; this skips the slowly rising noise floor that precedes every piano strike), a 2 ms fade-in inside that lead, resampled to 48 kHz, 24-bit FLAC, channels kept. Notes are D-major steps (D E F# A B per octave: every D-major tone is at most one semitone from a recorded note).
+Files are AIFF. Pitched notes are named by sounding pitch (checked by FFT harmonic-product against the expected frequency for 107 pitched files: 96 within 60 cents, the other 11 exactly one octave low, within 4-11 cents of an octave, all high piano and bell notes where the checker picks a subharmonic). `s` = sharp in file names (`Fs4` = F#4; the site writes `Gb4`). Each file is cut from its attack - 5 ms (onset = first 15 dB jump in 10 ms of the 1 ms envelope; this skips the slowly rising noise floor that precedes every piano strike), a 2 ms fade-in inside that lead, resampled to 48 kHz, 24-bit FLAC, channels kept. A `<note>.flac.stamp.json` beside each FLAC records the conversion id (version, lead, fade, rate), the sha256 of the AIFF it came from and the sha256 of the decoded audio: `--verify` fails and `fetch.py` reconverts when any of them differs. Notes are D-major steps (D E F# A B per octave: every D-major tone is at most one semitone from a recorded note).
 
 | folder `audio/assets/iowa/` | files | notes (sounding) | source | peak dBFS | length s | realness |
 |---|---|---|---|---|---|---|
@@ -53,7 +53,7 @@ Deviations from the brief (the site does not have it, or has it differently):
 
 Columns: id (the Mixkit item id; file `audio/assets/mixkit/<id>.wav`), title, length, attack / peak time from `analyze.py`, realness p_real and verdict on the whole file, `earshot rank` z and verdict against the need's description (the evidence for the pick). All sources are 44.1 kHz 16/24-bit WAV; many are dual-mono.
 
-### Short whoosh  (`whoosh_short`)
+### Short whoosh (`whoosh_short`)
 
 Query: *a short air whoosh passing by, quick and dry*
 
@@ -69,7 +69,7 @@ Query: *a short air whoosh passing by, quick and dry*
 
 Not kept: 1489 Air woosh (uncertain 0.76 and 2.3 s long: not a short whoosh).
 
-### Long whoosh / swoosh  (`whoosh_long`)
+### Long whoosh / swoosh (`whoosh_long`)
 
 Query: *a long smooth whoosh sweeping past, air and wind*
 
@@ -85,9 +85,9 @@ Query: *a long smooth whoosh sweeping past, air and wind*
 
 Not kept: 1486 Cinematic tunnel reverb woosh (uncertain (0.64) but surplus: the kept list is capped); 167 Long sweeping air swoosh (uncertain (0.51) but surplus: the kept list is capped); 163 Slow sweeping swoosh (realness: uncertain, p 0.35); 1474 Transition windy swoosh (uncertain (0.68) but surplus: the kept list is capped); 2705 Vibrating wind passing by (realness: uncertain, p 0.28).
 
-### Cinematic riser, 2-4 s (24.0 s and 56.0 s)  (`riser_cinematic`)
+### Cinematic riser (`riser_cinematic`)
 
-Query: *a cinematic riser building tension, rising in pitch and loudness*
+Query: *a cinematic riser building tension, rising in pitch and loudness* Used at 24.0 s and 56.0 s, 2-4 s long.
 
 | rank | id | title | s | attack / peak s | p_real | rank z | verdict |
 |---|---|---|---|---|---|---|---|
@@ -98,9 +98,9 @@ Query: *a cinematic riser building tension, rising in pitch and loudness*
 
 Not kept: 2669 Short sci-fi swell (realness: likely code-synthesized (p 0.10)); 794 Tech choir cinematic riser (uncertain (0.58) but surplus: the kept list is capped); 2283 Cinematic mysterious riser brass (uncertain (0.72) but surplus: the kept list is capped); 1170 Cinematic wind swell (realness: likely code-synthesized (p 0.21)); 3133 Short rising thud (earshot match: no match (z +1.6), it sounds like a cinematic hit with a long tail); 3160 Sci fi power up (earshot match: no match (z +1.8), it sounds like a metal scrape).
 
-### Cinematic impact with sub (24.0 s and 56.0 s)  (`impact_cinematic_sub`)
+### Cinematic impact with sub (`impact_cinematic_sub`)
 
-Query: *a deep cinematic impact boom with sub bass and a long decay*
+Query: *a deep cinematic impact boom with sub bass and a long decay* Used at 24.0 s and 56.0 s.
 
 | rank | id | title | s | attack / peak s | p_real | rank z | verdict |
 |---|---|---|---|---|---|---|---|
@@ -112,9 +112,9 @@ Query: *a deep cinematic impact boom with sub bass and a long decay*
 
 Not kept: 2915 Blockbuster suspense movie impact (realness: uncertain, p 0.27).
 
-### Bass drum (not in the Iowa MIS)  (`bass_drum`)
+### Bass drum (`bass_drum`)
 
-Query: *a single deep bass drum hit*
+Query: *a single deep bass drum hit* The Iowa MIS has no bass drum.
 
 | rank | id | title | s | attack / peak s | p_real | rank z | verdict |
 |---|---|---|---|---|---|---|---|
@@ -127,7 +127,7 @@ Query: *a single deep bass drum hit*
 
 Not kept: 549 Deep cinematic subtle drum impact (earshot match: no match (z +1.7), it sounds like a deep cinematic whoosh); 544 Drum hit with eco (uncertain (0.74) but surplus: the kept list is capped); 2299 Short bass hit (realness: likely code-synthesized (p 0.05)).
 
-### Soft thud, plate landing  (`thud_soft_land`)
+### Soft thud for a plate landing (`thud_soft_land`)
 
 Query: *a soft thud of an object landing gently on a surface*
 
@@ -141,7 +141,7 @@ Query: *a soft thud of an object landing gently on a surface*
 
 Not kept: 3158 Thin metal plate drop (real (0.99) but a metal clang, not a soft thud (z +1.1)); 2148 Weak hit impact (realness: likely code-synthesized (p 0.05)); 3141 Small wood plank pile drop (earshot match: no match (z +0.9), it sounds like dominoes falling); 757 Falling hit (earshot match: no match (z +0.0), it sounds like a punchy impact hit); 2498 Body impact falling into the sand (earshot match: no match (z +1.6), it sounds like digging in soil); 2300 Knocking sub bass (realness: likely code-synthesized (p 0.04)).
 
-### UI click  (`ui_click`)
+### UI click (`ui_click`)
 
 Query: *a single crisp computer mouse click*
 
@@ -157,7 +157,7 @@ Query: *a single crisp computer mouse click*
 
 Not kept: 1113 Mouse click close (realness: likely code-synthesized (p 0.09)); 1126 Interface click (realness: uncertain, p 0.46); 2997 Clear mouse clicks (realness: likely code-synthesized (p 0.06)); 1109 Select click (realness: likely code-synthesized (p 0.13)); 2577 Interface device click (realness: likely code-synthesized (p 0.16)); 2582 Quick switch click (realness: uncertain, p 0.37).
 
-### Keyboard typing and single key takes  (`key_typing`)
+### Keyboard typing and single key takes (`key_typing`)
 
 Query: *typing on a computer keyboard (singles: "a single key press on a keyboard")*
 
@@ -172,21 +172,19 @@ Query: *typing on a computer keyboard (singles: "a single key press on a keyboar
 
 **Pick 2536** (typing, p 0.93, strong z +3.5, forced choice 75% for typing against a typewriter 0%, a mouse click 1% and typing on a smartphone 24%, peak 3.8 s, LUFS -34: quiet, +20 dB). 2537 and 2531 are the other multi-take sequences. For one key per character use the single presses 2533 (strong z +4.0 as 'a single key press', 1.2 s, peak 4 ms), 2542 (strong z +3.1) and 2541 (plausible z +2.8): three different keys. The prompt types a character every 0.025 s, so takes overlap: layer these three or slice single presses out of the sequences with `earshot find`.
 
-### Soft tonal notification  (`notify_tonal`)
+### Soft tonal notification (`notify_tonal`)
 
 Query: *a soft tonal notification chime, gentle bell*
 
 | rank | id | title | s | attack / peak s | p_real | rank z | verdict |
 |---|---|---|---|---|---|---|---|
 | 1 | 3109 | Relaxing bell chime | 1.678 | 0.04 / 0.074 | 0.94 real | +2.5 | weak |
-| 2 | 3108 | Crystal chime | 2.0 | 0.101 / 0.232 | 0.71 uncertain | +0.7 | no match |
-| 3 | 2820 | Magic marimba | 3.341 | 0.059 / 0.633 | 0.44 uncertain | +2.5 | plausible |
 
-**Pick 3109** (real 0.94; only 'weak' z +2.4 for 'a soft bell chime', 94% against an alarm / buzzer / ringtone; earshot hears it as a glissando on bar chimes). Alternates 3108 (crystal chime: sparkly, uncertain 0.71) and 2820 (a marimba note: 'a success chime' z +4.6 but uncertain 0.44). This is the weakest need; the notification is a candidate for a vibraphone / crotale note from the Iowa set instead.
+**Pick 3109** (real 0.94; only 'weak' z +2.4 for 'a soft bell chime', 94% against an alarm / buzzer / ringtone; earshot hears it as a glissando on bar chimes). No alternate survived: the other chimes are code-synthesized, uncertain below 0.5 (2820 marimba 0.44, 938, 2344, 933) or no match (3108 crystal chime, 1107). This is the weakest need and has a single candidate: a vibraphone or crotale note from the Iowa set is the better notification.
 
-Not kept: 1107 Page forward single chime (real (0.95) but earshot hears a page turn / reverse swell, not a chime (z -0.3)); 2865 Success software tone (realness: likely code-synthesized (p 0.03)); 938 Uplifting bells notification (realness: uncertain, p 0.34); 933 Bell notification (realness: uncertain, p 0.21); 2344 Magic notification ring (realness: uncertain, p 0.32).
+Not kept: 3108 Crystal chime (earshot match: no match (z +0.7), it sounds like a magic sparkle chime); 1107 Page forward single chime (real (0.95) but earshot hears a page turn / reverse swell, not a chime (z -0.3)); 2865 Success software tone (realness: likely code-synthesized (p 0.03)); 2820 Magic marimba (realness: uncertain, p 0.44); 938 Uplifting bells notification (realness: uncertain, p 0.34); 933 Bell notification (realness: uncertain, p 0.21); 2344 Magic notification ring (realness: uncertain, p 0.32).
 
-### Rising swoosh for the comet  (`comet_swoosh_rise`)
+### Rising swoosh for the comet (`comet_swoosh_rise`)
 
 Query: *a swoosh rising in pitch, a fast object flying past*
 
@@ -200,7 +198,7 @@ Query: *a swoosh rising in pitch, a fast object flying past*
 
 Not kept: 3024 Meteor whoosh (realness: uncertain, p 0.19); 3161 Transition flying swoosh (real (0.84) but its spectrum falls (centroid 6.6 -> 2.5 kHz): not a rising swoosh); 2634 Futuristic transition sweep (uncertain (0.63) but surplus: the kept list is capped); 2635 Futuristic cinematic sweep (realness: likely code-synthesized (p 0.14)); 3114 Fast sci fi transition sweep (real (0.83) but its spectrum falls: not a rising swoosh).
 
-### Shimmer / sparkle for the sting  (`sting_sparkle`)
+### Shimmer / sparkle for the sting (`sting_sparkle`)
 
 Query: *a magical sparkle shimmer, twinkling chime*
 
