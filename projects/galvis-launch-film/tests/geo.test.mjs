@@ -14,3 +14,14 @@ test('Riau province outline is a single 600x600 path', () => {
   assert.match(svg, /viewBox="0 0 600 600"/);
   assert.equal((svg.match(/<path\b/g) || []).length, 1);
 });
+
+test('globe points carry their country, aligned with sea-points.json (same seed and order)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const g = JSON.parse(readFileSync(new URL('../assets/geo/globe-sea.json', import.meta.url), 'utf8'));
+  const projected = JSON.parse(readFileSync(new URL('../assets/geo/sea-points.json', import.meta.url), 'utf8'));
+  const SEA = ['IDN', 'MYS', 'SGP', 'BRN', 'PHL', 'THA', 'VNM', 'LAO', 'KHM', 'MMR', 'TLS'];
+  assert.equal(g.countries.length, g.points.length);
+  assert.equal(g.points.length, projected.length);
+  assert.ok(g.countries.every((c) => SEA.includes(c)));
+  assert.ok(g.countries.filter((c) => c === 'IDN').length > 1000);
+});

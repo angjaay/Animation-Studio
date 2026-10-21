@@ -21,4 +21,4 @@ export { register } from './register.js';
 export { cubicBezier, UI_EASE, since } from './motion/ease.js';
 export { vortexPoint, lerpRect } from './motion/paths.js';
 export { HANDOFF, CAM_END } from './handoff.js';
-export { architectureSvg, BRANCH_COLORS } from './ui/architecture.js';
+export { architectureSvg, BRANCH_COLORS, navyGlowCanvas } from './ui/architecture.js';

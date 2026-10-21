@@ -33,6 +33,10 @@
           font-family: var(--font-text); font-weight: 700; font-size: 26px; color: var(--navy);
         }
         #act07-enrichment-flow svg { width: 22px; height: 22px; }
+        .act07-enrichment-step { padding: 6px 14px; border-radius: 22px; }
+        #act07-enrichment-dark { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; }
+        #act07-enrichment-arch { position: absolute; inset: 0; }
+        #act07-enrichment-arch svg { position: absolute; inset: 0; transform-origin: 0 0; }
         #act07-enrichment-position {
           position: absolute; left: 0; right: 0; top: 860px; text-align: center;
           font-family: var(--font-display); font-weight: 700; font-size: 52px; color: var(--navy);
@@ -52,6 +56,8 @@
         </div>
         <div id="act07-enrichment-tag"></div>
         <div id="act07-enrichment-sub"></div>
+        <canvas id="act07-enrichment-dark" width="1920" height="1080" data-layout-allow-overflow></canvas>
+        <div id="act07-enrichment-arch" data-layout-allow-overflow></div>
       </div>
       <script>
         GV.register('act07-enrichment', async (tl) => {
@@ -109,6 +115,9 @@
             return row;
           });
 
+          // Rows land on the 1/8 grid, accelerating: every beat for six rows, then every eighth note.
+          const ROW_AT = (k) => (k < 6 ? A(41) + k * 0.5 : A(42, 2) + (k - 6) * 0.25);
+
           // The polygon: a mosaic of attribute maps clipped to Riau. Each cell resolves from raw (dithered)
           // to clear on its own schedule; the frame is recomposed from the cells whenever one changes.
           const outline = new Path2D(GV.RIAU_SVG.match(/ d="([^"]+)"/)[1]);
@@ -119,7 +128,7 @@
             canvas.width = Math.ceil(cw * 1.2); canvas.height = Math.ceil(ch * 1.2);
             const layer = GV.mountDither(canvas, images[k % images.length], { palette: 'brand', cell: 3, resolve: 0, crop: CROP });
             layer.draw();
-            const at = k < 8 ? A(41) + k * 0.4 : A(42, 3) + (k - 8) * 0.1;
+            const at = ROW_AT(Math.min(k, 9));
             return { canvas, layer, at, resolve: 0 };
           });
           const compose = (fill) => {
@@ -155,25 +164,33 @@
           tl.to($('node'), { opacity: 1, duration: 0.2 }, A(40) + 1.0);
           tl.to($('lead'), { opacity: 1, duration: 0.4 }, A(41));
 
-          // Bar 39: title. Bars 41-42: one attribute row every 0.4 s while the mosaic resolves.
+          // Bar 39: title after the architecture glimpse. Bars 41-42: each attribute row lands on its grid
+          // step with a teal flash while its map cell resolves.
           gsap.set([$('tag'), $('sub')], { opacity: 0, y: 16 });
-          tl.to([$('tag'), $('sub')], { opacity: 1, y: 0, duration: 0.5, stagger: 0.15 }, A(39));
+          tl.to([$('tag'), $('sub')], { opacity: 1, y: 0, duration: 0.5, stagger: 0.12, ease: 'expo.out' }, A(39, 2));
           gsap.set(card, { opacity: 0, x: 40 });
-          tl.to(card, { opacity: 1, x: 0, duration: 0.5, ease: 'power3.out' }, A(41) - 0.3);
-          gsap.set(rows, { opacity: 0, x: 24 });
-          rows.forEach((row, i) => tl.to(row, { opacity: 1, x: 0, duration: 0.3 }, A(41) + i * 0.4));
+          tl.to(card, { opacity: 1, x: 0, duration: 0.5, ease: 'power3.out' }, A(41) - 0.4);
+          gsap.set(rows, { opacity: 0, x: 40 });
+          rows.forEach((row, i) => {
+            tl.to(row, { opacity: 1, x: 0, duration: 0.35, ease: 'expo.out' }, ROW_AT(i));
+            tl.set(row, { backgroundColor: 'rgba(31,175,161,0.28)' }, ROW_AT(i));
+            tl.to(row, { backgroundColor: 'rgba(31,175,161,0)', duration: 0.5, ease: 'power2.out' }, ROW_AT(i) + 1 / 30);
+          });
 
           // Bars 43-44: the camera pulls back — one place becomes thousands across the region.
           const region = $('region').getContext('2d');
           const rnd = GV.seeded(7);
-          const pts = GV.SEA_POINTS.map(([x, y]) => ({ x, y, at: A(43) + 0.3 + rnd() * 2.6 }));
+          // Thousands of locations in Indonesia (the spec's pull-back), lighting up together in one wave.
+          const COUNTRY = GV3D.GLOBE_SEA.countries;
+          const pts = GV.SEA_POINTS.filter((_, i) => COUNTRY[i] === 'IDN').map(([x, y]) => ({ x, y, at: A(43) + 0.3 + rnd() * 0.5 }));
           const seaPaths = [...GV.SEA_SVG.matchAll(/ d="([^"]+)"/g)].map(([, d]) => new Path2D(d));
           const drawRegion = (t) => {
             region.clearRect(0, 0, 1920, 1080);
             if (t < A(43)) return; // the wide shot is still hidden
             region.save();
-            const RS = 0.72;
-            region.translate(960 - (1920 * RS) / 2, 6);
+            // A slow camera drifts in on the region for the rest of the act (vector map, redrawn).
+            const RS = 0.72 * (1 + 0.08 * GV.since(t, A(43), A(45, 3) - A(43), (k) => k));
+            region.translate(960 - (1920 * RS) / 2, 6 - 40 * (RS / 0.72 - 1));
             region.scale(RS, RS);
             region.strokeStyle = 'rgba(3,39,80,0.35)';
             region.lineWidth = 1.4 / RS;
@@ -208,18 +225,56 @@
             drawRegion(t);
           };
           const clock = { t: 0 };
-          tl.to(clock, { t: 14, duration: 14, ease: 'none', onUpdate: () => apply(clock.t) }, 0);
+          tl.to(clock, { t: 14, duration: 14, ease: 'none', onUpdate: () => { apply(clock.t); frame(clock.t); } }, 0);
           apply(0);
 
           gsap.set($('wide'), { opacity: 0 });
           tl.to($('close'), { opacity: 0, duration: 0.6 }, A(43));
           tl.to([$('tag'), $('sub')], { opacity: 0, duration: 0.4 }, A(43));
           tl.to($('wide'), { opacity: 1, duration: 0.6 }, A(43));
+          // The chain, one step per beat from bar 44 (chevrons lead each step in).
           gsap.set(flowParts, { opacity: 0, y: 12 });
-          flowParts.forEach((p, i) => tl.to(p, { opacity: 1, y: 0, duration: 0.3 }, A(43, 2) + i * 0.3));
+          flowParts.forEach((p, i) => {
+            const step = Math.floor((i + 1) / 2);
+            const at = A(44) + step * 0.5 - (i % 2 ? 0.12 : 0);
+            tl.to(p, { opacity: 1, y: 0, duration: 0.35, ease: 'expo.out' }, at);
+            if (i % 2 === 0) {
+              tl.set(p, { backgroundColor: 'rgba(31,175,161,0.32)' }, at);
+              tl.to(p, { backgroundColor: 'rgba(31,175,161,0)', duration: 0.5, ease: 'power2.out' }, at + 1 / 30);
+            }
+          });
           gsap.set($('position'), { opacity: 0, y: 16 });
-          tl.to(flow, { opacity: 0, duration: 0.3 }, A(45) - 0.2);
-          tl.to($('position'), { opacity: 1, y: 0, duration: 0.5 }, A(45));
+          tl.to(flow, { opacity: 0, duration: 0.2 }, A(45) - 0.2);
+          tl.to($('position'), { opacity: 1, y: 0, duration: 0.5, ease: 'expo.out' }, A(45));
+          tl.set([$('position'), $('wide')], { opacity: 0 }, A(45, 3)); // under the returning navy
+
+          // Opening: act 06's last frame (architecture, middle branch lit), the camera pushes into that
+          // branch's end while the navy dissolves to light. Closing: on 89.5 the navy is back with the
+          // right branch lit, the frame act 08 opens from.
+          const CAM = GV.CAM_END;
+          const curtainCtx = $('dark').getContext('2d');
+          const curtain = GV.mountCurtain($('dark'), curtainCtx.createPattern(GV.navyGlowCanvas(CAM), 'no-repeat'), 6);
+          const middle = GV.architectureSvg({ lit: 'enrichment', scale: CAM });
+          const right = GV.architectureSvg({ lit: 'enterprise', scale: CAM });
+          const END = [960, 540 + (820 - 540) * CAM];
+          const BACK = A(45, 3);
+          let showing = '';
+          const frame = (t) => {
+            const which = t < 1 ? middle : t >= BACK ? right : '';
+            if (which !== showing) { $('arch').innerHTML = which; showing = which; }
+            const push = GV.since(t, 0, 0.8, (k) => k * k);
+            const svgEl = $('arch').firstElementChild;
+            if (svgEl) {
+              const k = t < 1 ? 1 + 1.4 * push : 1;
+              svgEl.style.transform = `matrix(${k}, 0, 0, ${k}, ${(END[0] * (1 - k)).toFixed(1)}, ${(END[1] * (1 - k)).toFixed(1)})`;
+            }
+            $('arch').style.opacity = String(t < 1 ? 1 - GV.since(t, 0.45, 0.35) : t >= BACK ? 1 : 0);
+            const navy = t < BACK ? 1 - GV.since(t, 0.25, 0.75, (k) => k) : 1;
+            curtain.set(1 - navy);
+            $('dark').style.visibility = navy > 0 ? 'visible' : 'hidden';
+            $('arch').style.visibility = (t < 1 || t >= BACK) ? 'visible' : 'hidden';
+          };
+          frame(0);
         }, 14);
       </script>
     </template>

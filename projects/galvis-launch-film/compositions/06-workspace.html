@@ -142,17 +142,8 @@
           // disc opens into the window while the navy dissolves to Cool Gray in Bayer order.
           // Closing (bar 38): the window shrinks back into that disc, the navy returns and the architecture
           // appears with the middle branch lit (act 07 opens from there).
-          const dark = document.createElement('canvas');
-          dark.width = 1920; dark.height = 1080;
-          const dg = dark.getContext('2d');
-          dg.fillStyle = '#032750';
-          dg.fillRect(0, 0, 1920, 1080);
           const S = GV.CAM_END;
-          const glow = dg.createRadialGradient(960, 540 + (360 - 540) * S, 0, 960, 540 + (360 - 540) * S, 900 * S);
-          glow.addColorStop(0, 'rgba(2,74,188,0.5)');
-          glow.addColorStop(1, 'rgba(3,39,80,0)');
-          dg.save(); dg.translate(960, 540 + (360 - 540) * S); dg.scale(1, 520 / 900); dg.translate(-960, -(540 + (360 - 540) * S));
-          dg.fillStyle = glow; dg.fillRect(0, 0, 1920, 1080 * 3); dg.restore();
+          const dark = GV.navyGlowCanvas(S);
           const curtainCtx = $('dark').getContext('2d');
           const curtain = GV.mountCurtain($('dark'), curtainCtx.createPattern(dark, 'no-repeat'), 6);
           $('arch').innerHTML = GV.architectureSvg({ lit: 'enrichment', scale: S });

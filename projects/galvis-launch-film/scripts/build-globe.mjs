@@ -35,13 +35,14 @@ const coast = sea.flatMap((f) => (f.geometry.type === 'Polygon' ? [f.geometry.co
 
 // Same draw order and seed as build-geo.mjs landPoints(), kept unprojected.
 const rnd = mulberry32(1);
-const points = [];
+const points = [], countries = [];
 while (points.length < 2500) {
   const p = [92 + rnd() * 49, -11 + rnd() * 39];
-  if (sea.some((f) => geoContains(f, p))) points.push(p.map(r2));
+  const home = sea.find((f) => geoContains(f, p));
+  if (home) { points.push(p.map(r2)); countries.push(home.properties.ADM0_A3); }
 }
 
-writeFileSync('assets/geo/globe-sea.json', JSON.stringify({ coast, points }));
+writeFileSync('assets/geo/globe-sea.json', JSON.stringify({ coast, points, countries }));
 const ledger = JSON.parse(readFileSync('assets/LICENSES.json', 'utf8'));
 ledger['geo/globe-sea.json'] = { source: `${NE_URL} (scripts/build-globe.mjs, seed 1)`, license: 'public domain (Natural Earth)', attribution: 'Made with Natural Earth' };
 writeFileSync('assets/LICENSES.json', JSON.stringify(Object.fromEntries(Object.entries(ledger).sort()), null, 2) + '\n');

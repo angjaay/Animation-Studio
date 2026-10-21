@@ -51,6 +51,7 @@ var GV = (() => {
     logoParts: () => logoParts,
     mountCurtain: () => mountCurtain,
     mountDither: () => mountDither,
+    navyGlowCanvas: () => navyGlowCanvas,
     register: () => register,
     renderLabel: () => renderLabel,
     renderLegend: () => renderLegend,
@@ -361,6 +362,23 @@ var GV = (() => {
       { t: 73, act: "act06-workspace", what: "step 4 done", box: [1360, 740, 420, 60] },
       { t: 74.5, act: "act06-workspace", what: "step 5 done", box: [1360, 790, 420, 60] },
       { t: 75.5, act: "act06-workspace", what: "window collapses into the branch", box: [0, 0, 1920, 1080] },
+      { t: 77, act: "act07-enrichment", what: "title", box: [96, 96, 1e3, 110] },
+      { t: 80, act: "act07-enrichment", what: "profile row 1", box: [1060, 250, 680, 60] },
+      { t: 80.5, act: "act07-enrichment", what: "profile row 2", box: [1060, 316, 680, 60] },
+      { t: 81, act: "act07-enrichment", what: "profile row 3", box: [1060, 382, 680, 60] },
+      { t: 81.5, act: "act07-enrichment", what: "profile row 4", box: [1060, 448, 680, 60] },
+      { t: 82, act: "act07-enrichment", what: "profile row 5", box: [1060, 514, 680, 60] },
+      { t: 82.5, act: "act07-enrichment", what: "profile row 6", box: [1060, 580, 680, 60] },
+      { t: 83, act: "act07-enrichment", what: "profile row 7", box: [1060, 646, 680, 60] },
+      { t: 83.25, act: "act07-enrichment", what: "profile row 8", box: [1060, 712, 680, 60] },
+      { t: 83.5, act: "act07-enrichment", what: "profile row 9", box: [1060, 778, 680, 60] },
+      { t: 83.75, act: "act07-enrichment", what: "profile row 10", box: [1060, 844, 680, 60] },
+      { t: 86, act: "act07-enrichment", what: "flow step 1", box: [250, 915, 200, 60] },
+      { t: 86.5, act: "act07-enrichment", what: "flow step 2", box: [480, 910, 330, 70] },
+      { t: 87, act: "act07-enrichment", what: "flow step 3", box: [900, 910, 330, 70] },
+      { t: 87.5, act: "act07-enrichment", what: "flow step 4", box: [1280, 910, 330, 70] },
+      { t: 88, act: "act07-enrichment", what: "positioning line", box: [300, 860, 1320, 70] },
+      { t: 89.5, act: "act07-enrichment", what: "back to the architecture", box: [0, 0, 1920, 1080] },
       { t: 112, act: "act10-final", what: "sting", box: [0, 0, 1920, 1080] }
     ]
   };
@@ -853,6 +871,26 @@ var GV = (() => {
       return `<circle cx="${x}" cy="${y}" r="9" fill="${BRANCH_COLORS[KEYS[i]]}" stroke="#FFFFFF" stroke-width="2" opacity="${o}"/>`;
     }).join("");
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080"><g transform="${m}"><path d="${geo.trunk}" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.7"/>${branches}${ends}</g></svg>`;
+  }
+  function navyGlowCanvas(scale = 1) {
+    const c = document.createElement("canvas");
+    c.width = 1920;
+    c.height = 1080;
+    const g = c.getContext("2d");
+    g.fillStyle = "#032750";
+    g.fillRect(0, 0, 1920, 1080);
+    const cy2 = 540 + (360 - 540) * scale;
+    const glow = g.createRadialGradient(960, cy2, 0, 960, cy2, 900 * scale);
+    glow.addColorStop(0, "rgba(2,74,188,0.5)");
+    glow.addColorStop(1, "rgba(3,39,80,0)");
+    g.save();
+    g.translate(960, cy2);
+    g.scale(1, 520 / 900);
+    g.translate(-960, -cy2);
+    g.fillStyle = glow;
+    g.fillRect(0, -1080, 1920, 1080 * 3);
+    g.restore();
+    return c;
   }
   return __toCommonJS(index_exports);
 })();
