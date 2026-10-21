@@ -16,7 +16,7 @@ export { default as RIAU_SVG } from '../assets/geo/province-riau.svg';
 export { default as WORDMARK_DARK } from '../assets/logo/galvis-wordmark-dark.svg';
 export { cleanCrop } from './solution-crops.js';
 export { at } from './beats.js';
-export { mountCurtain, bayerVisible } from './curtain.js';
+export { mountCurtain, bayerVisible, radialProgress } from './curtain.js';
 export { register } from './register.js';
 export { cubicBezier, UI_EASE, since } from './motion/ease.js';
 export { vortexPoint, lerpRect } from './motion/paths.js';

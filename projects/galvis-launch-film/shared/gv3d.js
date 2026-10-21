@@ -3994,7 +3994,9 @@ void main() {
     float sea = smoothstep(0.03, 0.12, dayRaw.b - max(dayRaw.r, dayRaw.g));
     float land = 1.0 - sea;
     // Cities glow teal, by day too.
-    c += vec3(0.12, 0.69, 0.63) * smoothstep(0.10, 0.50, lights) * cities * inSea * 2.6;
+    // On the beat (cities > 1) the threshold drops: the whole city network flashes, then settles.
+    float cityLo = max(0.02, 0.10 - 0.04 * max(cities - 1.0, 0.0));
+    c += vec3(0.12, 0.69, 0.63) * smoothstep(cityLo, 0.50, lights) * cities * inSea * 2.6;
     // Vegetation and water take the brand's green and bright navy.
     c = mix(c, c * 0.55 + vec3(0.53, 0.76, 0.42) * 0.75, clamp(green * vegetation, 0.0, 1.2) * inSea * 0.75);
     c = mix(c, vec3(0.04, 0.33, 0.86), clamp(sea * water, 0.0, 1.2) * inSea * 0.45);
@@ -4004,8 +4006,8 @@ void main() {
     float line = 1.0 - smoothstep(0.0, 0.09, 0.5 - iso);
     float etched = smoothstep(contourReach, contourReach - 1.5, ll.x);
     c += vec3(1.0) * line * land * inSea * etched * contours * 0.35;
-    // Dawn: a narrow warm band on the day side of the terminator.
-    c += vec3(1.0, 0.55, 0.25) * exp(-(d * d) / 0.0035) * smoothstep(-0.05, 0.02, d) * 0.30;
+    // Dawn: a soft warm wash on the day side of the terminator (wide and faint, so it never reads as a ring).
+    c += vec3(1.0, 0.6, 0.3) * exp(-(d * d) / 0.012) * smoothstep(-0.08, 0.04, d) * 0.16;
     // Thin atmosphere on the lit limb.
     float rim = pow(1.0 - clamp(dot(normalize(vNormalV), vec3(0.0, 0.0, 1.0)), 0.0, 1.0), 2.4);
     c += vec3(0.35, 0.62, 1.0) * rim * (0.15 + 0.85 * lit) * 0.9;

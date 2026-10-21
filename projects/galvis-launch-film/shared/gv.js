@@ -52,6 +52,7 @@ var GV = (() => {
     mountCurtain: () => mountCurtain,
     mountDither: () => mountDither,
     navyGlowCanvas: () => navyGlowCanvas,
+    radialProgress: () => radialProgress,
     register: () => register,
     renderLabel: () => renderLabel,
     renderLegend: () => renderLegend,
@@ -362,7 +363,7 @@ var GV = (() => {
       { t: 73, act: "act06-workspace", what: "step 4 done", box: [1360, 740, 420, 60] },
       { t: 74.5, act: "act06-workspace", what: "step 5 done", box: [1360, 790, 420, 60] },
       { t: 75.5, act: "act06-workspace", what: "window collapses into the branch", box: [0, 0, 1920, 1080] },
-      { t: 77, act: "act07-enrichment", what: "title", box: [96, 96, 1e3, 110] },
+      { t: 77, act: "act07-enrichment", what: "title", box: [96, 150, 600, 56] },
       { t: 80, act: "act07-enrichment", what: "profile row 1", box: [1060, 250, 680, 60] },
       { t: 80.5, act: "act07-enrichment", what: "profile row 2", box: [1060, 316, 680, 60] },
       { t: 81, act: "act07-enrichment", what: "profile row 3", box: [1060, 382, 680, 60] },
@@ -791,8 +792,14 @@ var GV = (() => {
   function bayerVisible(cx2, cy2, progress) {
     return (BAYER4[cy2 & 3][cx2 & 3] + 0.5) / 16 < progress;
   }
-  function mountCurtain(canvas, color, cell = 12) {
+  function radialProgress(progress, d, band) {
+    if (progress >= 1) return 1;
+    if (progress <= 0) return 0;
+    return Math.min(1, Math.max(0, (progress * (1 + band) - d) / band));
+  }
+  function mountCurtain(canvas, color, cell = 12, { origin, band = 0.2 } = {}) {
     const ctx = canvas.getContext("2d");
+    const far = origin ? Math.max(...[[0, 0], [canvas.width, 0], [0, canvas.height], [canvas.width, canvas.height]].map(([x, y]) => Math.hypot(x - origin[0], y - origin[1]))) : 1;
     return {
       set(progress) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -800,7 +807,8 @@ var GV = (() => {
         ctx.fillStyle = color;
         const cw = Math.ceil(canvas.width / cell), ch = Math.ceil(canvas.height / cell);
         for (let cy2 = 0; cy2 < ch; cy2++) for (let cx2 = 0; cx2 < cw; cx2++) {
-          if (!bayerVisible(cx2, cy2, progress)) ctx.fillRect(cx2 * cell, cy2 * cell, cell, cell);
+          const p = origin ? radialProgress(progress, Math.hypot((cx2 + 0.5) * cell - origin[0], (cy2 + 0.5) * cell - origin[1]) / far, band) : progress;
+          if (!bayerVisible(cx2, cy2, p)) ctx.fillRect(cx2 * cell, cy2 * cell, cell, cell);
         }
       }
     };

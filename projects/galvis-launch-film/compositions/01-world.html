@@ -41,7 +41,8 @@
           const [day, night] = await Promise.all([GV.loadImage('assets/earth/blue-marble.jpg'), GV.loadImage('assets/earth/black-marble.jpg')]);
           const globe = GV3D.mountGlobe({ canvas: gl, day, night });
           const dither = GV.mountDither($('globe'), gl, { palette: 'landing', cell: CELL });
-          const curtain = GV.mountCurtain($('curtain'), '#000000');
+          // The black opens radially from the top of the limb, already a third open on frame 0 (the hook).
+          const curtain = GV.mountCurtain($('curtain'), '#000000', 12, { origin: [960, 470], band: 0.25 });
 
           // Camera and light as functions of time: Southeast Asia turns into the dawn while the camera closes in.
           const ease = (k) => k * k * (3 - 2 * k);
@@ -74,7 +75,7 @@
           const coastFrom = A(3), coastTo = A(5), WEST = 92, EAST = 141.5;
 
           // Layers light up on the beat with a short overshoot, then settle (the accent lands on the frame).
-          const pop = (t, t0) => (t < t0 ? 0 : 1 + 1.2 * Math.exp(-(t - t0) * 6));
+          const pop = (t, t0) => (t < t0 ? 0 : 1 + 2.0 * Math.exp(-(t - t0) * 6));
           const layersAt = (t) => ({
             cities: pop(t, A(4)), vegetation: pop(t, A(4, 2)), water: pop(t, A(5)),
             contours: t < coastFrom ? 0 : 1,
@@ -135,8 +136,7 @@
           };
 
           const apply = (t) => {
-            // The curtain starts opening almost at once (a hook in the first half second), slowly at first.
-            curtain.set(Math.pow(Math.min(1, Math.max(0, (t - 0.25) / (A(3, 1) - 0.25))), 1.6));
+            curtain.set(0.3 + 0.7 * Math.pow(Math.min(1, t / A(3, 1)), 1.4));
             globe.render({ ...view(t), layers: layersAt(t) });
             dither.draw();
             drawOverlay(t);
