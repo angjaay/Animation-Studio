@@ -10,7 +10,7 @@ Form (seconds; the acts come from the cues):
   12-24   act 02  piano pulse on a pedal A; one layer joins at each plate that lands; build, stop-down 23.75
   24-34   act 03  impact (gong, bass drum, double bass); the core note D and its piano motif D-A-D
   34-52   act 04  core engine: pizz cello ostinato, one rising vibraphone note per module activation
-  52-62   act 05  build to the second stop-down; impact 56.0; sonic logo bells A4 / D5 / F#5
+  52-62   act 05  build to the second stop-down; impact 56.0; sonic logo A4 / D5 / F#5 (vibraphone, octave shimmer)
   62-76   act 06  Workspace: light piano and vibraphone, the logo's first note A4 as motif
   76-90   act 07  Data Enrichment: pizz, crotales sparkle per row, motif D5
   90-106  act 08  Enterprise: full strings, bass drum per sector, motif F#5
@@ -104,6 +104,17 @@ def bass_root(chord):
 # chord tones that sit inside the violin's and the vibraphone's ranges
 VIOLIN_TOP = {'D': 'A5', 'Bm': 'F#5', 'G': 'D5', 'A': 'E5'}
 VIB_TOP = {'D': 'F#5', 'Bm': 'D5', 'G': 'B4', 'A': 'C#5'}
+
+
+# The sonic logo is one timbre, the sustained vibraphone, each note doubled an octave up for shimmer by what is
+# sourced there: bells for A5 (no A4 bell exists in the Iowa set), crotales for D6 and F#6.
+LOGO_SHIMMER = {'A4': ('bells', 'A5'), 'D5': ('crotales', 'D6'), 'F#5': ('crotales', 'F#6')}
+
+
+def logo_note(s, t, pitch, vel, dur):
+    s.add(t, 'vibraphone', pitch, vel, dur)
+    inst, up = LOGO_SHIMMER[note_name(midi(pitch))]
+    s.add(t, inst, up, vel * 0.7, dur)
 
 
 def chord_at(t, changes):
@@ -283,7 +294,7 @@ def act05(s, cues, stop, hit):
     s.bows('cello_arco_soft', hit + 1.0, 62.0, lambda t: ['A2', 'D3'], 0.36, offset=1.0)
     for e in cues['events']:
         if e['id'].startswith('act05:product:'):
-            s.add(e['f'] / cues['fps'], 'bells', e['pitch'], 0.6, 6.0)
+            logo_note(s, e['f'] / cues['fps'], e['pitch'], 0.52, 6.0)
     s.chord(60.0, 'piano', ['A3', 'D4', 'F#4'], 0.38, 2.0)
     s.add(61.0, 'piano', 'A4', 0.36, 1.0)
 
@@ -347,7 +358,7 @@ def act08(s, cues):
 def act09(s, cues):
     """The three product notes climb back over an A pedal and become the D-F#-A chord at 108."""
     for t, p in paired(cues, 'act09:comet:', ['A4', 'D5', 'F#5']):
-        s.add(t, 'bells', p, 0.5, 4.0)
+        logo_note(s, t, p, 0.5, 4.0)
         s.add(t, 'piano', p, 0.34, 1.5)
     s.add(106.0, 'bass_arco_soft', 'A1', 0.42, 2.2)
     s.add(106.0, 'cello_arco_soft', 'E3', 0.36, 2.2)
@@ -372,9 +383,9 @@ def act10(s, cues):
     s.add(t, 'bass_arco', 'D2', 0.46, 3.5)
     s.add(t, 'cello_arco', 'D3', 0.42, 3.5)
     s.chord(t, 'violin_arco', ['A4', 'F#5'], 0.36, 3.5)
-    s.chord(t, 'bells', ['A4', 'D5', 'F#5'], 0.44, 6.0)
+    for p in ('A4', 'D5', 'F#5'):
+        logo_note(s, t, p, 0.4, 6.0)
     s.chord(t, 'piano', ['D2', 'D3', 'A3', 'F#4', 'A4'], 0.4, 6.0)
-    s.add(t, 'crotales', 'D6', 0.34, 4.0)
     for when, p in paired(cues, 'act10:phrase:', ['A4', 'D5', 'F#5']):
         s.add(when, 'piano', p, 0.34, 2.0)
     s.add(114.0, 'bass_arco_soft', 'D2', 0.4, 2.5)

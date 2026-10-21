@@ -77,7 +77,7 @@ VOICES = {
     'violin_arco_swell': Voice(**VIOLIN, release=0.03, swell=True),
     'vibraphone':        Voice(('vibraphone-sustain', 'vibraphone'), 'D4', 'A5', pan=(-0.6, 0.6), release=0.5),
     'crotales':          Voice(('crotales',), 'D6', 'A6', pan=(-0.7, 0.7), release=1.0, trim=-4.0),
-    'bells':             Voice(('bells',), 'A4', 'F#5', pan=(-0.4, 0.4), release=1.2, trim=-1.0,
+    'bells':             Voice(('bells',), 'D5', 'A5', pan=(-0.4, 0.4), release=1.2, trim=-1.0,
                                files=('brass-*.flac', '*.flac')),
     'gong':              Voice(('gongs', 'gong'), pan=0.0, release=1.5,
                                files=('tamtam40.flac', 'tamtam*[0-9].flac', 'tamtam*.flac', '*.flac')),

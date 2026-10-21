@@ -103,9 +103,21 @@ class TestCompose(unittest.TestCase):
         off = [n for n in self.notes if abs(n.t * 8 - round(n.t * 8)) > 1e-9]
         self.assertEqual(off, [])
 
-    def test_sonic_logo_is_three_bells_at_their_cues(self):
-        bells = [(n.t, n.pitch) for n in self.notes if n.inst == 'bells' and 57.0 <= n.t < 61.0]
-        self.assertEqual(bells, [(58.0, 'A4'), (58.5, 'D5'), (59.0, 'F#5')])
+    def test_sonic_logo_is_vibraphone_with_an_octave_shimmer_at_its_cues(self):
+        logo = sorted((n.t, n.inst, n.pitch) for n in self.notes if 57.0 <= n.t < 61.0
+                      and n.inst in ('vibraphone', 'bells', 'crotales'))
+        self.assertEqual(logo, [(58.0, 'bells', 'A5'), (58.0, 'vibraphone', 'A4'),
+                                (58.5, 'crotales', 'D6'), (58.5, 'vibraphone', 'D5'),
+                                (59.0, 'crotales', 'F#6'), (59.0, 'vibraphone', 'F#5')])
+        cue = {e['f'] / CUES['fps']: e['pitch'] for e in CUES['events'] if e['kind'] == 'bell'}
+        self.assertEqual(cue, {58.0: 'A4', 58.5: 'D5', 59.0: 'F#5'})
+
+    def test_the_logo_triad_returns_on_vibraphone_at_the_comets_and_the_sting(self):
+        for t in [e['f'] / CUES['fps'] for e in CUES['events'] if e['id'].startswith('act09:comet:')] + [112.5]:
+            self.assertTrue({n.pitch for n in self.at(t, 'vibraphone')}, t)
+        self.assertEqual({n.pitch for n in self.at(112.5, 'vibraphone')}, {'A4', 'D5', 'F#5'})
+        self.assertEqual({n.pitch for n in self.at(112.5, 'crotales')}, {'D6', 'F#6'})
+        self.assertNotIn('A4', {n.pitch for n in self.notes if n.inst == 'bells'})
 
     def test_full_chord_at_108(self):
         classes = {pitch_class(n.pitch) for n in self.at(108.0) if n.pitch}
@@ -128,7 +140,7 @@ class TestCompose(unittest.TestCase):
 
     def test_sting_at_112_5(self):
         insts = {n.inst for n in self.at(112.5)}
-        self.assertTrue({'gong', 'bells', 'piano'} <= insts, insts)
+        self.assertTrue({'gong', 'vibraphone', 'bells', 'piano'} <= insts, insts)
 
     def test_starts_at_zero_and_last_onset_is_the_end_card_chord_at_116(self):
         self.assertEqual(min(n.t for n in self.notes), 0.0)
@@ -199,14 +211,14 @@ class TestBank(unittest.TestCase):
     def test_fetch_layout_soft_piano_preferred_files_and_optional_bass_drum(self):
         with tempfile.TemporaryDirectory() as tmp:
             iowa = Path(tmp) / 'iowa'
-            for folder, names in {'piano-mf': ['D4'], 'piano-pp': ['D4'], 'bells': ['plastic-A4', 'brass-A4'],
+            for folder, names in {'piano-mf': ['D4'], 'piano-pp': ['D4'], 'bells': ['plastic-A5', 'brass-A5'],
                                   'gongs': ['thaigong-D4', 'tamtam40-bow', 'tamtam40'],
                                   'cymbals': ['crash18-viennese', 'roll20-mallet']}.items():
                 (iowa / folder).mkdir(parents=True)
                 for name in names:
                     sf.write(iowa / folder / f'{name}.flac', np.zeros(SR // 10), SR)
             notes = [compose.Note(0.0, 'piano', 'D4', 0.3, 1.0), compose.Note(0.0, 'piano', 'D4', 0.6, 1.0),
-                     compose.Note(0.0, 'bells', 'A4', 0.5, 1.0), compose.Note(0.0, 'gong', None, 0.5, 1.0),
+                     compose.Note(0.0, 'bells', 'A5', 0.5, 1.0), compose.Note(0.0, 'gong', None, 0.5, 1.0),
                      compose.Note(0.0, 'cymbal_roll_swell', None, 0.5, 1.0),
                      compose.Note(0.0, 'cymbal_crash', None, 0.5, 1.0), compose.Note(0.0, 'bass_drum', None, 0.5, 1.0)]
             plan = render.resolve(notes, tmp)
@@ -214,7 +226,7 @@ class TestBank(unittest.TestCase):
                     for n in notes}
             self.assertEqual(used['piano/soft'][0].parent.name, 'piano-pp')
             self.assertEqual(used['piano'][0].parent.name, 'piano-mf')
-            self.assertEqual(used['bells'][0].name, 'brass-A4.flac')
+            self.assertEqual(used['bells'][0].name, 'brass-A5.flac')
             self.assertEqual(used['gong'][0].name, 'tamtam40.flac')
             self.assertEqual(used['cymbal_roll_swell'][0].name, 'roll20-mallet.flac')
             self.assertEqual(used['cymbal_crash'][0].name, 'crash18-viennese.flac')
