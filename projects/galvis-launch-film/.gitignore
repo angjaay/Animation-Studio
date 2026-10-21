@@ -10,3 +10,4 @@ audio/assets/
 audio/out/
 audio/tools/__pycache__/
 audio/tests/__pycache__/
+audio/score/__pycache__/
