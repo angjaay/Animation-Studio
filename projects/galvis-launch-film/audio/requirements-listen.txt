@@ -1,0 +1,4 @@
+# Listening models (earshot describe / match / critique). Not needed to build the film: setup.sh --core skips this file.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.14.1
+transformers==5.20.2
