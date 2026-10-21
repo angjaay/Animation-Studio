@@ -26,6 +26,9 @@ Disalin dari ledger eksekusi sebelum workspace dihapus. Tiap ruling: keputusan �
 - Task 7: Ruling: earshot's one major on the v4 mix (onset density 0.9/s vs refs ≥ ~2.2) is fixed in the score (a light rhythmic layer), started in parallel with the Task 6 review in worktree p4-t7s off p4-t6 — speed — cost if wrong: rework if the Task 6 review changes build.py.
 - Task 6: Ruling: the 0.76 s near-silent tail after 119.2 is intended (picture fades to black 119.2–120; earshot end_silence ok ≤ 2.15 s) — the last-second exemption in the gap test stands — cost if wrong: none.
 - Task 7: film-v4 test:film 7/7 PASS; earshot critique 'close' 0 critical 2 major (onset density 0.87/s; 19/31 visual events without an onset, none at 69.7/94.0/103.77/105.73). Ruling: SFX accents on visual events in worktree p4-t7x (design only, no m4a commit) in parallel with the score density fix; controller runs one build after both merge — avoids a binary conflict on soundtrack.m4a — cost if wrong: one extra build.
+- Final: Ruling: final-review Important 3 (masked act 07 row pops) — drop mo.row.pop / mo.row.pop.body: the score already plays a crotale note on every row cue, so each row keeps its onset; add a test that qa audibility has no masked verdict outside act06:key:* — cost if wrong: the rows lose a quiet click layer nobody heard.
+- Final: Ruling: final-review Minor 3 (19 bass_drum notes composed but never sounded, Iowa has none) — drop the notes and fix the docstrings/test rather than map to Mixkit 564 (impacts and sectors already carry 564 via SFX) — cost if wrong: no act 04 heartbeat.
+- Final: Ruling: commit trailers name the writing model (session attribution instruction) although the plan's constraints say "tanpa identifier model" — left as is; history rewrite is the user's call — cost if wrong: one history rewrite.
 
 ## Minor yang ditunda
 
@@ -49,3 +52,6 @@ Disalin dari ledger eksekusi sebelum workspace dihapus. Tiap ruling: keputusan �
 - Task 6: minor (deferred): sync-check.mjs usage comment/default still name animatic-v1.mp4; JSON import attribute needs Node ≥ 20.10.
 - Task 7 (sfx accents): minor (deferred): ~30 layers for 12 events; tick-on-every-transition motif (consider dropping clicks where margin is comfortable: 69.7, 94.0); Mixkit 168 and click 1116 reused often; no test guards the new JSON rules (hole/veil guarantees rest on the existing audio suite).
 - Task 7 (score density): minor (deferred): TICK_LEVEL 1.4 makes the tick layer the loudest piano material in acts 04/08/10 (listen; lower TICK_LEVEL ~1.2 if busy); ticks on the 28.0/28.5 syllables and under the logo ring at 60 and sting echo; end-card chord velocities raised without a code comment; density test skips acts 03/05 and sits on its 4.0/s bound; width path not unit-tested; docstrings don't mention the layer.
+- Final: minor (deferred): a missing Iowa file in check_recordings raises a traceback instead of joining the problem list
+- Final: minor (deferred): qa-based tests (sync, audibility) skip when audio/out is absent (fresh clone runs them only after audio:build)
+- Final: minor (deferred): stale comment at audio/score/compose.py:357
