@@ -390,6 +390,13 @@ var GV = (() => {
       { t: 103.5, act: "act08-enterprise", what: "flash 3", box: [0, 236, 1920, 600] },
       { t: 104, act: "act08-enterprise", what: "positioning line", box: [300, 390, 1320, 90] },
       { t: 104.5, act: "act08-enterprise", what: "sector recap", box: [96, 560, 414, 130] },
+      { t: 106, act: "act09-reunify", what: "Workspace room pops at its branch end", box: [330, 690, 180, 120] },
+      { t: 106.5, act: "act09-reunify", what: "Data Enrichment room pops at its branch end", box: [870, 690, 180, 120] },
+      { t: 107, act: "act09-reunify", what: "Enterprise room pops at its branch end", box: [1410, 690, 180, 120] },
+      { t: 108, act: "act09-reunify", what: "architecture complete (full chord)", box: [560, 300, 800, 560] },
+      { t: 110, act: "act09-reunify", what: "map network lights up", box: [550, 170, 600, 400] },
+      { t: 110.25, act: "act09-reunify", what: "ONE CORE.", box: [740, 845, 440, 80] },
+      { t: 110.75, act: "act09-reunify", what: "second line", box: [460, 946, 1e3, 36] },
       { t: 112, act: "act10-final", what: "sting", box: [0, 0, 1920, 1080] }
     ]
   };
