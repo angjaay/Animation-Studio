@@ -6,6 +6,7 @@
       <style>
         #act04-core-root { position: absolute; inset: 0; overflow: hidden; background: var(--navy); }
         #act04-core-glow { position: absolute; inset: 0; background: radial-gradient(circle at 960px 600px, rgba(2, 74, 188, 0.55), rgba(3, 39, 80, 0) 520px); }
+        #act04-core-entry { position: absolute; inset: 0; background: var(--navy); }
         #act04-core-gl { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; }
         .act04-core-anchor { position: absolute; left: 0; top: 0; width: 0; height: 0; }
         #act04-core-name {
@@ -48,6 +49,7 @@
         <div id="act04-core-heartpos" class="act04-core-anchor"><div id="act04-core-heart"></div></div>
         <div id="act04-core-question"></div>
         <div id="act04-core-packet"></div>
+        <div id="act04-core-entry"></div>
       </div>
       <script>
         GV.register('act04-core', async (tl) => {
@@ -191,6 +193,10 @@
           const clock = { t: 0 };
           tl.to(clock, { t: 18, duration: 18, ease: 'none', onUpdate: () => apply(clock.t) }, 0);
           apply(0);
+
+          // Act 03 cuts away on full navy; the chamber emerges from it.
+          gsap.set($('entry'), { opacity: 1 });
+          tl.to($('entry'), { opacity: 0, duration: 0.35, ease: 'power2.out' }, 0);
 
           // Bar 18: from inside the hexagon the core settles; the header follows.
           gsap.set($('heart'), { scale: 6, opacity: 0.6 });

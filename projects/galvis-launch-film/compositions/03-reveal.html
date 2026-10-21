@@ -21,7 +21,7 @@
           position: absolute; left: 0; right: 0; text-align: center; font-family: var(--font-text); font-weight: 600; color: var(--text-body);
         }
         #act03-reveal-full { top: 744px; font-size: 32px; }
-        #act03-reveal-tag { top: 806px; font-size: 24px; color: var(--text-muted); }
+        #act03-reveal-tag { top: 806px; font-size: 24px; color: var(--text-body); }
         #act03-reveal-flash, #act03-reveal-inside { position: absolute; inset: 0; }
         #act03-reveal-flash { background: #fff; }
         #act03-reveal-inside { background: var(--navy); }
@@ -48,24 +48,53 @@
           $('full').textContent = GV.COPY['reveal.full'];
           $('tag').textContent = GV.COPY['reveal.sub'];
 
-          // The mark, one layer per part of its anatomy.
+          // The mark, one layer per part of its anatomy; the hexagon also as six wedges that lock in one by one.
           const parts = GV.logoParts('act03');
           const layer = {};
-          for (const key of ['hexagon', 'arrow', 'plates']) {
+          for (const key of ['arrow', 'plates']) {
             layer[key] = document.createElement('div');
             layer[key].innerHTML = parts[key];
-            $('mark').append(layer[key]);
           }
+          const MW = 240, MH = 263, MC = [120, 131.5];
+          const wedges = Array.from({ length: 6 }, (_, k) => {
+            const w = document.createElement('div');
+            w.innerHTML = parts.hexagon;
+            const v = (j) => { const a = ((-90 + 60 * j) * Math.PI) / 180; return `${(MC[0] + 220 * Math.cos(a)).toFixed(1)}px ${(MC[1] + 220 * Math.sin(a)).toFixed(1)}px`; };
+            w.style.clipPath = `polygon(${MC[0]}px ${MC[1]}px, ${v(k)}, ${v(k + 1)})`;
+            const mid = ((-60 + 60 * k) * Math.PI) / 180;
+            w.dir = [Math.cos(mid), Math.sin(mid)];
+            $('mark').append(w);
+            return w;
+          });
+          $('mark').append(layer.arrow, layer.plates);
 
-          // Keylines echo the pointy-top hexagon around the mark.
+          // The mark's silhouette, rasterised once, gives the particles their targets and colours.
+          const sil = document.createElement('canvas');
+          sil.width = MW; sil.height = MH;
+          const sg = sil.getContext('2d', { willReadFrequently: true });
+          for (const key of ['hexagon', 'arrow', 'plates']) {
+            const img = await GV.loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(parts[key])}`);
+            sg.drawImage(img, 0, 0, MW, MH);
+          }
+          const px = sg.getImageData(0, 0, MW, MH).data;
+          const inside = [];
+          for (let y = 0; y < MH; y += 3) for (let x = 0; x < MW; x += 3) if (px[(y * MW + x) * 4 + 3] > 160) inside.push([x, y]);
+
+          // Echo keylines: hexagons that keep rippling out from the mark once it is whole.
           const cx = 960, cy = 291;
           const hex = (r) => Array.from({ length: 6 }, (_, i) => {
             const a = (Math.PI / 3) * i - Math.PI / 2;
             return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`;
           }).join(' ');
-          $('keylines').innerHTML = [[168, 0.32], [204, 0.2], [240, 0.1]]
-            .map(([r, o]) => `<polygon points="${hex(r)}" fill="none" stroke="#024ABC" stroke-opacity="${o}" stroke-width="1.5" stroke-linejoin="round"/>`)
-            .join('');
+          $('keylines').innerHTML = [0, 1, 2].map(() => '<polygon fill="none" stroke="#024ABC" stroke-width="1.5" stroke-linejoin="round"/>').join('');
+          const polys = [...$('keylines').querySelectorAll('polygon')];
+          const ECHO_FROM = A(14, 3), ECHO_PERIOD = 1.5;
+          const echo = (t) => polys.forEach((p, i) => {
+            if (t < ECHO_FROM) { p.setAttribute('stroke-opacity', '0'); return; }
+            const ph = ((t - ECHO_FROM) / ECHO_PERIOD + i / 3) % 1;
+            p.setAttribute('points', hex(150 + 160 * ph));
+            p.setAttribute('stroke-opacity', (0.38 * (1 - ph) * Math.min(1, (t - ECHO_FROM) / 0.4)).toFixed(3));
+          });
 
           // Left-over dither dust at the edges (static, screen-locked).
           const src = document.createElement('canvas');
@@ -82,55 +111,96 @@
           GV.mountDither(dust, src, { palette: 'landing', cell: 3 }).draw();
           $('dust').append(dust);
 
-          // Impact: the frame is white, then the node bursts into points that gather into the mark.
+          // Impact on 24.0: white, then the node bursts into dots, dither cells and contour fragments that
+          // fly out and gather into the mark's silhouette (the pixel swarm), which dissolves as the sharp mark lands.
           gsap.set($('flash'), { opacity: 1 });
           tl.to($('flash'), { opacity: 0, duration: 0.4, ease: 'power2.out' }, 0);
           const rnd = GV.seeded(3);
-          const points = Array.from({ length: 600 }, () => ({
-            x0: 960 + (rnd() - 0.5) * 1700, y0: 600 + (rnd() - 0.5) * 900,
-            x1: 852 + rnd() * 216, y1: 175 + rnd() * 235,
-            c: ['#032750', '#024ABC', '#1FAFA1', '#86C36A'][Math.floor(rnd() * 4)],
-          }));
+          const BRAND = ['#032750', '#024ABC', '#1FAFA1', '#86C36A'];
+          const points = Array.from({ length: 720 }, (_, n) => {
+            const [tx, ty] = inside[Math.floor(rnd() * inside.length)];
+            const i = (ty * MW + tx) * 4;
+            const a = rnd() * Math.PI * 2, r = 260 + rnd() * 700;
+            return {
+              kind: n % 3, // 0 dot, 1 dither cell, 2 contour fragment
+              ox: 960 + Math.cos(a) * r, oy: 600 + Math.sin(a) * r * 0.62,
+              x1: 840 + tx, y1: 160 + ty,
+              c: `rgb(${px[i]},${px[i + 1]},${px[i + 2]})`, c2: BRAND[Math.floor(rnd() * 4)],
+              rot: rnd() * Math.PI, len: 7 + rnd() * 9, delay: rnd() * 0.25,
+            };
+          });
           const pctx = $('particles').getContext('2d');
-          const drawParticles = (k, fadeOut) => {
+          const OUT = 0.55, GATHER = A(14), FADE_FROM = A(14, 1), FADE_TO = A(14, 2) + 0.2;
+          const expoOut = (k) => (k >= 1 ? 1 : 1 - Math.pow(2, -10 * k));
+          const drawParticles = (t) => {
             pctx.clearRect(0, 0, 1920, 1080);
-            if (fadeOut >= 1) return;
-            pctx.globalAlpha = 1 - fadeOut;
-            const e = 1 - Math.pow(1 - k, 3);
+            if (t >= FADE_TO) return;
+            pctx.globalAlpha = 1 - Math.min(1, Math.max(0, (t - FADE_FROM) / (FADE_TO - FADE_FROM)));
             for (const p of points) {
-              pctx.fillStyle = p.c;
-              pctx.fillRect(p.x0 + (p.x1 - p.x0) * e, p.y0 + (p.y1 - p.y0) * e, 3, 3);
+              let x, y;
+              if (t < OUT) { const e = expoOut(t / OUT); x = 960 + (p.ox - 960) * e; y = 600 + (p.oy - 600) * e; }
+              else {
+                const k = Math.min(1, Math.max(0, (t - OUT - p.delay) / (GATHER - OUT - 0.25)));
+                const e = k * k * (3 - 2 * k);
+                x = p.ox + (p.x1 - p.ox) * e; y = p.oy + (p.y1 - p.oy) * e;
+              }
+              if (p.kind === 0) { pctx.fillStyle = p.c2; pctx.fillRect(x - 1.5, y - 1.5, 3, 3); }
+              else if (p.kind === 1) {
+                pctx.fillStyle = p.c; pctx.fillRect(x - 3, y - 3, 3, 3); pctx.fillRect(x, y, 3, 3);
+                pctx.fillStyle = p.c2; pctx.fillRect(x, y - 3, 3, 3); pctx.fillRect(x - 3, y, 3, 3);
+              } else {
+                const settle = Math.min(1, Math.max(0, (t - OUT) / (GATHER - OUT)));
+                const L = p.len * (1 - settle) + 3 * settle;
+                pctx.strokeStyle = p.c2; pctx.lineWidth = 1.5;
+                pctx.beginPath();
+                pctx.moveTo(x - Math.cos(p.rot) * L, y - Math.sin(p.rot) * L);
+                pctx.quadraticCurveTo(x, y + L * 0.4, x + Math.cos(p.rot) * L, y + Math.sin(p.rot) * L);
+                pctx.stroke();
+              }
             }
+            pctx.globalAlpha = 1;
           };
-          const gather = { k: 0, fade: 0 };
-          tl.to(gather, { k: 1, duration: A(14), ease: 'none', onUpdate: () => drawParticles(gather.k, gather.fade) }, 0);
-          tl.to(gather, { fade: 1, duration: 0.6, ease: 'none', onUpdate: () => drawParticles(gather.k, gather.fade) }, A(14));
-          drawParticles(0, 0);
 
-          // Bar 14: the mark assembles from its anatomy.
-          gsap.set(layer.hexagon, { scale: 0.6, opacity: 0 });
-          gsap.set(layer.arrow, { rotationX: 90, transformPerspective: 600, opacity: 0 });
+          // Bar 14: the hexagon's six wedges lock in one per 1/16 bar from 26.0, the arrow folds down from one
+          // plane on 26.5, the plates land on 27.0. The finished mark is always flat.
+          const WEDGE_AT = wedges.map((_, k) => A(14) + k * 0.125);
+          const placeWedges = (t) => wedges.forEach((w, k) => {
+            const e = t < WEDGE_AT[k] ? 0 : expoOut((t - WEDGE_AT[k]) / 0.25);
+            gsap.set(w, { x: w.dir[0] * 40 * (1 - e), y: w.dir[1] * 40 * (1 - e), opacity: t < WEDGE_AT[k] ? 0 : Math.min(1, 0.4 + e) });
+          });
+          const apply = (t) => { drawParticles(t); placeWedges(t); echo(t); };
+          const clock = { t: 0 };
+          tl.to(clock, { t: 10, duration: 10, ease: 'none', onUpdate: () => apply(clock.t) }, 0);
+          apply(0);
+
+          gsap.set(layer.arrow, { rotationX: 90, transformPerspective: 600, transformOrigin: '50% 30%', opacity: 0 });
+          tl.to(layer.arrow, { rotationX: 0, opacity: 1, duration: 0.4, ease: 'expo.out' }, A(14, 1));
           gsap.set(layer.plates, { y: -60, opacity: 0 });
-          tl.to(layer.hexagon, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.6)' }, A(14));
-          tl.to(layer.arrow, { rotationX: 0, opacity: 1, duration: 0.5, ease: 'power3.out' }, A(14, 1));
-          tl.to(layer.plates, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' }, A(14, 2));
-          const polys = $('keylines').querySelectorAll('polygon');
-          gsap.set(polys, { opacity: 0, scale: 0.9, svgOrigin: `${cx} ${cy}` });
-          tl.to(polys, { opacity: 1, scale: 1, duration: 0.6, stagger: 0.12, ease: 'power2.out' }, A(14, 3));
+          tl.to(layer.plates, { y: 0, opacity: 1, duration: 0.4, ease: 'expo.out' }, A(14, 2));
+          // The mark is complete on 27.0: one teal glow pulse around it.
+          gsap.set($('mark'), { filter: 'drop-shadow(0 0 0px rgba(31,175,161,0))' });
+          tl.set($('mark'), { filter: 'drop-shadow(0 0 34px rgba(31,175,161,0.95))' }, A(14, 2));
+          tl.to($('mark'), { filter: 'drop-shadow(0 0 0px rgba(31,175,161,0))', duration: 0.7, ease: 'power2.out' }, A(14, 2) + 1 / 30);
 
-          // Bars 15-17: the name in two syllables, then the full name and the line beneath it.
-          const rise = { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' };
-          gsap.set([$('gal'), $('vis'), $('full'), $('tag')], { opacity: 0, y: 30 });
-          tl.to($('gal'), rise, A(15));
-          tl.to($('vis'), rise, A(15, 1));
-          tl.to($('full'), rise, A(16));
-          tl.to($('tag'), rise, A(17));
+          // Bars 15-17: GAL · VIS step in, then the full name and the line beneath it, blur to baseline.
+          const step = { opacity: 1, y: 0, duration: 0.4, ease: 'expo.out' };
+          gsap.set([$('gal'), $('vis')], { opacity: 0, y: 40 });
+          tl.to($('gal'), step, A(15));
+          tl.to($('vis'), step, A(15, 1));
+          // Blur scaled to the type size: 4 px on 24–32 px lines (10 px would hide them on the first frame).
+          const blurIn = { opacity: 0, y: 14, filter: 'blur(4px)' };
+          const sharp = { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.6, ease: 'expo.out' };
+          gsap.set($('full'), blurIn);
+          tl.to($('full'), sharp, A(16));
+          // The tagline under the name rises without blur (blur-to-baseline is for statements, spec §3).
+          gsap.set($('tag'), { opacity: 0, y: 14 });
+          tl.to($('tag'), { opacity: 1, y: 0, duration: 0.5, ease: 'expo.out' }, A(17));
 
-          // Last beat: the camera dives into the hexagon.
+          // Last beat: the camera dives into the hexagon; the frame is fully navy by the cut.
           gsap.set($('inside'), { opacity: 0 });
           tl.to($('mark'), { scale: 9, duration: 0.5, ease: 'power3.in' }, A(17, 3));
           tl.to([$('name'), $('full'), $('tag'), $('keylines')], { opacity: 0, duration: 0.25 }, A(17, 3));
-          tl.to($('inside'), { opacity: 1, duration: 0.3, ease: 'power2.in' }, A(17, 3) + 0.2);
+          tl.to($('inside'), { opacity: 1, duration: 0.3, ease: 'power2.in' }, A(17, 3) + 0.15);
         }, 10);
       </script>
     </template>
