@@ -167,7 +167,9 @@
           // Bar 39: title after the architecture glimpse. Bars 41-42: each attribute row lands on its grid
           // step with a teal flash while its map cell resolves.
           gsap.set([$('tag'), $('sub')], { opacity: 0, y: 16 });
-          tl.to([$('tag'), $('sub')], { opacity: 1, y: 0, duration: 0.5, stagger: 0.12, ease: 'expo.out' }, A(39, 2));
+          // The headline lands on the beat; the small tag leads it by one stagger.
+          tl.to($('tag'), { opacity: 1, y: 0, duration: 0.5, ease: 'expo.out' }, A(39, 2) - 0.12);
+          tl.to($('sub'), { opacity: 1, y: 0, duration: 0.5, ease: 'expo.out' }, A(39, 2));
           gsap.set(card, { opacity: 0, x: 40 });
           tl.to(card, { opacity: 1, x: 0, duration: 0.5, ease: 'power3.out' }, A(41) - 0.4);
           gsap.set(rows, { opacity: 0, x: 40 });
@@ -253,10 +255,10 @@
           // right branch lit, the frame act 08 opens from.
           const CAM = GV.CAM_END;
           const curtainCtx = $('dark').getContext('2d');
-          const curtain = GV.mountCurtain($('dark'), curtainCtx.createPattern(GV.navyGlowCanvas(CAM), 'no-repeat'), 6);
+          const END = [960, 540 + (820 - 540) * CAM];
+          const curtain = GV.mountCurtain($('dark'), curtainCtx.createPattern(GV.navyGlowCanvas(CAM), 'no-repeat'), 6, { origin: END });
           const middle = GV.architectureSvg({ lit: 'enrichment', scale: CAM });
           const right = GV.architectureSvg({ lit: 'enterprise', scale: CAM });
-          const END = [960, 540 + (820 - 540) * CAM];
           const BACK = A(45, 3);
           let showing = '';
           const frame = (t) => {

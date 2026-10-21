@@ -73,7 +73,7 @@
     {"t": 73.0, "act": "act06-workspace", "what": "step 4 done", "box": [1360,740,420,60]},
     {"t": 74.5, "act": "act06-workspace", "what": "step 5 done", "box": [1360,790,420,60]},
     {"t": 75.5, "act": "act06-workspace", "what": "window collapses into the branch", "box": [0,0,1920,1080]},
-    {"t": 77.0, "act": "act07-enrichment", "what": "title", "box": [96,96,1000,110]},
+    {"t": 77.0, "act": "act07-enrichment", "what": "title", "box": [96,150,600,56]},
     {"t": 80.0, "act": "act07-enrichment", "what": "profile row 1", "box": [1060,250,680,60]},
     {"t": 80.5, "act": "act07-enrichment", "what": "profile row 2", "box": [1060,316,680,60]},
     {"t": 81.0, "act": "act07-enrichment", "what": "profile row 3", "box": [1060,382,680,60]},
