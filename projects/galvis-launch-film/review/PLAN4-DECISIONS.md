@@ -1,0 +1,51 @@
+# Rencana 4 — keputusan selama eksekusi
+
+Disalin dari ledger eksekusi sebelum workspace dihapus. Tiap ruling: keputusan — alasan — biaya bila keliru.
+
+## Rulings
+
+- Ruling: the sonic-logo bells (58.0/58.5/59.0) and the act 04 module activations are voiced by the score (Task 4: bells, vibraphone); their cue events (`bell`, `ping` with id `act04:module:k`) exist for sync tests and Task 5 adds no SFX rule on them — avoids doubled notes — cost if wrong: one rule to add in Task 5.
+- Ruling: Task 5's top-level `audio/sounddesign.json` is owned by Task 6; Task 5 writes only `audio/design/*.json` and solo renders with a minimal local design per category — avoids parallel edits of one file — cost if wrong: none.
+- Ruling: implementers use the prepared venv (AUDIO_PY) instead of installing torch per worktree; audio/setup.sh still documents the full install — saves ~10 min per task — cost if wrong: setup.sh untested end-to-end here (Task 1 must at least run it with --core into a temp venv).
+- Ruling: Task 3 starts in parallel with Tasks 1–2 (worktree p4-t3), importing licences.py from the earshot checkout via PYTHONPATH until Task 1's audio/tools merges — the user asked for speed; sourcing is the longest task — cost if wrong: an import path fixed at merge.
+- Task 2: Ruling: the 23.5 s "stop-down veil" whoosh (act02:veil:1) is never sounded — Task 5 rules exclude it, so the stop-down hole before 24.0 stays clean — cost if wrong: none.
+- Task 2: Ruling: kinds as mapped by the implementer stand (reveals = pop, landings + 108 chord = land, act10:converge:1 = whoosh at 112.0, sting at 112.5); no whoosh on the 52.0 boundary (the 52.0 frame belongs to act 05's caption; music carries it) — cost if wrong: one rule.
+- Task 1: Ruling: the plan's 'align: onset' is mix.py's 'attack' (valid: attack|peak|end|start; unknown values silently act as attack) — Tasks 5–6 write align attack/peak/end explicitly — cost if wrong: none.
+- Ruling: Task 4 starts before Task 3 merges (worktree p4-t4 at ed9ff4f): compose + sampler built and tested on generated fixture samples in Task 3's layout audio/assets/iowa/<instrument>/<note>.flac; the real music render runs after Task 3 merges — speed — cost if wrong: instrument/note names to map at merge.
+- Task 4: Ruling: review Important 1 (sting tail runs to ~120 s) — code stands: spec §5 "sting + ekor tonal 2–4 s, fade < 1 s" is read as the final ring-out; under the end card (tagline 116.0, url 118.0, black 119.2) the music holds (earshot/spec: no dead air, end at body level); the 116.0 chord lands with the tagline and rings ~3.5 s with a < 1 s fade at the end — a test pins it — cost if wrong: a shorter tail is one constant.
+- Task 4: Ruling: the sonic logo (A4/D5/F#5 at 58.0/58.5/59.0) is voiced on vibraphone sustain (all three sourced) with an octave doubling on bells/crotales (A5, D6, F#6) — Iowa has no A4 bell; mixing a vib A4 with bell D5/F#5 would change timbre mid-logo; the rising triad and pitches stay exact — cost if wrong: one instrument swap if a bell A4 is found later.
+- Task 3: Ruling: Iowa licence classification lives in fetch.py (exact-label match), licences.py stays a verbatim copy; Task 6 runs credits/audit through fetch.patched_licences() — cost if wrong: one wrapper call.
+- Task 3: Ruling: commit trailers by subagents name the model that wrote them (Task 3 used Sonnet 5.5); not amended — attribution stays accurate — cost if wrong: none.
+- Ruling: Task 5 runs as two parallel implementers (5a impacts+transitions, 5b ui+motion) in worktrees that carry Task 3's commit (pre-review) and symlink its downloaded assets — speed; disjoint fragment files — cost if wrong: Task 3 review changes could require a small rebase of Task 5.
+- Ruling: Task 5 runs as two parallel implementers (5a impacts+transitions, 5b ui+motion) in worktrees carrying Task 3's commit (pre-review) with its downloaded assets symlinked — speed; disjoint fragment files — cost if wrong: Task 3 review changes may need a small rebase of Task 5.
+- Task 4: Ruling: the real music render + earshot realness/timeline (brief step 3) move to Task 6, which renders music.wav from the merged real assets anyway; Task 6 must use render.py --strict and report realness per stem — cost if wrong: a score fix found one task later.
+- Task 3: fix round 1/5 (FLAC stamps, headings, alternates; commits 2c6816c..5f8a4f3). Ruling: step-done notifications may use a real Iowa crotale/vibraphone note instead of the weak Mixkit chime (3109) — cost if wrong: none.
+- Task 5a: Ruling: whoosh cues act02:vortex (22.0), act06:collapse (75.5), act07:return (89.5), act08:dark (92.0) stay unsounded — collapse/return sit 0.5 s before a wipe whoosh, the 24.0 riser carries the vortex, restraint per the playbook — cost if wrong: one rule each in the Task 6 mix.
+- Ruling: Task 6 starts in parallel with the 5a review and 5b (worktree p4-t6 = main + p4-t5a); its design includes every audio/design/*.json present, so ui/motion join when merged — speed — cost if wrong: one re-run of build.py after the last fragment lands.
+- Task 5b: Ruling: comets sound on the climb (apex +0.8 s after the badge-pop cue, arriving 106.8/107.3/107.8 before the 108.0 chord) — the cue marks the pop, the motion is the climb — cost if wrong: one offset.
+- Task 7: Ruling: earshot's one major on the v4 mix (onset density 0.9/s vs refs ≥ ~2.2) is fixed in the score (a light rhythmic layer), started in parallel with the Task 6 review in worktree p4-t7s off p4-t6 — speed — cost if wrong: rework if the Task 6 review changes build.py.
+- Task 6: Ruling: the 0.76 s near-silent tail after 119.2 is intended (picture fades to black 119.2–120; earshot end_silence ok ≤ 2.15 s) — the last-second exemption in the gap test stands — cost if wrong: none.
+- Task 7: film-v4 test:film 7/7 PASS; earshot critique 'close' 0 critical 2 major (onset density 0.87/s; 19/31 visual events without an onset, none at 69.7/94.0/103.77/105.73). Ruling: SFX accents on visual events in worktree p4-t7x (design only, no m4a commit) in parallel with the score density fix; controller runs one build after both merge — avoids a binary conflict on soundtrack.m4a — cost if wrong: one extra build.
+
+## Minor yang ditunda
+
+- Task 2: minor (deferred): typeFrom = 66.0 hard-coded in export-sound-cues.mjs (guarded by a grep test; could derive from actWindow).
+- Task 2: minor (deferred): riser.end/stopdown at the 24.0/56.0 boundaries carry act03:/act05: ids though the stop-down sits in the previous act.
+- Task 2: minor (deferred): export script's main guard compares import.meta.url to argv[1]; a symlinked path would skip output silently.
+- Task 1: minor (deferred): an unknown align value (e.g. onset) falls to the 5 ms-window branch in mix.py; later designs must write attack literally.
+- Task 1: minor (deferred): test_tools does not check mixer determinism (byte-identical second render).
+- Task 1: minor (deferred): requirements-listen uses --extra-index-url (works on Linux via +cpu ordering; not on macOS).
+- Task 1: minor (deferred): default git+https earshot install path untested here (github unreachable); run once where reachable.
+- Task 4: minor (deferred): hard-coded act boundaries/build times in compose.py (only stop-downs, logo, chord, sting follow cues); act02/act05 build blocks near-duplicate.
+- Task 4: minor (deferred): possible double riser (score cymbal roll + SFX riser) — check at Task 6 mix.
+- Task 4: minor (deferred): sample cache float64 (memory); report() uses gated 3 s windows, not true short-term; render test renders the full score twice (~47 s); test_level_before_mix nearly tautological; bare module names compose/render; seeded-noise reverb IR is processing (accepted).
+- Task 3: minor (deferred): doc numbers table vs prose (564, 3062, 3109 z values); ffprobe hard dependency not caught as FetchError; --only message/audit scope inconsistent; download retries on 4xx with sleeps; locally modified raw file healed silently (document); untested main download/audit/pin(repin) paths; vibraphone E4/B4/D5/E5 realness uncertain (data cannot enforce).
+- Task 4: minor (deferred): --strict/WARNING path in render main untested; crotale melodies of act07 rows and act08 flashes moved up (D6–A6) for the sourced range.
+- Task 3: minor (deferred): an unreadable FLAC or malformed stamp makes derived_problem raise (traceback) instead of reporting/reconverting.
+- Task 3: minor (deferred): notify_tonal has one Mixkit candidate (weak); ui may use an Iowa note instead (ruling above).
+- Task 5a: minor (deferred): tr.match.12/.34 near-duplicate rules (cycle on one-event rules); wipe offsets 0.664/0.700 comment attributes the lead to panning (it is the recording's L/R peaks); riser offset −0.25 and ramp duplicate the stop-down length; qa_ok self-granted (acknowledged, not critic-confirmed), redundant on im.riser.whip.
+- Task 5b: minor (deferred): plate thud jitter 0.5 dB flattens the weight ramp at the top (plates 6/7); slicer settings implicit for picked key takes; comet doc wording ("fastest point"); ui doc level numbers stale; crotale `use` text in sources.json names only the score.
+- Task 6: minor (deferred): +3.5 dB end-card lift raises decaying recordings (longer sustains in the score would be cleaner); _music_doc vs bus-ride fade wording; real ceiling-lowering loop path only mocked; build.py run() without -I for render.py; test window LENGTH-4..LENGTH-1 not derived from the fade.
+- Task 6: minor (deferred): sync-check.mjs usage comment/default still name animatic-v1.mp4; JSON import attribute needs Node ≥ 20.10.
+- Task 7 (sfx accents): minor (deferred): ~30 layers for 12 events; tick-on-every-transition motif (consider dropping clicks where margin is comfortable: 69.7, 94.0); Mixkit 168 and click 1116 reused often; no test guards the new JSON rules (hole/veil guarantees rest on the existing audio suite).
+- Task 7 (score density): minor (deferred): TICK_LEVEL 1.4 makes the tick layer the loudest piano material in acts 04/08/10 (listen; lower TICK_LEVEL ~1.2 if busy); ticks on the 28.0/28.5 syllables and under the logo ring at 60 and sting echo; end-card chord velocities raised without a code comment; density test skips acts 03/05 and sits on its 4.0/s bound; width path not unit-tested; docstrings don't mention the layer.

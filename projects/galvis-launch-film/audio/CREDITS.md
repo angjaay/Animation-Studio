@@ -98,6 +98,7 @@ Real recordings from Mixkit, trimmed, cut into single hits, layered, level-adjus
 
 - "Bed pillow hit the mattress" by Mixkit (https://mixkit.co/free-sound-effects/hit/?page=3), licensed under Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)
 - "Cinematic trailer riser" by Mixkit (https://mixkit.co/free-sound-effects/cinematic/), licensed under Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)
+- "Cinematic wind swoosh" by Mixkit (https://mixkit.co/free-sound-effects/swoosh/), licensed under Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)
 - "Fast air sweep transition" by Mixkit (https://mixkit.co/free-sound-effects/swoosh/), licensed under Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)
 - "Futuristic sweep pass by" by Mixkit (https://mixkit.co/free-sound-effects/swoosh/), licensed under Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)
 - "Light impact on the ground" by Mixkit (https://mixkit.co/free-sound-effects/impact/?page=2), licensed under Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)
