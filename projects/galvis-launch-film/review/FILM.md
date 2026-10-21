@@ -1,17 +1,21 @@
-# GALVIS Launch Film — Animasi penuh v2
+# GALVIS Launch Film — Animasi penuh v3
 
-Render: `renders/film-v2.mp4` (tidak di-commit; dibuat ulang dengan
-`node scripts/render.mjs --quality looks --name film-v2`). 1920×1080, 30 fps, 120,0 s, skor sementara
-(`audio/temp-score.m4a`). Kontak sheet: `review/film-v2-sheet.jpg`, satu frame tiap 2 s.
+Render: `renders/film-v3.mp4` (tidak di-commit; dibuat ulang dengan
+`node scripts/render.mjs --quality looks --name film-v3`). 1920×1080, 30 fps, 120,0 s, skor sementara
+(`audio/temp-score.m4a`). Kontak sheet: `review/film-v3-sheet.jpg`, satu frame tiap 2 s.
+
+v3 adalah gambar v2 (yang dinilai juri putaran 2) ditambah perbaikan dari review kode akhir: frame babak 02
+dan 10 tidak lagi bergantung pada urutan seek, debu dither babak 03 tidak ikut diskalakan kamera, babak 10
+tahan terhadap aset dawn yang gagal dimuat, dan pendaratan pelat 4 kini diuji. Perbedaannya nyaris tak terlihat.
 
 ## Pemeriksaan
 
 | Pemeriksaan | Perintah | Hasil |
 |---|---|---|
-| Film | `FILM=renders/film-v2.mp4 npm run test:film` | 6/6: event di grid, batas match, tanpa beku, format, −14,0 LUFS / −1,0 dBTP, determinisme |
+| Film | `FILM=renders/film-v3.mp4 npm run test:film` | 7/7: event di grid, batas match, tanpa beku, format, −14,0 LUFS / −1,0 dBTP, determinisme termasuk urutan seek |
 | Per babak | `npm run qa:act -- <babak>` | sepuluh babak lulus |
 | Komposisi | `npx hyperframes check` | lulus, tanpa peringatan kontras |
-| Unit | `npm test` | 115/115 |
+| Unit | `npm test` | 128/128 |
 
 ## Skor (mg-styles-15, 1–10)
 
@@ -62,5 +66,5 @@ Diganti atau dilewati:
 
 ## Langkah berikutnya
 
-Persetujuan user atas film v2 adalah gerbang ke Rencana 4 (sound design, mix, master). Sisa yang bisa
+Persetujuan user atas film v3 adalah gerbang ke Rencana 4 (sound design, mix, master). Sisa yang bisa
 diputuskan user: pembuka babak 05, hold nama babak 03, dan juri independen opsional (`review/jury-2.md`).
