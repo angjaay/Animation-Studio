@@ -380,7 +380,7 @@ var GV = (() => {
       { t: 87.5, act: "act07-enrichment", what: "flow step 4", box: [1280, 910, 330, 70] },
       { t: 88, act: "act07-enrichment", what: "positioning line", box: [300, 860, 1320, 70] },
       { t: 89.5, act: "act07-enrichment", what: "back to the architecture", box: [0, 0, 1920, 1080] },
-      { t: 91, act: "act08-enterprise", what: "title", box: [96, 70, 1700, 140] },
+      { t: 91, act: "act08-enterprise", what: "title", box: [96, 128, 1260, 80] },
       { t: 92, act: "act08-enterprise", what: "plugboard goes dark", box: [0, 0, 1920, 1080] },
       { t: 94, act: "act08-enterprise", what: "sector 1", box: [0, 236, 1920, 600] },
       { t: 96.25, act: "act08-enterprise", what: "sector 2", box: [0, 236, 1920, 600] },
@@ -390,7 +390,7 @@ var GV = (() => {
       { t: 103.25, act: "act08-enterprise", what: "flash 2", box: [0, 236, 1920, 600] },
       { t: 103.5, act: "act08-enterprise", what: "flash 3", box: [0, 236, 1920, 600] },
       { t: 104, act: "act08-enterprise", what: "positioning line", box: [300, 390, 1320, 90] },
-      { t: 104.5, act: "act08-enterprise", what: "sector recap", box: [96, 560, 414, 130] },
+      { t: 104.5, act: "act08-enterprise", what: "sector recap", box: [108, 600, 384, 228] },
       { t: 106, act: "act09-reunify", what: "Workspace room pops at its branch end", box: [330, 690, 180, 120] },
       { t: 106.5, act: "act09-reunify", what: "Data Enrichment room pops at its branch end", box: [870, 690, 180, 120] },
       { t: 107, act: "act09-reunify", what: "Enterprise room pops at its branch end", box: [1410, 690, 180, 120] },
@@ -762,7 +762,7 @@ var GV = (() => {
   // shared/solution-crops.js
   var S = "assets/solution";
   var UI_BOXES = {
-    [`${S}/DMR/desktop/risk.jpg`]: [[0.32, 0.29, 0.23, 0.1], [0.82, 0.7, 0.17, 0.25]],
+    [`${S}/DMR/desktop/risk.jpg`]: [[0.32, 0.29, 0.23, 0.1], [0.64, 0.71, 0.35, 0.26]],
     [`${S}/ESC/desktop/biodiversity.jpg`]: [[0.23, 0.11, 0.22, 0.08], [0.32, 0.2, 0.06, 0.1], [0.02, 0.7, 0.34, 0.27], [0.67, 0.52, 0.31, 0.44]],
     [`${S}/WRWS/desktop/WaterResource-Desktop.jpg`]: [[0.64, 0.4, 0.34, 0.56]],
     [`${S}/ESRE/desktop/Network-Desktop.jpg`]: [[0.68, 0.6, 0.3, 0.37]],
@@ -773,7 +773,8 @@ var GV = (() => {
     [`${S}/EBG/desktop/Geomarketing-Desktop.jpg`]: [[0.91, 0.38, 0.09, 0.62], [0.01, 0.88, 0.18, 0.1]]
   };
   var CLEAN_CROPS = {
-    [`${S}/DMR/desktop/risk.jpg`]: [0.55, 0.05, 0.27, 0.62],
+    [`${S}/DMR/desktop/risk.jpg`]: [0, 0.395, 1, 0.31],
+    // the full-width band between the label and the legend
     [`${S}/ESC/desktop/biodiversity.jpg`]: [0.4, 0.3, 0.26, 0.4],
     [`${S}/WRWS/desktop/WaterResource-Desktop.jpg`]: [0, 0, 0.62, 0.75],
     [`${S}/ESRE/desktop/Network-Desktop.jpg`]: [0.02, 0.02, 0.64, 0.56],

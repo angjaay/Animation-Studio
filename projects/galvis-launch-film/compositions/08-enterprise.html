@@ -226,9 +226,9 @@
           // right branch end while the navy dissolves in Bayer order onto the first sector's raw strip.
           const CAM = GV.CAM_END;
           const navyCtx = $('navy').getContext('2d');
-          const curtain = GV.mountCurtain($('navy'), navyCtx.createPattern(GV.navyGlowCanvas(CAM), 'no-repeat'), 6);
-          $('arch').innerHTML = GV.architectureSvg({ lit: 'enterprise', scale: CAM });
           const END = [960 + (1500 - 960) * CAM, 540 + (820 - 540) * CAM];
+          const curtain = GV.mountCurtain($('navy'), navyCtx.createPattern(GV.navyGlowCanvas(CAM), 'no-repeat'), 6, { origin: END });
+          $('arch').innerHTML = GV.architectureSvg({ lit: 'enterprise', scale: CAM });
           const opening = (t) => {
             const k = 1 + 1.4 * GV.since(t, 0, 0.8, (u) => u * u);
             $('arch').firstElementChild.style.transform = `matrix(${k}, 0, 0, ${k}, ${(END[0] * (1 - k)).toFixed(1)}, ${(END[1] * (1 - k)).toFixed(1)})`;
@@ -244,7 +244,9 @@
 
           // Bar 46: the tag and the line, over the first sector's raw strip.
           gsap.set([$('tag'), $('sub')], { opacity: 0, y: 16 });
-          tl.to([$('tag'), $('sub')], { opacity: 1, y: 0, duration: 0.5, stagger: 0.12, ease: 'expo.out' }, A(46, 2));
+          // The headline lands on the beat; the small tag leads it by one stagger.
+          tl.to($('tag'), { opacity: 1, y: 0, duration: 0.5, ease: 'expo.out' }, A(46, 2) - 0.12);
+          tl.to($('sub'), { opacity: 1, y: 0, duration: 0.5, ease: 'expo.out' }, A(46, 2));
           tl.to($('sub'), { opacity: 0, y: -12, duration: 0.3 }, A(47));
 
           // Sector names and counters enter with each sector.
@@ -260,15 +262,16 @@
           const thumbs = sectors.map((sec, k) => {
             const card = make('div', 'thumb', $('recap'));
             const c = document.createElement('canvas');
-            c.width = 400; c.height = 125;
-            c.getContext('2d').drawImage(sec.clearC, 0, 0, 1920, 600, 0, 0, 400, 125);
+            // The centre 1200x600 of each sector's clear strip, at 400x200 so the four read at a glance.
+            c.width = 400; c.height = 200;
+            c.getContext('2d').drawImage(sec.clearC, 360, 0, 1200, 600, 0, 0, 400, 200);
             const label = document.createElement('span');
             label.textContent = SECTORS[k].name;
             card.append(c, label);
             return card;
           });
-          gsap.set(thumbs, { opacity: 0, y: 30 });
-          tl.to(thumbs, { opacity: 1, y: 0, duration: 0.45, stagger: 0.12, ease: 'expo.out' }, A(53, 1));
+          gsap.set(thumbs, { opacity: 0, y: 60, scale: 0.9 });
+          tl.to(thumbs, { opacity: 1, y: 0, scale: 1, duration: 0.35, stagger: 0.12, ease: 'expo.out' }, A(53, 1));
           // The last 0.3 s clear to plain Light Gray: act 09's curtain starts from it.
           tl.to([$('tag'), $('position'), $('recap')], { opacity: 0, duration: 0.2 }, A(53, 3) + 0.2);
           gsap.set($('position'), { opacity: 0, y: 24 });
