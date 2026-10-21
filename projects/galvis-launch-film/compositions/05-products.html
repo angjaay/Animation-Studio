@@ -13,7 +13,7 @@
         #act05-products-pulse { position: absolute; inset: 0; background: radial-gradient(circle 520px at 960px 318px, rgba(255, 255, 255, 0.85), rgba(31, 175, 161, 0.25) 45%, rgba(3, 39, 80, 0) 100%); }
         #act05-products-core {
           position: absolute; left: 0; right: 0; top: 268px; text-align: center;
-          font-family: var(--font-text); font-weight: 700; font-size: 22px; letter-spacing: 0.3em; padding-left: 0.3em; color: var(--cool-gray);
+          font-family: var(--font-text); font-weight: 700; font-size: 26px; letter-spacing: 0.3em; padding-left: 0.3em; color: var(--white);
         }
         #act05-products-flow { position: absolute; inset: 0; width: 1920px; height: 1080px; }
         .act05-products-say {
@@ -53,7 +53,8 @@
           $('one').textContent = GV.COPY['products.one'];
           $('three').textContent = GV.COPY['products.three'];
           const root = document.getElementById(`${id}-root`);
-          document.getElementById(`${id}-core`).textContent = GV.COPY['core.label'];
+          // The core is named as GALVIS's own (a no-context viewer could not tell whether the core was GALVIS).
+          document.getElementById(`${id}-core`).textContent = `${GV.COPY['reveal.name']} ${GV.COPY['core.label']}`;
 
           const mount = (host, prefix) => {
             const parts = GV.logoParts(prefix);
@@ -138,7 +139,9 @@
           }
 
           // Bar 27-28: one core, three ways — the mark holds the centre, then rises to its place.
+          // Under the two lines the mark keeps growing (1.6 → 1.72), so the captions never sit on a still logo.
           gsap.set($('mark'), { y: 360, scale: 1.6 });
+          tl.to($('mark'), { scale: 1.72, duration: A(28), ease: 'none' }, 0);
           tl.to($('mark'), { y: 0, scale: 1, duration: 1.6, ease: 'power3.inOut' }, A(28));
           const say = (el, inAt, outAt) => {
             gsap.set(el, { opacity: 0, y: 24 });
