@@ -24,8 +24,14 @@ function visibleStrings(html) {
   const SCRIPT = /<script\b[^>]*>([\s\S]*?)<\/script>/g;
   const text = [...body.replace(SCRIPT, '').matchAll(/>([^<]+)</g)].map((m) => m[1]);
   const scripts = [...body.matchAll(SCRIPT)].map((m) => m[1].replace(/(^|[^:'"`])\/\/[^\n]*/g, '$1')).join('\n');
+  // A template is judged as a whole first (CSS like `inset(${a}px … round ${r}px)` is not copy), and only
+  // then split at its interpolations.
   const literals = [...scripts.matchAll(/'([^'\n]*)'|"([^"\n]*)"|`([^`]*)`/g)]
-    .flatMap((m) => (m[3] !== undefined ? stripInterpolations(m[3]) : [m[1] ?? m[2]]));
+    .flatMap((m) => {
+      if (m[3] === undefined) return [m[1] ?? m[2]];
+      const segments = stripInterpolations(m[3]);
+      return NOT_COPY.test(segments.join(' ').replace(/\$/g, '')) ? [] : segments;
+    });
   return [...text, ...literals].map((s) => s.trim()).filter(Boolean);
 }
 

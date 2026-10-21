@@ -23,3 +23,7 @@ test('CSS values and GV.COPY lookups are not copy', () => {
 test('font family names are not copy', () => {
   assert.deepEqual(offenders(wrap("svgEl('text', { 'font-family': 'JetBrains Mono' }); el.style.fontFamily = 'Plus Jakarta Sans';")), []);
 });
+
+test('a CSS template keeps its context across interpolations', () => {
+  assert.deepEqual(offenders(wrap('el.style.clipPath = `inset(${a}px ${b}px ${c}px ${d}px round ${r}px)`;')), []);
+});

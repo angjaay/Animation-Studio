@@ -22,6 +22,7 @@ var GV = (() => {
   __export(index_exports, {
     ACTS: () => ACTS,
     BAYER4: () => BAYER4,
+    BRANCH_COLORS: () => BRANCH_COLORS,
     BRAND_RAMP: () => BRAND_RAMP,
     CAM_END: () => CAM_END,
     COPY: () => copy_default,
@@ -35,6 +36,7 @@ var GV = (() => {
     UI_EASE: () => UI_EASE,
     WORDMARK_DARK: () => galvis_wordmark_dark_default,
     actWindow: () => actWindow,
+    architectureSvg: () => architectureSvg,
     at: () => at,
     barStart: () => barStart,
     bayerVisible: () => bayerVisible,
@@ -349,11 +351,16 @@ var GV = (() => {
       { t: 58.5, act: "act05-products", what: "GALVIS DATA ENRICHMENT", box: [730, 840, 460, 80] },
       { t: 59, act: "act05-products", what: "GALVIS ENTERPRISE", box: [1270, 840, 460, 80] },
       { t: 61.5, act: "act05-products", what: "left branch chosen, others dim", box: [730, 830, 1e3, 100] },
-      { t: 70, act: "act06-workspace", what: "step 1 done", box: [1290, 560, 500, 380] },
-      { t: 71, act: "act06-workspace", what: "step 2 done", box: [1290, 560, 500, 380] },
-      { t: 72, act: "act06-workspace", what: "step 3 done", box: [1290, 560, 500, 380] },
-      { t: 73, act: "act06-workspace", what: "step 4 done", box: [1290, 560, 500, 380] },
-      { t: 74.5, act: "act06-workspace", what: "step 5 done", box: [1290, 560, 500, 380] },
+      { t: 66, act: "act06-workspace", what: "ASK", box: [100, 740, 160, 210] },
+      { t: 68, act: "act06-workspace", what: "ANALYZE", box: [100, 520, 160, 430] },
+      { t: 70, act: "act06-workspace", what: "VISUALIZE", box: [100, 520, 160, 430] },
+      { t: 72, act: "act06-workspace", what: "UNDERSTAND", box: [100, 520, 160, 430] },
+      { t: 70, act: "act06-workspace", what: "step 1 done", box: [1360, 590, 420, 60] },
+      { t: 71, act: "act06-workspace", what: "step 2 done", box: [1360, 640, 420, 60] },
+      { t: 72, act: "act06-workspace", what: "step 3 done", box: [1360, 690, 420, 60] },
+      { t: 73, act: "act06-workspace", what: "step 4 done", box: [1360, 740, 420, 60] },
+      { t: 74.5, act: "act06-workspace", what: "step 5 done", box: [1360, 790, 420, 60] },
+      { t: 75.5, act: "act06-workspace", what: "window collapses into the branch", box: [0, 0, 1920, 1080] },
       { t: 112, act: "act10-final", what: "sting", box: [0, 0, 1920, 1080] }
     ]
   };
@@ -567,6 +574,7 @@ var GV = (() => {
     if (state.map instanceof HTMLElement) map.append(state.map);
     else if (state.map) map.innerHTML = state.map;
     let card = null;
+    const bars = [];
     if (state.insight) {
       card = el("div", "gv-insight");
       card.append(el("h5", "", esc(state.insight.title)));
@@ -574,6 +582,7 @@ var GV = (() => {
         const row = el("div", "gv-bar");
         row.append(el("span", "", esc(b.label)), el("i"), el("em", "", `${Math.round(b.value * 100)}%`));
         row.querySelector("i").style.width = `${Math.round(b.value * 100)}%`;
+        bars.push({ fill: row.querySelector("i"), value: b.value });
         card.append(row);
       }
       map.append(card);
@@ -603,21 +612,31 @@ var GV = (() => {
     host.replaceChildren(win);
     return {
       win,
-      setStep(i, status) {
-        if (state.steps[i].status === status) return;
-        state.steps[i].status = status;
-        paintStep(stepRows[i], state.steps[i], i);
-        paintPlan();
+      setStep(i, status, k = 1) {
+        if (state.steps[i].status !== status) {
+          state.steps[i].status = status;
+          paintStep(stepRows[i], state.steps[i], i);
+          paintPlan();
+        }
+        const row = stepRows[i];
+        row.style.transform = status === "pending" ? "" : `scale(${(0.94 + 0.06 * k).toFixed(4)})`;
+        row.style.backgroundColor = status === "done" ? `rgba(31,175,161,${(0.22 * (1 - k)).toFixed(3)})` : "";
+        const badge = row.querySelector(".gv-badge");
+        if (badge) badge.style.opacity = k.toFixed(3);
       },
       setTyped(n) {
         bubble.textContent = state.prompt.slice(0, n);
         bubble.style.visibility = n > 0 ? "visible" : "hidden";
       },
-      flashLayer(i, on) {
-        layerRows[i].classList.toggle("flash", on);
+      flashLayer(i, k) {
+        layerRows[i].classList.remove("flash");
+        layerRows[i].style.backgroundColor = k > 0 ? `rgba(2,74,188,${(0.16 * k).toFixed(3)})` : "";
       },
-      setInsight(visible) {
-        if (card) card.style.opacity = visible ? "1" : "0";
+      setInsight(k) {
+        if (!card) return;
+        card.style.opacity = k.toFixed(3);
+        card.style.transform = `translateY(${(16 * (1 - k)).toFixed(2)}px)`;
+        for (const b of bars) b.fill.style.width = `${(b.value * 100 * k).toFixed(2)}%`;
       }
     };
   }
@@ -816,5 +835,24 @@ var GV = (() => {
   var pushed = ([x, y]) => [960 + (x - 960) * CAM_END, 540 + (y - 540) * CAM_END];
   var [cx, cy] = pushed(END);
   var HANDOFF = { workspace: { cx, cy, r: R * CAM_END } };
+
+  // shared/ui/architecture.js
+  var BRANCH_COLORS = { workspace: "#024ABC", enrichment: "#1FAFA1", enterprise: "#86C36A" };
+  var KEYS = ["workspace", "enrichment", "enterprise"];
+  var ENDS = [[420, 820], [960, 820], [1500, 820]];
+  var DIM = 0.35;
+  function architectureSvg({ lit, scale = 1 } = {}) {
+    const geo = branchGeometry({ top: [960, 318], split: [960, 560], ends: ENDS });
+    const m = `matrix(${scale} 0 0 ${scale} ${+(960 * (1 - scale)).toFixed(4)} ${+(540 * (1 - scale)).toFixed(4)})`;
+    const branches = geo.branches.map((d, i) => {
+      const o = KEYS[i] === lit ? 1 : DIM;
+      return `<path d="${d}" fill="none" stroke="${BRANCH_COLORS[KEYS[i]]}" stroke-width="3" opacity="${o}"/>`;
+    }).join("");
+    const ends = ENDS.map(([x, y], i) => {
+      const o = KEYS[i] === lit ? 1 : DIM;
+      return `<circle cx="${x}" cy="${y}" r="9" fill="${BRANCH_COLORS[KEYS[i]]}" stroke="#FFFFFF" stroke-width="2" opacity="${o}"/>`;
+    }).join("");
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080"><g transform="${m}"><path d="${geo.trunk}" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.7"/>${branches}${ends}</g></svg>`;
+  }
   return __toCommonJS(index_exports);
 })();

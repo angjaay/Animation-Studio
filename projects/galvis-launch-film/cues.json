@@ -63,11 +63,16 @@
     {"t": 58.5, "act": "act05-products", "what": "GALVIS DATA ENRICHMENT", "box": [730,840,460,80]},
     {"t": 59.0, "act": "act05-products", "what": "GALVIS ENTERPRISE", "box": [1270,840,460,80]},
     {"t": 61.5, "act": "act05-products", "what": "left branch chosen, others dim", "box": [730,830,1000,100]},
-    {"t": 70.0, "act": "act06-workspace", "what": "step 1 done", "box": [1290,560,500,380]},
-    {"t": 71.0, "act": "act06-workspace", "what": "step 2 done", "box": [1290,560,500,380]},
-    {"t": 72.0, "act": "act06-workspace", "what": "step 3 done", "box": [1290,560,500,380]},
-    {"t": 73.0, "act": "act06-workspace", "what": "step 4 done", "box": [1290,560,500,380]},
-    {"t": 74.5, "act": "act06-workspace", "what": "step 5 done", "box": [1290,560,500,380]},
+    {"t": 66.0, "act": "act06-workspace", "what": "ASK", "box": [100,740,160,210]},
+    {"t": 68.0, "act": "act06-workspace", "what": "ANALYZE", "box": [100,520,160,430]},
+    {"t": 70.0, "act": "act06-workspace", "what": "VISUALIZE", "box": [100,520,160,430]},
+    {"t": 72.0, "act": "act06-workspace", "what": "UNDERSTAND", "box": [100,520,160,430]},
+    {"t": 70.0, "act": "act06-workspace", "what": "step 1 done", "box": [1360,590,420,60]},
+    {"t": 71.0, "act": "act06-workspace", "what": "step 2 done", "box": [1360,640,420,60]},
+    {"t": 72.0, "act": "act06-workspace", "what": "step 3 done", "box": [1360,690,420,60]},
+    {"t": 73.0, "act": "act06-workspace", "what": "step 4 done", "box": [1360,740,420,60]},
+    {"t": 74.5, "act": "act06-workspace", "what": "step 5 done", "box": [1360,790,420,60]},
+    {"t": 75.5, "act": "act06-workspace", "what": "window collapses into the branch", "box": [0,0,1920,1080]},
     {"t": 112.0, "act": "act10-final", "what": "sting", "box": [0,0,1920,1080]}
   ]
 }

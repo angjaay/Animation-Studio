@@ -55,6 +55,7 @@ export function renderWorkspace(host, state, { prefix = '' } = {}) {
   else if (state.map) map.innerHTML = state.map;
 
   let card = null;
+  const bars = [];
   if (state.insight) {
     card = el('div', 'gv-insight');
     card.append(el('h5', '', esc(state.insight.title)));
@@ -62,6 +63,7 @@ export function renderWorkspace(host, state, { prefix = '' } = {}) {
       const row = el('div', 'gv-bar');
       row.append(el('span', '', esc(b.label)), el('i'), el('em', '', `${Math.round(b.value * 100)}%`));
       row.querySelector('i').style.width = `${Math.round(b.value * 100)}%`;
+      bars.push({ fill: row.querySelector('i'), value: b.value });
       card.append(row);
     }
     map.append(card);
@@ -93,23 +95,35 @@ export function renderWorkspace(host, state, { prefix = '' } = {}) {
   win.append(top, body);
   host.replaceChildren(win);
 
+  // Every handle takes k, the eased progress (0..1) of the change, so the timeline can animate
+  // state changes from time (movee-fe: 180 ms, cubic-bezier(.2,0,0,1)) instead of snapping.
   return {
     win,
-    setStep(i, status) {
-      if (state.steps[i].status === status) return;
-      state.steps[i].status = status;
-      paintStep(stepRows[i], state.steps[i], i);
-      paintPlan();
+    setStep(i, status, k = 1) {
+      if (state.steps[i].status !== status) {
+        state.steps[i].status = status;
+        paintStep(stepRows[i], state.steps[i], i);
+        paintPlan();
+      }
+      const row = stepRows[i];
+      row.style.transform = status === 'pending' ? '' : `scale(${(0.94 + 0.06 * k).toFixed(4)})`;
+      row.style.backgroundColor = status === 'done' ? `rgba(31,175,161,${(0.22 * (1 - k)).toFixed(3)})` : '';
+      const badge = row.querySelector('.gv-badge');
+      if (badge) badge.style.opacity = k.toFixed(3);
     },
     setTyped(n) {
       bubble.textContent = state.prompt.slice(0, n);
       bubble.style.visibility = n > 0 ? 'visible' : 'hidden';
     },
-    flashLayer(i, on) {
-      layerRows[i].classList.toggle('flash', on);
+    flashLayer(i, k) {
+      layerRows[i].classList.remove('flash');
+      layerRows[i].style.backgroundColor = k > 0 ? `rgba(2,74,188,${(0.16 * k).toFixed(3)})` : '';
     },
-    setInsight(visible) {
-      if (card) card.style.opacity = visible ? '1' : '0';
+    setInsight(k) {
+      if (!card) return;
+      card.style.opacity = k.toFixed(3);
+      card.style.transform = `translateY(${(16 * (1 - k)).toFixed(2)}px)`;
+      for (const b of bars) b.fill.style.width = `${(b.value * 100 * k).toFixed(2)}%`;
     },
   };
 }

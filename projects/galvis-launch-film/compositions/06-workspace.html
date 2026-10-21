@@ -5,7 +5,10 @@
     <template>
       <style>
         #act06-workspace-root { position: absolute; inset: 0; overflow: hidden; background: var(--cool-gray); }
+        #act06-workspace-dark, #act06-workspace-arch { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; }
+        #act06-workspace-clip { position: absolute; inset: 0; }
         #act06-workspace-win { position: absolute; left: 400px; top: 135px; width: 1440px; height: 810px; }
+        #act06-workspace-bloom { position: absolute; left: 0; top: 0; border-radius: 50%; background: var(--light-gray); box-shadow: 0 0 30px 8px rgba(245, 246, 248, 0.6); }
         #act06-workspace-tag {
           position: absolute; left: 96px; top: 135px; font-family: var(--font-text); font-weight: 700; font-size: 18px;
           letter-spacing: 0.18em; color: var(--navy);
@@ -19,8 +22,12 @@
           position: absolute; left: 140px; top: 945px; transform-origin: 0 0;
           font-family: var(--font-display); font-weight: 700; font-size: 86px; letter-spacing: 0.04em; color: var(--bright-navy); white-space: nowrap;
         }
-        .act06-workspace-map { position: absolute; inset: 0; }
+        .act06-workspace-map { position: absolute; inset: 0; overflow: hidden; }
         .act06-workspace-map canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+        #act06-workspace-sweep {
+          position: absolute; top: 0; bottom: 0; left: 0; width: 220px; opacity: 0;
+          background: linear-gradient(90deg, rgba(2, 74, 188, 0), rgba(2, 74, 188, 0.28) 70%, rgba(255, 255, 255, 0.75) 100%);
+        }
       </style>
       <div id="act06-workspace-root" data-composition-id="act06-workspace" data-width="1920" data-height="1080">
         <div id="act06-workspace-tag"></div>
@@ -30,7 +37,10 @@
         <div id="act06-workspace-w1" class="act06-workspace-word"></div>
         <div id="act06-workspace-w2" class="act06-workspace-word"></div>
         <div id="act06-workspace-w3" class="act06-workspace-word"></div>
-        <div id="act06-workspace-win"></div>
+        <canvas id="act06-workspace-dark" width="1920" height="1080" data-layout-allow-overflow></canvas>
+        <div id="act06-workspace-arch" data-layout-allow-overflow></div>
+        <div id="act06-workspace-clip"><div id="act06-workspace-win"></div></div>
+        <div id="act06-workspace-bloom"></div>
       </div>
       <script>
         GV.register('act06-workspace', async (tl) => {
@@ -42,6 +52,8 @@
           $('sub').textContent = GV.COPY['workspace.sub'];
           $('position').textContent = GV.COPY['workspace.position'];
           const words = GV.COPY['workspace.words'].map((w, i) => { $(`w${i}`).textContent = w; return $(`w${i}`); });
+          const lerp = (a, b, k) => a + (b - a) * k;
+          const smooth = (k) => { const c = Math.min(1, Math.max(0, k)); return c * c * (3 - 2 * c); };
 
           // Map area of the window is 1144x764 (1440 minus the 296 px layer panel, minus the 46 px top bar).
           const W = 1144, H = 764;
@@ -50,7 +62,7 @@
           const base = await GV.ditheredCanvas('assets/sentinel/riau-plantation.jpg', W, H, { palette: 'brand', cell: 3, resolve: 0.3 });
           map.append(base);
 
-          // Suitability surface painted over the plantation belt: seeded blobs in three classes.
+          // Suitability surface painted over the plantation belt (in the zoomed frame): seeded blobs in three classes.
           const surf = document.createElement('canvas');
           surf.width = W; surf.height = H;
           const g = surf.getContext('2d');
@@ -70,6 +82,9 @@
           g.setLineDash([8, 6]);
           g.strokeRect(24, 280, 600, 470);
           map.append(surf);
+          const sweep = document.createElement('div');
+          sweep.id = `${id}-sweep`;
+          map.append(sweep);
 
           const steps = GV.COPY['workspace.steps'].map((label) => ({ label, status: 'pending' }));
           const ui = GV.renderWorkspace($('win'), {
@@ -82,45 +97,104 @@
             map,
           }, { prefix: id });
 
-          // The agent's run, as a function of time: typing, then five steps finishing at 70, 71, 72, 73, 74.5 s.
+          // The agent's run as a function of time: typing, then five steps finishing on 70, 71, 72, 73, 74.5 s.
+          // Each step makes the map react; every UI change eases over 180 ms (GV.UI_EASE).
           const prompt = GV.COPY['workspace.prompt'];
           const typeFrom = A(34), typeTo = A(34) + prompt.length * 0.025;
           const doneAt = [A(36), A(36, 2), A(37), A(37, 2), A(38, 1)];
-          let lastResolve = -1;
+          const startAt = doneAt.map((d, i) => (i === 0 ? typeTo : doneAt[i - 1]));
+          const UI = 0.18;
+          const ZOOM = [0.12, 0.18, 0.72, 0.72];
+          let lastCrop = '', lastResolve = -1;
           const apply = (t) => {
             ui.setTyped(Math.max(0, Math.min(prompt.length, Math.round((t - typeFrom) / 0.025))));
             doneAt.forEach((d, i) => {
-              const start = i === 0 ? typeTo : doneAt[i - 1];
-              ui.setStep(i, t >= d ? 'done' : t >= start ? 'running' : 'pending');
+              if (t >= d) ui.setStep(i, 'done', GV.since(t, d, UI));
+              else if (t >= startAt[i]) ui.setStep(i, 'running', GV.since(t, startAt[i], UI));
+              else ui.setStep(i, 'pending');
             });
-            ui.flashLayer(3, t >= doneAt[3] && t < doneAt[3] + 1.5);
-            ui.setInsight(t >= A(37));
-            const resolve = 0.3 + 0.42 * Math.min(1, Math.max(0, (t - A(35)) / (A(37) - A(35))));
-            if (Math.abs(resolve - lastResolve) > 1e-3) { base.layer.set({ resolve }); base.layer.draw(); lastResolve = resolve; }
-            surf.style.opacity = String(Math.min(1, Math.max(0, (t - A(36)) / 1.5)));
+            // 1 · identify region: the map zooms in by redrawing the dither on a narrowing crop (never scaled).
+            const z = smooth((t - startAt[0]) / (doneAt[0] - startAt[0]));
+            // 4 · suitability: the imagery resolves while the surface is painted on.
+            const resolve = 0.3 + 0.45 * smooth((t - startAt[3]) / (doneAt[3] - startAt[3]));
+            // Before the zoom the map drifts slowly (a live view), redrawn on a moving crop.
+            const drift = 0.05 * Math.min(1, t / startAt[0]);
+            const from = [drift, drift * 0.6, 0.94, 0.94];
+            const crop = [lerp(from[0], ZOOM[0], z), lerp(from[1], ZOOM[1], z), lerp(from[2], ZOOM[2], z), lerp(from[3], ZOOM[3], z)];
+            const key = crop.map((v) => v.toFixed(4)).join();
+            if (key !== lastCrop || Math.abs(resolve - lastResolve) > 1e-3) {
+              base.layer.set({ crop, resolve }); base.layer.draw(); lastCrop = key; lastResolve = resolve;
+            }
+            // 2 · activate datasets: the dataset layers blink in the panel.
+            const blink = t >= startAt[1] && t < doneAt[1] ? 0.5 + 0.5 * Math.cos((t - startAt[1]) * Math.PI * 4) : 0;
+            ui.flashLayer(1, blink); ui.flashLayer(2, blink);
+            ui.flashLayer(3, t >= doneAt[3] ? 1 - GV.since(t, doneAt[3] + 0.8, 0.6) : 0);
+            // 3 · spatial analysis: a scan band crosses the map.
+            const s3 = (t - startAt[2]) / (doneAt[2] - startAt[2]);
+            sweep.style.opacity = s3 > 0 && s3 < 1 ? '1' : '0';
+            sweep.style.transform = `translateX(${(lerp(-220, W, Math.min(1, Math.max(0, s3)))).toFixed(1)}px)`;
+            surf.style.clipPath = `inset(0 ${((1 - smooth((t - startAt[3]) / (doneAt[3] - startAt[3]))) * 100).toFixed(2)}% 0 0)`;
+            // 5 · summary: the insight card rises and its chart grows.
+            ui.setInsight(t < startAt[4] ? 0 : smooth((t - startAt[4]) / 0.6));
+          };
+
+          // Opening (bar 32): act 05's last frame — navy, glow, a light disc at the left branch end — then the
+          // disc opens into the window while the navy dissolves to Cool Gray in Bayer order.
+          // Closing (bar 38): the window shrinks back into that disc, the navy returns and the architecture
+          // appears with the middle branch lit (act 07 opens from there).
+          const dark = document.createElement('canvas');
+          dark.width = 1920; dark.height = 1080;
+          const dg = dark.getContext('2d');
+          dg.fillStyle = '#032750';
+          dg.fillRect(0, 0, 1920, 1080);
+          const S = GV.CAM_END;
+          const glow = dg.createRadialGradient(960, 540 + (360 - 540) * S, 0, 960, 540 + (360 - 540) * S, 900 * S);
+          glow.addColorStop(0, 'rgba(2,74,188,0.5)');
+          glow.addColorStop(1, 'rgba(3,39,80,0)');
+          dg.save(); dg.translate(960, 540 + (360 - 540) * S); dg.scale(1, 520 / 900); dg.translate(-960, -(540 + (360 - 540) * S));
+          dg.fillStyle = glow; dg.fillRect(0, 0, 1920, 1080 * 3); dg.restore();
+          const curtainCtx = $('dark').getContext('2d');
+          const curtain = GV.mountCurtain($('dark'), curtainCtx.createPattern(dark, 'no-repeat'), 6);
+          $('arch').innerHTML = GV.architectureSvg({ lit: 'enrichment', scale: S });
+
+          const H0 = GV.HANDOFF.workspace;
+          const disc = { x: H0.cx - H0.r, y: H0.cy - H0.r, w: 2 * H0.r, h: 2 * H0.r, r: H0.r };
+          const full = { x: 400, y: 135, w: 1440, h: 810, r: 16 };
+          const OPEN_FROM = 0, OPEN = 1.1, CLOSE_FROM = A(38, 2), CLOSE = 0.5; // collapses into the disc on 75.5
+          const clip = (rect) => `inset(${rect.y.toFixed(1)}px ${(1920 - rect.x - rect.w).toFixed(1)}px ${(1080 - rect.y - rect.h).toFixed(1)}px ${rect.x.toFixed(1)}px round ${rect.r.toFixed(1)}px)`;
+          const frame = (t) => {
+            const open = GV.since(t, OPEN_FROM, OPEN, (k) => 1 - Math.pow(1 - k, 3));
+            const close = GV.since(t, CLOSE_FROM, CLOSE, (k) => k * k * k);
+            const k = open * (1 - close);
+            $('clip').style.clipPath = clip(GV.lerpRect(disc, full, k));
+            const COLLAPSE = CLOSE_FROM + CLOSE;
+            const bloom = Math.max(1 - GV.since(t, OPEN_FROM, 0.35), t >= COLLAPSE - 0.1 ? 1 : 0);
+            Object.assign($('bloom').style, { left: `${disc.x}px`, top: `${disc.y}px`, width: `${disc.w}px`, height: `${disc.h}px`, opacity: String(bloom * (1 - GV.since(t, COLLAPSE + 0.15, 0.2))) });
+            // The navy is back in one stroke as the window collapses, and the architecture appears.
+            const navy = Math.max(1 - GV.since(t, 0.15, 0.85, (x) => x), t >= COLLAPSE ? 1 : GV.since(t, CLOSE_FROM + 0.1, 0.4, (x) => x) * 0.6);
+            curtain.set(1 - navy);
+            // Fully clear layers are hidden so they never sit over the copy.
+            $('dark').style.visibility = navy > 0 ? 'visible' : 'hidden';
+            $('arch').style.opacity = String(t >= COLLAPSE ? 0.6 + 0.4 * GV.since(t, COLLAPSE, 0.3) : 0);
+            $('arch').style.visibility = t >= COLLAPSE ? 'visible' : 'hidden';
           };
           const clock = { t: 0 };
-          tl.to(clock, { t: 14, duration: 14, ease: 'none', onUpdate: () => apply(clock.t) }, 0);
-          apply(0);
-
-          // The window opens from the Workspace branch (bottom-left) with a clip, never a scale (the map is dithered).
-          const closed = 'inset(94% 96% 0% 0% round 16px)', open = 'inset(0% 0% 0% 0% round 16px)';
-          gsap.set($('win'), { clipPath: closed });
-          tl.to($('win'), { clipPath: open, duration: 1.2, ease: 'power3.inOut' }, A(32));
-          tl.to($('win'), { clipPath: closed, duration: 0.9, ease: 'power3.in' }, A(38, 2));
+          tl.to(clock, { t: 14, duration: 14, ease: 'none', onUpdate: () => { apply(clock.t); frame(clock.t); } }, 0);
+          apply(0); frame(0);
 
           gsap.set([$('tag'), $('sub'), $('position')], { opacity: 0, y: 16 });
-          tl.to([$('tag'), $('sub')], { opacity: 1, y: 0, duration: 0.5, stagger: 0.15 }, A(33));
+          tl.to([$('tag'), $('sub')], { opacity: 1, y: 0, duration: 0.5, stagger: 0.15, ease: 'expo.out' }, A(33));
           tl.to($('sub'), { opacity: 0, duration: 0.3 }, A(38));
-          tl.to($('position'), { opacity: 1, y: 0, duration: 0.5 }, A(38));
+          tl.to($('position'), { opacity: 1, y: 0, duration: 0.5, ease: 'expo.out' }, A(38));
+          tl.to([$('tag'), $('position')], { opacity: 0, duration: 0.3 }, CLOSE_FROM);
 
-          // Ask, analyse, visualise, understand: one word per bar, sliding along the vertical.
+          // Ask, analyse, visualise, understand: one word per bar, landing on the bar line.
           words.forEach((w, i) => {
             gsap.set(w, { rotation: -90, x: 0, y: 60, opacity: 0 });
-            tl.to(w, { y: 0, opacity: 1, duration: 0.45, ease: 'power3.out' }, A(34 + i));
-            if (i < 3) tl.to(w, { y: -60, opacity: 0, duration: 0.35, ease: 'power2.in' }, A(35 + i) - 0.3);
+            tl.to(w, { y: 0, opacity: 1, duration: 0.45, ease: 'expo.out' }, A(34 + i));
+            if (i < 3) tl.to(w, { y: -60, opacity: 0, duration: 0.3, ease: 'power2.in' }, A(35 + i) - 0.3);
           });
-          tl.to(words[3], { opacity: 0, duration: 0.4 }, A(38, 2));
+          tl.to(words[3], { opacity: 0, duration: 0.3 }, CLOSE_FROM);
         }, 14);
       </script>
     </template>
