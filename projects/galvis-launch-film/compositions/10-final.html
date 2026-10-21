@@ -12,7 +12,15 @@
           opacity: 0.85;
         }
         #act10-final-dawn canvas { display: block; width: 100%; height: 100%; }
-        #act10-final-contours { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+        #act10-final-contours {
+          position: absolute; inset: 0; width: 1920px; height: 1080px;
+          /* The lines stay out of the lockup band, so they never cross the type. */
+          -webkit-mask-image: linear-gradient(180deg, #000 0, #000 160px, transparent 220px, transparent 680px, #000 740px);
+          mask-image: linear-gradient(180deg, #000 0, #000 160px, transparent 220px, transparent 680px, #000 740px);
+        }
+        #act10-final-converge { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+        #act10-final-burst { position: absolute; left: 520px; top: 50px; width: 560px; height: 480px; background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255, 255, 255, 0.95), rgba(31, 175, 161, 0.35) 40%, rgba(3, 39, 80, 0) 72%); }
+        #act10-final-foot { position: absolute; left: 0; right: 0; bottom: 0; height: 140px; background: linear-gradient(180deg, rgba(3, 39, 80, 0), rgba(3, 39, 80, 0.82)); }
         #act10-final-logo { position: absolute; left: 50%; top: 230px; width: 432px; height: 121px; margin-left: -216px; }
         #act10-final-logo svg { width: 100%; height: 100%; display: block; }
         #act10-final-tagline {
@@ -50,6 +58,9 @@
       <div id="act10-final-root" data-composition-id="act10-final" data-width="1920" data-height="1080">
         <div id="act10-final-dawn"></div>
         <svg id="act10-final-contours" viewBox="0 0 1920 1080" data-layout-allow-overflow></svg>
+        <div id="act10-final-foot"></div>
+        <div id="act10-final-burst"></div>
+        <canvas id="act10-final-converge" width="1920" height="1080"></canvas>
         <div id="act10-final-lockup">
         <div id="act10-final-logo"></div>
         <div id="act10-final-sweep"></div>
@@ -107,10 +118,41 @@
             return el;
           });
 
-          // Bar 57, the sting: the reverse logo settles and a soft band of light crosses it (the glyphs are white, so the band lives around them).
-          gsap.set($('logo'), { opacity: 0, scale: 0.96 });
-          tl.to($('logo'), { opacity: 1, duration: 0.25, ease: 'power2.out' }, 0);
-          tl.to($('logo'), { scale: 1, duration: 1.6, ease: 'power3.out' }, 0);
+          // Bar 57, the sting: the three product lights fly in from the branch ends and meet in the mark on
+          // 112.5; a white burst, and the lockup pops into place. Then a soft band of light crosses it (the
+          // glyphs are white, so the band lives around them).
+          const LANDS = 0.5, MARK = [804, 290];
+          const COMETS = [[[420, 820], '2,74,188'], [[960, 820], '31,175,161'], [[1500, 820], '134,195,106']];
+          const cctx = $('converge').getContext('2d');
+          const converge = (t) => {
+            cctx.clearRect(0, 0, 1920, 1080);
+            if (t >= LANDS) return;
+            const k = (u) => Math.pow(Math.min(1, Math.max(0, u / LANDS)), 2); // accelerating into the mark
+            for (const [[x0, y0], rgb] of COMETS) {
+              for (let s = 0; s < 14; s++) {
+                const a = k(t - s * 0.02), b = k(t - (s + 1) * 0.02);
+                cctx.strokeStyle = `rgba(${rgb},${(0.95 * (1 - s / 14)).toFixed(3)})`;
+                cctx.lineWidth = 10 * (1 - s / 14);
+                cctx.lineCap = 'round';
+                cctx.beginPath();
+                cctx.moveTo(x0 + (MARK[0] - x0) * a, y0 + (MARK[1] - y0) * a);
+                cctx.lineTo(x0 + (MARK[0] - x0) * b, y0 + (MARK[1] - y0) * b);
+                cctx.stroke();
+              }
+              const h = k(t);
+              cctx.fillStyle = '#FFFFFF';
+              cctx.beginPath(); cctx.arc(x0 + (MARK[0] - x0) * h, y0 + (MARK[1] - y0) * h, 7, 0, Math.PI * 2); cctx.fill();
+            }
+          };
+          const sting = { t: 0 };
+          tl.to(sting, { t: 1, duration: 1, ease: 'none', onUpdate: () => converge(sting.t) }, 0);
+          converge(0);
+          gsap.set($('burst'), { opacity: 0 });
+          tl.set($('burst'), { opacity: 1 }, LANDS);
+          tl.to($('burst'), { opacity: 0, duration: 0.6, ease: 'power2.out' }, LANDS + 1 / 30);
+          gsap.set($('logo'), { opacity: 0, scale: 1.15 });
+          tl.set($('logo'), { opacity: 1 }, LANDS);
+          tl.to($('logo'), { scale: 1, duration: 0.6, ease: 'expo.out' }, LANDS);
           gsap.set($('sweep'), { backgroundPosition: '100% 0', opacity: 0 });
           tl.set($('sweep'), { opacity: 1 }, A(57) + 0.3);
           tl.to($('sweep'), { backgroundPosition: '0% 0', duration: 0.8, ease: 'power1.inOut' }, A(57) + 0.3);
