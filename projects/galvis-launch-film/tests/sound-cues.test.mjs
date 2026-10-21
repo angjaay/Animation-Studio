@@ -19,7 +19,7 @@ const thingOf = (e) => e.id.split(':')[1];
 test('header and event shape', () => {
   assert.equal(out.fps, 30);
   assert.equal(out.total, 3600);
-  const KINDS = ['impact', 'riser.end', 'stopdown', 'land', 'whoosh', 'wipe', 'key', 'step', 'ping', 'pop', 'bell', 'comet', 'sting', 'section'];
+  const KINDS = ['veil', 'impact', 'riser.end', 'stopdown', 'land', 'whoosh', 'wipe', 'key', 'step', 'ping', 'pop', 'bell', 'comet', 'sting', 'section'];
   for (const e of E) {
     assert.ok(KINDS.includes(e.kind), `${e.id}: kind ${e.kind}`);
     assert.ok(Number.isFinite(e.f) && e.f >= 0 && e.f < out.total, `${e.id}: f ${e.f}`);
@@ -108,4 +108,17 @@ test('whoosh at the match boundaries 12.0 and 34.0 s', () => {
 test('audio/cues.json on disk is what the script generates', () => {
   const disk = readFileSync(new URL('../audio/cues.json', import.meta.url), 'utf8');
   assert.equal(disk, serialize(out));
+});
+
+test('kinds of the cues that had no obvious home, and the stop-down holes stay free of whooshes', () => {
+  const byF = (f) => E.filter((e) => e.f === f);
+  assert.ok(byF(3240).some((e) => e.kind === 'land'), 'full chord 108.0 s is land');
+  assert.equal(E.find((e) => e.id === 'act10:converge:1').f, 3360);
+  assert.equal(E.find((e) => e.id === 'act10:converge:1').kind, 'whoosh');
+  const veil = E.find((e) => e.id === 'act02:veil:1');
+  assert.equal(veil.kind, 'veil');
+  assert.equal(veil.f, 705);
+  for (const [a, b] of [[705, 720], [1665, 1680]]) {
+    assert.deepEqual(E.filter((e) => e.kind === 'whoosh' && e.f >= a && e.f <= b), [], `whoosh in ${a}..${b}`);
+  }
 });

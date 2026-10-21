@@ -36,7 +36,7 @@ const RULES = [
   [/^constellation$/, 'ping', 'constellation'],
   [/^plate \d lands$/, 'land', 'plate'],
   [/^vortex begins$/, 'whoosh', 'vortex'],
-  [/^stop-down veil$/, 'whoosh', 'veil', { weight: 0.3 }],
+  [/^stop-down veil$/, 'veil', 'veil'], // picture-only dim; no mixer rule matches this kind
   [/^impact: /, 'impact', 'impact', { weight: 1 }],
   [/^hexagon locks$/, 'land', 'hexagon'],
   [/^arrow folds$/, 'step', 'arrow'],

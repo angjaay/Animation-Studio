@@ -20,7 +20,7 @@
     {"f":465,"kind":"land","id":"act02:plate:7","weight":1},
     {"f":540,"kind":"pop","id":"act02:line:2"},
     {"f":660,"kind":"whoosh","id":"act02:vortex:1"},
-    {"f":705,"kind":"whoosh","id":"act02:veil:1","weight":0.3},
+    {"f":705,"kind":"veil","id":"act02:veil:1"},
     {"f":712.5,"kind":"stopdown","id":"act03:stopdown:1"},
     {"f":720,"kind":"impact","id":"act03:impact:1","weight":1},
     {"f":720,"kind":"riser.end","id":"act03:riser:1"},
