@@ -90,6 +90,17 @@
     {"t": 87.5, "act": "act07-enrichment", "what": "flow step 4", "box": [1280,910,330,70]},
     {"t": 88.0, "act": "act07-enrichment", "what": "positioning line", "box": [300,860,1320,70]},
     {"t": 89.5, "act": "act07-enrichment", "what": "back to the architecture", "box": [0,0,1920,1080]},
+    {"t": 91.0, "act": "act08-enterprise", "what": "title", "box": [96,70,1700,140]},
+    {"t": 92.0, "act": "act08-enterprise", "what": "plugboard goes dark", "box": [0,0,1920,1080]},
+    {"t": 94.0, "act": "act08-enterprise", "what": "sector 1", "box": [0,236,1920,600]},
+    {"t": 96.25, "act": "act08-enterprise", "what": "sector 2", "box": [0,236,1920,600]},
+    {"t": 98.5, "act": "act08-enterprise", "what": "sector 3", "box": [0,236,1920,600]},
+    {"t": 100.75, "act": "act08-enterprise", "what": "sector 4", "box": [0,236,1920,600]},
+    {"t": 103.0, "act": "act08-enterprise", "what": "flash 1", "box": [0,236,1920,600]},
+    {"t": 103.25, "act": "act08-enterprise", "what": "flash 2", "box": [0,236,1920,600]},
+    {"t": 103.5, "act": "act08-enterprise", "what": "flash 3", "box": [0,236,1920,600]},
+    {"t": 104.0, "act": "act08-enterprise", "what": "positioning line", "box": [300,390,1320,90]},
+    {"t": 104.5, "act": "act08-enterprise", "what": "sector recap", "box": [96,560,414,130]},
     {"t": 112.0, "act": "act10-final", "what": "sting", "box": [0,0,1920,1080]}
   ]
 }

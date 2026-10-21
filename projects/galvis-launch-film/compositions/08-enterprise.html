@@ -42,6 +42,9 @@
           font-family: var(--font-display); font-weight: 700; font-size: 64px; color: var(--navy);
         }
         #act08-enterprise-dark { position: absolute; inset: 0; background: var(--navy); }
+        #act08-enterprise-navy { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; }
+        #act08-enterprise-arch { position: absolute; inset: 0; }
+        #act08-enterprise-arch svg { position: absolute; inset: 0; transform-origin: 0 0; }
         #act08-enterprise-cables { position: absolute; inset: 0; width: 1920px; height: 1080px; }
         #act08-enterprise-mark { position: absolute; left: 860px; top: 430px; width: 200px; height: 219px; }
         #act08-enterprise-mark > div { position: absolute; inset: 0; }
@@ -62,6 +65,8 @@
         <div id="act08-enterprise-chains"></div>
         <div id="act08-enterprise-position"></div>
         <div id="act08-enterprise-recap"></div>
+        <canvas id="act08-enterprise-navy" width="1920" height="1080" data-layout-allow-overflow></canvas>
+        <div id="act08-enterprise-arch" data-layout-allow-overflow></div>
         <div id="act08-enterprise-dark">
           <svg id="act08-enterprise-cables" viewBox="0 0 1920 1080"></svg>
           <div id="act08-enterprise-mark"></div>
@@ -89,15 +94,23 @@
           const W = 1920, H = 600;
           const S = 'assets/solution';
           const clean = (p) => GV.cleanCrop(`${S}/${p}`);
-          const raw = (src, crop) => GV.ditheredCanvas(src, W, H, { palette: 'brand', cell: 3, resolve: 0, crop });
-          const clear = (src, crop) => GV.ditheredCanvas(src, W, H, { palette: 'brand', cell: 3, resolve: 1, crop });
+          // Strip canvases keep 7 % of margin each side so their content can drift (redrawn on a moving crop).
+          const inset = ([x, y, w, h] = [0, 0, 1, 1]) => [x + w * 0.07, y, w * 0.86, h];
+          const strip_ = (resolve) => async (src, crop) => {
+            const base = inset(crop);
+            const c = await GV.ditheredCanvas(src, W, H, { palette: 'brand', cell: 3, resolve, crop: base });
+            c.base = base;
+            return c;
+          };
+          const raw = strip_(0);
+          const clear = strip_(1);
           const RIAU = 'assets/sentinel/riau-plantation.jpg', MORO = 'assets/sentinel/morowali-mining.jpg';
           const MORO_CROP = [0, 0.45, 0.72, 0.36];
 
           // Mining has no solution map: environmental pressure is painted over the clear scene around the smelters.
           const pressure = async () => {
             const c = await clear(MORO, MORO_CROP);
-            const g = c.getContext('2d');
+            c.overlay = (g) => {
             const rnd = GV.seeded(8);
             const cores = [[620, 500, 1], [1250, 300, 1], [900, 380, 0.7], [1500, 420, 0.5]];
             for (let k = 0; k < 40; k++) {
@@ -111,6 +124,8 @@
               g.fillStyle = grad;
               g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
             }
+            };
+            c.overlay(c.getContext('2d'));
             return c;
           };
 
@@ -122,7 +137,7 @@
           const SECTORS = GV.COPY['enterprise.sectors'];
           const sources = [
             [raw(RIAU, [0, 0.52, 0.62, 0.46]), clear(`${S}/AFS/desktop/precision.jpg`, clean('AFS/desktop/precision.jpg')), RAMP.up],
-            [raw(RIAU, [0.3, 0.08, 0.7, 0.4]), clear(`${S}/DMR/desktop/risk.jpg`, clean('DMR/desktop/risk.jpg')), RAMP.down],
+            [raw(`${S}/ESC/desktop/biodiversity.jpg`, clean('ESC/desktop/biodiversity.jpg')), clear(`${S}/DMR/desktop/risk.jpg`, clean('DMR/desktop/risk.jpg')), RAMP.down],
             [raw(MORO, MORO_CROP), pressure(), RAMP.heat],
             [raw(`${S}/ESRE/desktop/EnergyPotential-Desktop.jpg`, clean('ESRE/desktop/EnergyPotential-Desktop.jpg')), clear(`${S}/ESRE/desktop/SolarProperty-Desktop.jpg`, clean('ESRE/desktop/SolarProperty-Desktop.jpg')), RAMP.up],
           ];
@@ -157,13 +172,24 @@
           for (const [k, [p]] of FLASH.entries()) {
             const canvas = await clear(`${S}/${p}`, clean(p));
             strip.insertBefore(canvas, $('beam'));
-            flashes.push({ start: flashFrom + k / 3, canvas, name: make('div', 'head', $('heads'), GV.COPY['enterprise.flash'][k]) });
+            flashes.push({ start: flashFrom + k * 0.25, canvas, name: make('div', 'head', $('heads'), GV.COPY['enterprise.flash'][k]) });
           }
-          const flashTo = flashFrom + 1;
+          const flashTo = flashFrom + 0.75;
 
           // Everything in the strip is a function of time: which pair shows, where the beam is, which chain step is live.
           const SWEEP_FROM = 0.2, SWEEP_TO = 2.1;
           const show = (el, on) => { el.style.visibility = on ? 'visible' : 'hidden'; };
+          // The live sector's imagery drifts left across its 2.25 s (both canvases, same crop: the beam
+          // keeps showing the same place raw and clear).
+          const drift = (s, u) => {
+            const off = (Math.min(Math.max(u, 0), 2.25) / 2.25 - 0.5) * 0.12; // within the 7 % margin
+            for (const c of [s.rawC, s.clearC]) {
+              const [bx, by, bw, bh] = c.base;
+              c.layer.set({ crop: [bx + off * bw, by, bw, bh] });
+              c.layer.draw();
+              if (c.overlay) c.overlay(c.getContext('2d'));
+            }
+          };
           const apply = (t) => {
             const k = sectors.findLastIndex((s) => t >= s.start);
             const live = t < flashFrom ? Math.max(0, k) : -1;
@@ -180,22 +206,45 @@
               s.clearC.style.clipPath = `inset(0 ${W - x}px 0 0)`;
               s.rawC.style.clipPath = `inset(0 0 0 ${x}px)`;
               const u = t - s.start;
+              if (on) drift(s, u);
               const stage = u >= SWEEP_TO ? 2 : x >= W / 2 ? 1 : 0;
-              s.steps.forEach((el, j) => { el.className = j < stage ? 'done' : j === stage ? 'on' : ''; });
+              // The step that becomes active pulses once (scale 1 → 1.08 → 1).
+              const since = [0, SWEEP_FROM + (SWEEP_TO - SWEEP_FROM) / 2, SWEEP_TO][stage];
+              const pulse = Math.sin(Math.PI * Math.min(1, Math.max(0, (u - since) / 0.3)));
+              s.steps.forEach((el, j) => {
+                el.className = j < stage ? 'done' : j === stage ? 'on' : '';
+                el.style.transform = j === stage && on ? `scale(${(1 + 0.08 * pulse).toFixed(4)})` : '';
+              });
             });
-            const f = t >= flashFrom && t < flashTo ? Math.min(2, Math.floor((t - flashFrom) * 3)) : -1;
+            const f = t >= flashFrom && t < flashTo ? Math.min(2, Math.floor((t - flashFrom) * 4)) : -1;
             flashes.forEach((fl, i) => { show(fl.canvas, i === f); show(fl.name, i === f); });
             const beam = $('beam');
             show(beam, x > 0 && x < W);
             beam.style.transform = `translateX(${x}px)`;
           };
+          // Opening: act 07's last frame (navy, architecture, right branch lit); the camera pushes into the
+          // right branch end while the navy dissolves in Bayer order onto the first sector's raw strip.
+          const CAM = GV.CAM_END;
+          const navyCtx = $('navy').getContext('2d');
+          const curtain = GV.mountCurtain($('navy'), navyCtx.createPattern(GV.navyGlowCanvas(CAM), 'no-repeat'), 6);
+          $('arch').innerHTML = GV.architectureSvg({ lit: 'enterprise', scale: CAM });
+          const END = [960 + (1500 - 960) * CAM, 540 + (820 - 540) * CAM];
+          const opening = (t) => {
+            const k = 1 + 1.4 * GV.since(t, 0, 0.8, (u) => u * u);
+            $('arch').firstElementChild.style.transform = `matrix(${k}, 0, 0, ${k}, ${(END[0] * (1 - k)).toFixed(1)}, ${(END[1] * (1 - k)).toFixed(1)})`;
+            $('arch').style.opacity = String(1 - GV.since(t, 0.45, 0.35));
+            const navy = 1 - GV.since(t, 0.25, 0.75, (u) => u);
+            curtain.set(1 - navy);
+            $('navy').style.visibility = navy > 0 ? 'visible' : 'hidden';
+            $('arch').style.visibility = t < 0.8 ? 'visible' : 'hidden';
+          };
           const clock = { t: 0 };
-          tl.to(clock, { t: 16, duration: 16, ease: 'none', onUpdate: () => apply(clock.t) }, 0);
-          apply(0);
+          tl.to(clock, { t: 16, duration: 16, ease: 'none', onUpdate: () => { apply(clock.t); opening(clock.t); } }, 0);
+          apply(0); opening(0);
 
           // Bar 46: the tag and the line, over the first sector's raw strip.
           gsap.set([$('tag'), $('sub')], { opacity: 0, y: 16 });
-          tl.to([$('tag'), $('sub')], { opacity: 1, y: 0, duration: 0.5, stagger: 0.15, ease: 'power3.out' }, A(46));
+          tl.to([$('tag'), $('sub')], { opacity: 1, y: 0, duration: 0.5, stagger: 0.12, ease: 'expo.out' }, A(46, 2));
           tl.to($('sub'), { opacity: 0, y: -12, duration: 0.3 }, A(47));
 
           // Sector names and counters enter with each sector.
@@ -219,9 +268,11 @@
             return card;
           });
           gsap.set(thumbs, { opacity: 0, y: 30 });
-          tl.to(thumbs, { opacity: 1, y: 0, duration: 0.45, stagger: 0.12, ease: 'power3.out' }, A(53, 1));
+          tl.to(thumbs, { opacity: 1, y: 0, duration: 0.45, stagger: 0.12, ease: 'expo.out' }, A(53, 1));
+          // The last 0.3 s clear to plain Light Gray: act 09's curtain starts from it.
+          tl.to([$('tag'), $('position'), $('recap')], { opacity: 0, duration: 0.2 }, A(53, 3) + 0.2);
           gsap.set($('position'), { opacity: 0, y: 24 });
-          tl.to($('position'), { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, A(53));
+          tl.to($('position'), { opacity: 1, y: 0, duration: 0.6, ease: 'expo.out' }, A(53));
 
           // Bar 47, dark for a moment: seven systems are cabled into the hexagon one after another.
           const parts = GV.logoParts('act08');
@@ -244,7 +295,7 @@
           });
           gsap.set($('dark'), { opacity: 0 });
           tl.to($('dark'), { opacity: 1, duration: 0.15 }, A(47));
-          tl.to($('dark'), { opacity: 0, duration: 0.2 }, A(48) - 0.2);
+          tl.set($('dark'), { opacity: 0 }, A(48)); // hard cut from the plugboard to the first sector, on the bar
           gsap.set($('mark'), { scale: 0.8, opacity: 0 });
           tl.to($('mark'), { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(1.6)' }, A(47));
           cables.forEach(({ tile, path, order }) => {
