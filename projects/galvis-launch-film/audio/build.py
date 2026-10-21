@@ -4,7 +4,7 @@
     $AUDIO_PY audio/build.py          (npm run audio:build)
 
 1. audio/score/render.py --strict    the score from Iowa MIS recordings -> audio/out/music.wav
-2. audio/tools/mix.py --trace        audio/sounddesign.json (fragments not on disk yet are left out) -> premaster + stems
+2. audio/tools/mix.py --trace        audio/sounddesign.json (every listed fragment must exist) -> premaster + stems
 3. audio/tools/master.py             -14 LUFS, true-peak limited; the ceiling is lowered until the AAC 192k encode
                                      (audio/soundtrack.m4a) measures <= -1.5 dBTP
 4. audio/tools/qa.py                 placements, sync, edges, masking, the master gate -> audio/out/qa/qa.json
@@ -55,10 +55,11 @@ def must(code, step):
         sys.exit(f'build.py: {step} failed (exit {code})')
 
 
-def effective_design(design):
-    """the design with only the include fragments that exist on disk; the others are listed under _skipped"""
-    have = [i for i in design['include'] if (PROJECT / i).is_file()]
-    return {**design, 'include': have, '_skipped': [i for i in design['include'] if i not in have]}
+def check_includes(design):
+    """every fragment the design lists must be on disk: a soundtrack is never built with a category missing"""
+    missing = [i for i in design['include'] if not (PROJECT / i).is_file()]
+    if missing:
+        raise FileNotFoundError('sounddesign.json lists fragments that are not on disk: ' + ', '.join(missing))
 
 
 def decode(path):
@@ -132,6 +133,8 @@ def licences_and_credits(design_path, report_path):
     mdir.mkdir(parents=True, exist_ok=True)
     sources = fetch.load_sources(AUDIO / 'sources.json')
     manifest, seed = fetch.audit_manifest(sources, AUDIO / 'assets', PROJECT)
+    if not len(sources['entries']) == len(manifest) == len(seed):
+        sys.exit('build.py: fetch.audit_manifest returned lists that do not match sources.json entry for entry')
     for src, e, s in zip(sources['entries'], manifest, seed):
         # project-relative, as mix.py reports them (fetch resolves audio/assets, which may be a symlink)
         e['file'] = s['file_check']['path'] = rel(AUDIO / 'assets' / src['file'])
@@ -153,18 +156,22 @@ def licences_and_credits(design_path, report_path):
                                                  '--desc', rel(OUT / 'CREDITS_description.txt'), '--title', TITLE])
         must(cred, 'credits.py (a recording without a confirmed licence)')
     md = AUDIO / 'CREDITS.md'
-    md.write_text(md.read_text().replace('## Music\n\n', f'## Music\n\n{SCORE_NOTE}\n\n', 1))
+    text = md.read_text()
+    if '## Music\n\n' not in text:
+        sys.exit('build.py: CREDITS.md has no "## Music" section for the score note (credits.py output changed?)')
+    md.write_text(text.replace('## Music\n\n', f'## Music\n\n{SCORE_NOTE}\n\n', 1))
 
 
 def main():
     QA.mkdir(parents=True, exist_ok=True)
     must(run(sys.executable, AUDIO / 'score' / 'render.py', '--strict'), 'score render')
 
-    design = effective_design(json.loads(DESIGN.read_text()))
-    for i in design['_skipped']:
-        print(f'note: {i} is not on disk yet: left out of this mix', flush=True)
-    design_path = OUT / 'sounddesign.json'
-    design_path.write_text(json.dumps(design, indent=1))
+    design = json.loads(DESIGN.read_text())
+    try:
+        check_includes(design)
+    except FileNotFoundError as err:
+        sys.exit(f'build.py: {err}')
+    design_path = DESIGN
 
     premaster, report, trace = OUT / 'premaster.wav', QA / 'mix_report.json', QA / 'adds.json'
     must(run(sys.executable, '-I', TOOLS / 'mix.py', '--root', PROJECT, '--design', rel(design_path),

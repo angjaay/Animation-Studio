@@ -2,7 +2,6 @@ node_modules/
 .hyperframes/artifacts/
 renders/
 .hyperframes/video-state.json
-audio/temp-score.wav
 audio/__pycache__/
 .hyperframes/render-outputs.json
 audio/.venv/

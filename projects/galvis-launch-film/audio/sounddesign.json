@@ -1,5 +1,5 @@
 {
- "_doc": "GALVIS launch film soundtrack (real-sound format, audio/tools/mix.py). The score is composed in code and played from University of Iowa MIS recordings (audio/score -> audio/out/music.wav); the sound effects are real Mixkit recordings placed on the picture's cue events by one fragment per category in audio/design/ (prefixes im. tr. ui. mo.). audio/build.py renders the score, mixes, masters, encodes audio/soundtrack.m4a and writes audio/CREDITS.md. A listed fragment that is not on disk yet is left out by build.py (it says so), so every fragment joins the mix on its own once merged.",
+ "_doc": "GALVIS launch film soundtrack (real-sound format, audio/tools/mix.py). The score is composed in code and played from University of Iowa MIS recordings (audio/score -> audio/out/music.wav); the sound effects are real Mixkit recordings placed on the picture's cue events by one fragment per category in audio/design/ (prefixes im. tr. ui. mo.). audio/build.py renders the score, mixes, masters, encodes audio/soundtrack.m4a and writes audio/CREDITS.md. Every listed fragment must exist: build.py stops on a missing one.",
  "cues": "audio/cues.json",
  "include": [
   "audio/design/impacts.json",

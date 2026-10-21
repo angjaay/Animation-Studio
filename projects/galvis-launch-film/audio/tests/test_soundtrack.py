@@ -113,7 +113,7 @@ class TestEarshotTargets(unittest.TestCase):
 
 
 class TestDesign(unittest.TestCase):
-    """audio/sounddesign.json: every fragment in audio/design/ is mixed; a listed fragment not merged yet is skipped"""
+    """audio/sounddesign.json: every fragment in audio/design/ is mixed, and every listed fragment must exist"""
 
     @classmethod
     def setUpClass(cls):
@@ -128,13 +128,29 @@ class TestDesign(unittest.TestCase):
         for p in sorted((AUDIO / 'design').glob('*.json')):
             self.assertIn(f'audio/design/{p.name}', listed)
 
-    def test_missing_fragments_are_left_out_of_the_effective_design(self):
-        d = self.build.effective_design({**self.design, 'include': self.design['include'] + ['audio/design/nope.json']})
-        present = [f'audio/design/{p.name}' for p in sorted((AUDIO / 'design').glob('*.json'))]
-        self.assertEqual(sorted(d['include']), present)
-        self.assertIn('audio/design/nope.json', d['_skipped'])
-        self.assertEqual({k: v for k, v in d.items() if k not in ('include', '_skipped')},
-                         {k: v for k, v in self.design.items() if k != 'include'})
+    def test_every_listed_fragment_exists(self):
+        self.assertEqual(sorted(self.design['include']),
+                         sorted(f'audio/design/{p.name}' for p in (AUDIO / 'design').glob('*.json')))
+        self.build.check_includes(self.design)
+
+    def test_a_missing_fragment_stops_the_build(self):
+        with self.assertRaisesRegex(FileNotFoundError, 'audio/design/nope.json'):
+            self.build.check_includes({**self.design, 'include': self.design['include'] + ['audio/design/nope.json']})
+
+    def test_music_ducks_3_db_under_act_06_on_bar_lines(self):
+        """a -3 dB plateau from 66.0 to 76.0 under the typing and clicks; each ramp ends on a bar line (bars are 2 s)"""
+        t, d = zip(*sorted(self.design['buses']['music']['auto']))
+        ride = lambda x: float(np.interp(x, t, d))
+        self.assertTrue(all(ride(x) == -3.0 for x in np.arange(66.0, 75.95, 0.05)))
+        self.assertEqual((ride(62.0), ride(76.0), ride(77.0)), (0.0, 0.0, 0.0))
+        # the ramps: last point at 0 dB before the plateau, last point at -3 dB before the return
+        down = max(x for x, y in zip(t, d) if x < 66.0 and y == 0)
+        up = max(x for x, y in zip(t, d) if x < 76.0 and y == -3)
+        self.assertLessEqual(66.0 - down, 0.1)
+        self.assertLessEqual(76.0 - up, 0.1)
+        self.assertEqual((66.0 % 2, 76.0 % 2), (0.0, 0.0))
+        self.assertIn([66.0, -3], self.design['buses']['music']['auto'])
+        self.assertIn([76.0, 0], self.design['buses']['music']['auto'])
 
     def test_ceiling_is_lowered_until_the_m4a_is_under_the_limit(self):
         from unittest import mock

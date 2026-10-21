@@ -64,6 +64,7 @@ class TestSync(unittest.TestCase):
     def test_sonic_logo_bells_on_their_frames(self):
         bells = cue_times('bell')
         self.assertEqual([t for t, _ in bells], [58.0, 58.5, 59.0])
+        self.assertEqual([e['pitch'] for _, e in bells], ['A4', 'D5', 'F#5'])
         for t, _ in bells:
             self.assertLessEqual(abs(self.onset(t, high=True) - t), FRAME, f'bell {t}: onset {self.onset(t, True):.3f} s')
 
