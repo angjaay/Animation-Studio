@@ -105,6 +105,16 @@ test('whoosh at the match boundaries 12.0 and 34.0 s', () => {
   }
 });
 
+test('picture changes without a cues.json event get a whoosh cue (takeover 69.7 s, clears 103.75 / 105.7 s)', () => {
+  assert.equal(E.find((e) => e.id === 'act06:takeover:1').f, 69.7 * FPS);
+  assert.deepEqual(E.filter((e) => thingOf(e) === 'clear').map((e) => [e.id, e.kind, e.f]),
+    [['act08:clear:1', 'whoosh', 103.75 * FPS], ['act08:clear:2', 'whoosh', 105.7 * FPS]]);
+  const src = readFileSync(new URL('../compositions/08-enterprise.html', import.meta.url), 'utf8');
+  assert.match(src, /flashTo = flashFrom \+ 0\.75/);
+  assert.match(src, /A\(53, 3\) \+ 0\.2/);
+  assert.equal(actWindow('act08-enterprise').start + 4 + 4 * 2.25 + 0.75, 103.75);
+});
+
 test('audio/cues.json on disk is what the script generates', () => {
   const disk = readFileSync(new URL('../audio/cues.json', import.meta.url), 'utf8');
   assert.equal(disk, serialize(out));
