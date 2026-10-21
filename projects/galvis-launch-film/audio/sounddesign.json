@@ -18,9 +18,11 @@
     "fade_in": 0.05, "fade_out": 0.0}
   ]
  },
- "_buses_doc": "Fader rides, film seconds -> dB. Act 06 (62-76): the music dips 3 dB under the typing and clicks from the bar line at 66.0 (first key, first word) to the bar line at 76.0 (act 07 wipe), each step a 50 ms ramp into the bar line so it hides under that downbeat's transient.",
+ "_buses_doc": "Fader rides, film seconds -> dB. (1) 22.0-23.75, the riser into 24.0: the score's cymbal-roll swell and the SFX riser climb in the same 5-8 kHz band (qa read the riser only +4.6 dB over the bed), so the music steps 2 dB down on the bar line at 22.0 and the riser leads; it comes back inside the stop-down hole (music is silent there). Not at 56.0: that riser already reads +8.3 dB. (2) Act 06 (62-76): the music dips 3 dB under the typing and clicks from the bar line at 66.0 (first key, first word) to the bar line at 76.0 (act 07 wipe), each step a 50 ms ramp into the bar line so it hides under that downbeat's transient; the UI peaks then sit about 10 dB under the act's music peak, 13 dB under it before the dip. (3) The end card: the recordings of the 116.0 chord run out about 118.2 while the score holds the chord to 120, so the bus lifts 3.5 dB over 117.6-118.6 to keep the chord at body level under the URL (118.0), then fades out over 118.9-119.4, with the picture going black at 119.2 (earshot: fade under 1 s, final moment at body level). EQ: a 2.5 dB low shelf at 60 Hz on the music: Iowa MIS has no bass drum, so the score's sub share sat just under the reference films' range (earshot critique: sub 20-60 Hz -17.8 dB, refs from -17.7 dB).",
  "buses": {
-  "music": {"auto": [[0, 0], [65.95, 0], [66.0, -3], [75.95, -3], [76.0, 0], [120, 0]]},
+  "music": {"eq": {"lowshelf": [60, 2.5]},
+            "auto": [[0, 0], [21.95, 0], [22.0, -2], [23.8, -2], [23.95, 0], [65.95, 0], [66.0, -3], [75.95, -3], [76.0, 0],
+                    [117.6, 0], [118.6, 3.5], [118.9, 3.5], [119.4, -30], [120, -30]]},
   "sfx": {},
   "amb": {}
  },

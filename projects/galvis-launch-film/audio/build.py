@@ -123,7 +123,8 @@ def licences_and_credits(design_path, report_path):
     import fetch
     music = json.loads(Path(design_path).read_text())['music']['file']
     report = json.loads(Path(report_path).read_text())
-    report['files_used'] = sorted({f for f in report['files_used'] if f != music} | set(score_recordings()))
+    score = set(score_recordings())
+    report['files_used'] = sorted({f for f in report['files_used'] if f != music} | score)
     credits_report = QA / 'credits_report.json'
     credits_report.write_text(json.dumps(report, indent=1))
     # the licence manifest generated from audio/sources.json (one source of truth), the score's recordings as music
@@ -134,7 +135,7 @@ def licences_and_credits(design_path, report_path):
     for src, e, s in zip(sources['entries'], manifest, seed):
         # project-relative, as mix.py reports them (fetch resolves audio/assets, which may be a symlink)
         e['file'] = s['file_check']['path'] = rel(AUDIO / 'assets' / src['file'])
-        if e['source'] == 'iowa-mis':
+        if e['file'] in score:
             e['category'] = 'music'
     (mdir / 'recordings.json').write_text(json.dumps(manifest, indent=1, ensure_ascii=False))
     (mdir / 'audit.seed.json').write_text(json.dumps(seed, indent=1, ensure_ascii=False))

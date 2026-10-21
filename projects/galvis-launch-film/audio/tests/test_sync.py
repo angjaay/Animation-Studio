@@ -1,7 +1,10 @@
 """Sync of the final soundtrack with the picture: the hits, the sonic logo, and the film plays this soundtrack.
 
 Onsets are measured on audio/soundtrack.m4a as in scripts/sync-check.mjs: 5 ms energy hops, the onset is the hop with
-the largest rise over the 50 ms before it, searched within 0.1 s of the cue. Times and pitches come from audio/cues.json.
+the largest rise over the 50 ms before it, searched within 0.1 s of the cue. The sonic logo plays over the ring of the
+56.0 impact (gong, double bass), whose low partials beat by +-3 dB from hop to hop, as much as a bell adds: the bells
+are measured above 1 kHz, where their attacks and the octave shimmer are the new sound. Times and pitches come from
+audio/cues.json.
 Run from the project root:  audio/.venv/bin/python -m unittest discover -s audio/tests
 """
 import json
@@ -11,6 +14,7 @@ import unittest
 from pathlib import Path
 
 import numpy as np
+from scipy.signal import butter, sosfilt
 
 from test_soundtrack import CUES, FRAME, M4A, SR, decode
 
@@ -33,16 +37,20 @@ def hz(name):
 class TestSync(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.x = decode(M4A).astype(np.float64)
-        mono = cls.x.mean(axis=1)
-        n = len(mono) // HOP
-        cls.energy = (mono[:n * HOP] ** 2).reshape(n, HOP).mean(axis=1)
-        cls.mono = mono
+        cls.mono = decode(M4A).astype(np.float64).mean(axis=1)
+        cls.energy = cls.hops(cls.mono)
+        cls.energy_high = cls.hops(sosfilt(butter(4, 1000, 'highpass', fs=SR, output='sos'), cls.mono))
 
-    def onset(self, t):
+    @staticmethod
+    def hops(x):
+        n = len(x) // HOP
+        return (x[:n * HOP] ** 2).reshape(n, HOP).mean(axis=1)
+
+    def onset(self, t, high=False):
+        e = self.energy_high if high else self.energy
         best, ratio = None, 0.0
         for h in range(round((t - 0.1) / 0.005), round((t + 0.1) / 0.005) + 1):
-            r = self.energy[h] / (self.energy[h - 10:h].mean() + 1e-12)
+            r = e[h] / (e[h - 10:h].mean() + 1e-12)
             if r > ratio:
                 best, ratio = h, r
         return best * 0.005
@@ -57,7 +65,7 @@ class TestSync(unittest.TestCase):
         bells = cue_times('bell')
         self.assertEqual([t for t, _ in bells], [58.0, 58.5, 59.0])
         for t, _ in bells:
-            self.assertLessEqual(abs(self.onset(t) - t), FRAME, f'bell {t}: onset {self.onset(t):.3f} s')
+            self.assertLessEqual(abs(self.onset(t, high=True) - t), FRAME, f'bell {t}: onset {self.onset(t, True):.3f} s')
 
     def new_spectrum(self, t, span=0.42, gap=0.03):
         """magnitude spectrum of what starts at t: |after| - |before| (Hann, zero-padded), and its frequency axis"""
@@ -97,7 +105,7 @@ class TestFilmPlaysTheSoundtrack(unittest.TestCase):
         for d in ('compositions', 'scripts', 'checks', 'tests'):
             files += [p for p in (PROJECT / d).rglob('*') if p.suffix in ('.html', '.js', '.mjs', '.json', '.py')]
         for p in files:
-            self.assertNotIn('temp-score', p.read_text(), p)
+            self.assertFalse('temp-score' in p.read_text(), f'{p} mentions temp-score')
         for name in ('score.py', 'temp-score.m4a', 'test_score.py', 'score.png'):
             self.assertFalse((AUDIO / name).exists(), name)
 

@@ -79,10 +79,9 @@ class TestMaster(unittest.TestCase):
             hole = self.x[int((a + 0.05) * SR):int((b - 0.03) * SR)]
             self.assertLess(20 * np.log10(np.abs(hole).max() + 1e-12), -40.0, (a, b))
 
-    def test_ends_at_body_level_with_a_short_fade(self):
-        """the 3 s before the last second sit within 3 LU of integrated; the last second is the fade"""
+    def test_ends_at_body_level(self):
+        """the 3 s before the last second (the fade, at most 1 s: TestEarshotTargets) sit within 3 LU of integrated"""
         self.assertGreaterEqual(self.loudness(LENGTH - 4.0, LENGTH - 1.0) - self.lufs, -3.0)
-        self.assertGreater(self.loudness(LENGTH - 1.0, LENGTH - 0.5) - self.lufs, -12.0)
 
 
 class TestEarshotTargets(unittest.TestCase):
@@ -136,6 +135,21 @@ class TestDesign(unittest.TestCase):
         self.assertIn('audio/design/nope.json', d['_skipped'])
         self.assertEqual({k: v for k, v in d.items() if k not in ('include', '_skipped')},
                          {k: v for k, v in self.design.items() if k != 'include'})
+
+    def test_ceiling_is_lowered_until_the_m4a_is_under_the_limit(self):
+        from unittest import mock
+        b, ceilings = self.build, []
+        with mock.patch.object(b, 'master', lambda pre, wav, m, c: ceilings.append(c) or 0), \
+                mock.patch.object(b, 'encode', lambda wav, m4a: None), mock.patch.object(b, 'decode', lambda p: None), \
+                mock.patch.object(b, 'true_peak_db', side_effect=[-1.2, -1.45, -1.62]), \
+                mock.patch.object(b.shutil, 'copyfile') as copy, mock.patch('builtins.print'):
+            ceiling, tp = b.master_to_m4a('premaster.wav', {'ceiling': 0.77})
+        self.assertEqual(tp, -1.62)
+        self.assertEqual(len(ceilings), 3)
+        self.assertAlmostEqual(20 * np.log10(ceilings[1] / ceilings[0]), -1.5 - 0.1 + 1.2)
+        self.assertAlmostEqual(20 * np.log10(ceilings[2] / ceilings[1]), -1.5 - 0.1 + 1.45)
+        self.assertEqual(ceiling, ceilings[2])
+        copy.assert_called_once()
 
     def test_music_is_the_rendered_score_on_the_grid(self):
         m = self.design['music']
