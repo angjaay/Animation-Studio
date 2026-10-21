@@ -1,0 +1,11 @@
+# Core audio toolchain (mixer, master, QA, credits). Versions are the ones the film was built with.
+# earshot itself is installed by audio/setup.sh (pinned commit 925ebe5), not from here.
+numpy==2.5.4
+scipy==1.18.1
+soundfile==0.14.0
+soxr==1.1.0
+librosa==1.0.0
+pyloudnorm==0.2.0
+scikit-learn==1.9.1
+pillow==13.0.0
+matplotlib==3.11.2

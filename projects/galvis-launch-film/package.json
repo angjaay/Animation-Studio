@@ -17,7 +17,10 @@
     "build:3d": "esbuild shared/three/index.js --bundle --format=iife --global-name=GV3D --minify --outfile=shared/gv3d.js --log-level=warning",
     "qa:act": "node scripts/qa-act.mjs",
     "audio:cues": "node scripts/export-sound-cues.mjs",
-    "test:film": "node --test checks/film.test.mjs checks/determinism.test.mjs"
+    "test:film": "node --test checks/film.test.mjs checks/determinism.test.mjs",
+    "audio:setup": "bash audio/setup.sh",
+    "audio:test": "${AUDIO_PY:-audio/.venv/bin/python} -m unittest discover -s audio/tests",
+    "audio:build": "${AUDIO_PY:-audio/.venv/bin/python} audio/build.py"
   },
   "devDependencies": {
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
