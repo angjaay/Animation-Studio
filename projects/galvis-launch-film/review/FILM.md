@@ -1,7 +1,7 @@
 # GALVIS Launch Film — v4 (gambar v3 + suara final)
 
 v4 = gambar v3 dengan soundtrack final dari Rencana 4: musik dikomposisi dengan kode dari rekaman instrumen asli
-(University of Iowa MIS), SFX rekaman asli Mixkit, mix dan master −14 LUFS / −2,0 dBTP. earshot critique:
+(University of Iowa MIS), SFX rekaman asli Mixkit, mix dan master −14 LUFS / −1,6 dBTP. earshot critique:
 **launch-grade**, 23/23 metrik, 0 critical, 0 major. Laporan suara: `review/SOUND.md`. Render: `renders/film-v4.mp4`,
 kontak sheet `review/film-v4-sheet.jpg`; `FILM=renders/film-v4.mp4 npm run test:film` 7/7.
 
