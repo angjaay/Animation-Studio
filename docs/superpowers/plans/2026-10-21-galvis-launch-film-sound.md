@@ -194,7 +194,10 @@ Aturan (prioritas, bukan suara di setiap cut — playbook §4, §8):
     di luar stop-down, akhir: level 3 s terakhir sebelum fade ≥ −3 LU dari integrated, fade ≤ 1 s;
   - sync: onset terukur pada soundtrack di 24,0 / 56,0 / 112,5 s dalam ±1 frame; bell di 58,0 / 58,5 / 59,0 s dalam ±1
     frame dan pitch A4 / D5 / F♯5 (±30 cent);
-  - `index.html` memutar `audio/soundtrack.m4a` dan tidak ada lagi rujukan `temp-score`.
+  - `index.html` memutar `audio/soundtrack.m4a` dan tidak ada lagi rujukan `temp-score`;
+  - dari baseline earshot film v3 (skor sementara: "needs work", realness 0,23 critical): lebar stereo side −15..−4 dB
+    di bawah mid (v3: −33 dB, nyaris mono), 3 s terkeras ≤ 4,0 LU di atas integrated (v3: 4,7 LU di 59,5 s), momen akhir
+    ≥ −3,7 LU dari integrated (v3: −4,7 LU; akhir di sting 112,5, bukan memudar), penutup 10 % terakhir ≤ +1,2 LU.
 - [ ] **Step 2:** `audio/build.py`: compose → render musik → `mix.py --trace` → master (`master.py`, −14 LUFS) → AAC
   192k dengan loop plafon sampai m4a ≤ −1,5 dBTP → `qa.py` → `credits.py` → `audio/CREDITS.md`. Bus musik di-duck 3 dB
   di bawah klik/ketikan babak 06 (auto ride di garis bar).
