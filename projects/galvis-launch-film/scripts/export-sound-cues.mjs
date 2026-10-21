@@ -6,6 +6,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { CUES, actWindow } from '../shared/cues.js';
+import { at } from '../shared/beats.js';
 import { CAM_END, HANDOFF } from '../shared/handoff.js';
 import COPY from '../shared/copy.json' with { type: 'json' };
 
@@ -24,10 +25,19 @@ const WIPES = [
   { act: 'act08-enterprise', x: 960 + (1500 - 960) * CAM_END },
   { act: 'act09-reunify', x: 960 },
 ];
+// Picture changes with no cues.json event that earshot's cut detector finds on the film (accents for the whoosh rules
+// of audio/design/transitions.json): the sounds that sit on them make 'visual events with a new attack' of the critique.
+const abs = (act, bar, beat = 0) => actWindow(act).start + at(act, bar, beat); // the compositions' A(bar, beat) in film seconds
+// act 06 (compositions/06-workspace.html): ui.setFocus settles the agent panel over 0.6 s from A(36) - 0.4 with the ease-out
+// of GV.since; the accent sits one sixth into that ramp, where the eased change is fastest (69.7 s, where the detector sees it).
+const TAKEOVER = abs('act06-workspace', 36) - 0.4 + 0.6 / 6;
+// act 08 (compositions/08-enterprise.html): the sector strip clears at flashTo = A(48) + 4 * 2.25 + 0.75; the last 0.3 s fade
+// to plain gray starts at A(53, 3) + 0.2.
+const CLEARS = [abs('act08-enterprise', 48) + 4 * 2.25 + 0.75, abs('act08-enterprise', 53, 3) + 0.2];
 const MATCH_WHOOSH = [12, 34]; // the two match boundaries without a wipe sound of their own (act 02 and act 04 openers)
 
 // Things that do not come from a cues.json event; the test uses this to tell the two apart.
-export const EXTRA_THINGS = ['section', 'key', 'wipe', 'riser', 'stopdown', 'match'];
+export const EXTRA_THINGS = ['section', 'key', 'wipe', 'riser', 'stopdown', 'match', 'takeover', 'clear'];
 
 // Each cues.json event, by its `what`, becomes one sound event: [pattern, kind, thing, extras].
 const RULES = [
@@ -114,6 +124,8 @@ export function buildSoundCues() {
 
   for (const w of WIPES) add(w.act, 'wipe', 'wipe', actWindow(w.act).start, { pan: tidy(w.x / 960 - 1) });
   for (const t of MATCH_WHOOSH) add(actAt(t), 'match', 'whoosh', t);
+  add(actAt(TAKEOVER), 'takeover', 'whoosh', TAKEOVER);
+  for (const t of CLEARS) add(actAt(t), 'clear', 'whoosh', t);
 
   events.sort((a, b) => a.f - b.f || (a.id < b.id ? -1 : 1));
   return { fps: FPS, total: CUES.duration * FPS, events };

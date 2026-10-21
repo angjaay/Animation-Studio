@@ -2,7 +2,7 @@
   "_doc": "Fragment 'transitions' (prefix tr.): a whoosh at each of the four radial wipes (acts 06-09) and a short whoosh at the two match boundaries (12.0, 34.0). Nothing on the 24.0 cut: the impact fragment owns it. Real Mixkit recordings only (review/audio-sourcing.md).",
   "_wipes": "The cue events 'wipe' sit on the first frame of the act (62, 76, 90, 106 s) and carry the pan (x / 960 - 1) of the point the radial curtain opens from. The curtain itself runs (compositions/06..09, GV.since): act06 0.15-1.00 s after the act start (apex 0.575), act07 0.25-1.00 (0.625), act08 0.25-1.00 (0.625), act09 0.00-0.60 (0.30). The whoosh peak is aligned on the MIDDLE of that time window (apex at 50 % of the wipe), so each rule's offset is half the wipe time measured from the cue frame.",
   "_apex": "mix.py aligns the 5 ms AMPLITUDE peak of the unpanned recording; qa.py measures the ENERGY apex (50 ms smoothed) of the panned event. For the stereo wind whoosh panned hard (wipes 06 and 08, pan -0.6 / +0.6) the two differ: the apex lies 89 / 75 ms before the amplitude peak (first render: apex 486 / 550 ms for offsets 575 / 625). Those two rules add that measured lead to half the wipe time (0.575 + 0.089, 0.625 + 0.075) so the energy apex, which is what the ear hears, lands on the wipe's middle; the speed recording (centred wipes 07, 09) needs none (-17 ms).",
-  "_scope": "Kind 'whoosh' events with another id (act02:vortex, act06:collapse, act07:return, act08:dark) are not matched here on purpose (controller: wipes + match boundaries only); act10:converge belongs to the impacts fragment.",
+  "_scope": "Task 7 fix (earshot critique v4: 19 of 31 picture events had no new attack within +-100 ms): the match whooshes peak on the picture's cut (11.8 / 33.9 s, 0.2 / 0.1 s before the cue), and the whoosh events nobody sounded now do (collapse 75.5, return 89.5, dark 92.0) along with three picture changes that had no cue (takeover 69.7, clear 103.75 / 105.7, see scripts/export-sound-cues.mjs). act02:vortex (22.0) stays silent under the riser; act10:converge belongs to the impacts fragment.",
   "samples": {
     "tr.wipe.wind": {
       "_about": "Mixkit 1168 'Woosh wind' (primary long whoosh, real 0.97, stereo). Used 0.95-2.55 s: the last 0.65 s of the swell, the peak at 1.60 s (0.65 s into the sample) and a 0.5 s fade of the decay. The peak is the alignment point.",
@@ -16,6 +16,33 @@
       "_about": "Mixkit 168 'Fast air sweep transition' (primary short whoosh, real 0.88, 0.86 s, peak 0.32 s): the match boundary at 12.0.",
       "file": "audio/assets/mixkit/168.wav", "start": 0.0, "end": 0.86, "norm_peak_db": -3.0, "fade_in": 0.06, "fade_out": 0.15
     },
+    "tr.acc.swoosh": {
+      "_about": "Mixkit 1471 'Cinematic wind swoosh' (alternate 3 short whoosh, real 0.80, 1.45 s, peak 0.43 s), used 0-1.1 s: the window collapsing into the disc at 75.5 (act06:collapse), with the rise before its peak.",
+      "file": "audio/assets/mixkit/1471.wav", "start": 0.0, "end": 1.1, "norm_peak_db": -3.0, "fade_in": 0.05, "fade_out": 0.3
+    },
+    "tr.acc.dark": {
+      "_about": "Mixkit 564 'Soft horror hit drum' low-passed to 220 Hz (a low, round thump, cut at 1.3 s): the plugboard goes dark at 92.0 (act08:dark). Same recording as the sting's soft hit, other trim and level.",
+      "file": "audio/assets/mixkit/564.wav", "start": 0.0, "end": 1.3, "mono": true, "norm_peak_db": -3.0, "fade_in": 0.002, "fade_out": 0.5,
+      "eq": {"lp": 220, "lp_order": 4}
+    },
+    "tr.hit.air": {
+      "_about": "Task 7 fix. Mixkit 168 from 0.28 s: the whoosh's apex and fall with a 4 ms entry, so it starts abruptly ON the picture cut (a swish with an attack). A rising whoosh alone gives the critique's onset detector no new attack (spectral flux of a swell is flat), so the rising whoosh keeps its peak on the cut and this layer adds the attack.",
+      "file": "audio/assets/mixkit/168.wav", "start": 0.28, "end": 0.86, "norm_peak_db": -3.0, "fade_in": 0.004, "fade_out": 0.2
+    },
+    "tr.hit.sweep": {
+      "_about": "Task 7 fix. Mixkit 2632 from 0.40 s (apex 0.44 s) with a 4 ms entry: the abrupt-start swish for the second match cut and the clears.",
+      "file": "audio/assets/mixkit/2632.wav", "start": 0.4, "end": 1.1, "norm_peak_db": -3.0, "fade_in": 0.004, "fade_out": 0.25
+    },
+    "tr.acc.click": {
+      "_about": "Task 7 fix. Mixkit 1116 'Single classic click' (same trim as ui.click, LP 6.5 kHz): the click as the agent panel settles and the map takes over at 69.7 (the 'VISUALIZE' moment).",
+      "file": "audio/assets/mixkit/1116.wav", "start": 0.1, "end": 0.23, "mono": true, "norm_peak_db": -3.0, "fade_out": 0.04,
+      "eq": {"hp": 250, "hp_order": 2, "lp": 6500, "lp_order": 2}
+    },
+    "tr.acc.pop": {
+      "_about": "Task 7 fix. Mixkit 2070 'Light impact on the ground' +5 semitones (same recipe as mo.pop.a): the small pop as the collapsing window disappears into the disc at 75.5.",
+      "file": "audio/assets/mixkit/2070.wav", "start": 0.0, "end": 0.14, "mono": true, "pitch": 5, "norm_peak_db": -3.0, "fade_in": 0.001, "fade_out": 0.05,
+      "eq": {"hp": 280, "hp_order": 2, "lp": 5500, "lp_order": 2}
+    },
     "tr.match.sweep": {
       "_about": "Mixkit 2632 'Whoosh wind sweep' (alternate short whoosh, real 0.87, 1.17 s, peak 0.44 s): the match boundary at 34.0, so the two match cuts do not play the same recording.",
       "file": "audio/assets/mixkit/2632.wav", "start": 0.0, "end": 1.1, "norm_peak_db": -3.0, "fade_in": 0.06, "fade_out": 0.2
@@ -24,7 +51,14 @@
   "pools": {
     "tr.p.wipe.wind": ["tr.wipe.wind"],
     "tr.p.wipe.speed": ["tr.wipe.speed"],
-    "tr.p.match": ["tr.match.air", "tr.match.sweep"]
+    "tr.p.match": ["tr.match.air", "tr.match.sweep"],
+    "tr.p.acc.air": ["tr.match.air"],
+    "tr.p.acc.swoosh": ["tr.acc.swoosh"],
+    "tr.p.acc.dark": ["tr.acc.dark"],
+    "tr.p.hit.air": ["tr.hit.air"],
+    "tr.p.hit.sweep": ["tr.hit.sweep"],
+    "tr.p.acc.click": ["tr.acc.click"],
+    "tr.p.acc.pop": ["tr.acc.pop"]
   },
   "rules": [
     {"name": "tr.wipe.06", "match": {"kind": "wipe", "id": "^act06:"}, "pool": "tr.p.wipe.wind", "mode": "fixed",
@@ -38,8 +72,40 @@
     {"name": "tr.wipe.09", "match": {"kind": "wipe", "id": "^act09:"}, "pool": "tr.p.wipe.speed", "mode": "fixed",
      "gain_db": -12.0, "pan": "cue", "align": "peak", "offset": 0.3},
     {"name": "tr.match.12", "match": {"kind": "whoosh", "id": "^act02:match:"}, "pool": "tr.p.match", "mode": "cycle", "cycle_start": 0,
-     "gain_db": -16.0, "pan": 0.0, "align": "peak"},
+     "gain_db": -16.0, "pan": 0.0, "align": "peak", "offset": -0.2},
     {"name": "tr.match.34", "match": {"kind": "whoosh", "id": "^act04:match:"}, "pool": "tr.p.match", "mode": "cycle", "cycle_start": 1,
-     "gain_db": -16.0, "pan": 0.0, "align": "peak"}
+     "gain_db": -16.0, "pan": 0.0, "align": "peak", "offset": -0.1},
+    {"name": "tr.match.12.hit", "match": {"kind": "whoosh", "id": "^act02:match:"}, "pool": "tr.p.hit.air", "mode": "fixed",
+     "gain_db": -17.0, "pan": 0.0, "align": "attack", "offset": -0.2, "no_cue": true},
+    {"name": "tr.match.34.hit", "match": {"kind": "whoosh", "id": "^act04:match:"}, "pool": "tr.p.hit.sweep", "mode": "fixed",
+     "gain_db": -17.0, "pan": 0.0, "align": "attack", "offset": -0.1, "no_cue": true},
+    {"name": "tr.match.12.click", "match": {"kind": "whoosh", "id": "^act02:match:"}, "pool": "tr.p.acc.click", "mode": "fixed",
+     "gain_db": -14.0, "pan": 0.0, "align": "attack", "offset": -0.2, "no_cue": true},
+    {"name": "tr.match.34.click", "match": {"kind": "whoosh", "id": "^act04:match:"}, "pool": "tr.p.acc.click", "mode": "fixed",
+     "gain_db": -14.0, "pan": 0.0, "align": "attack", "offset": -0.1, "no_cue": true},
+    {"name": "tr.collapse", "match": {"kind": "whoosh", "id": "^act06:collapse:"}, "pool": "tr.p.acc.swoosh", "mode": "fixed",
+     "gain_db": -15.0, "pan": 0.0, "align": "peak"},
+    {"name": "tr.collapse.pop", "match": {"kind": "whoosh", "id": "^act06:collapse:"}, "pool": "tr.p.acc.pop", "mode": "fixed",
+     "gain_db": -11.0, "pan": 0.0, "align": "attack", "no_cue": true},
+    {"name": "tr.return", "match": {"kind": "whoosh", "id": "^act07:return:"}, "pool": "tr.p.acc.air", "mode": "fixed",
+     "gain_db": -15.0, "pan": 0.0, "align": "peak"},
+    {"name": "tr.return.hit", "match": {"kind": "whoosh", "id": "^act07:return:"}, "pool": "tr.p.hit.air", "mode": "fixed",
+     "gain_db": -17.0, "pan": 0.0, "align": "attack", "no_cue": true},
+    {"name": "tr.return.click", "match": {"kind": "whoosh", "id": "^act07:return:"}, "pool": "tr.p.acc.click", "mode": "fixed",
+     "gain_db": -14.0, "pan": 0.0, "align": "attack", "no_cue": true},
+    {"name": "tr.dark", "match": {"kind": "whoosh", "id": "^act08:dark:"}, "pool": "tr.p.acc.dark", "mode": "fixed",
+     "gain_db": -9.0, "pan": 0.0, "align": "attack", "offset": 0.03},
+    {"name": "tr.dark.tick", "match": {"kind": "whoosh", "id": "^act08:dark:"}, "pool": "tr.p.acc.pop", "mode": "fixed",
+     "gain_db": -13.0, "pan": 0.0, "align": "attack", "offset": 0.03, "no_cue": true},
+    {"name": "tr.takeover", "match": {"kind": "whoosh", "id": "^act06:takeover:"}, "pool": "tr.p.acc.click", "mode": "fixed",
+     "gain_db": -15.0, "pan": 0.0, "align": "attack"},
+    {"name": "tr.clear.1", "match": {"kind": "whoosh", "id": "^act08:clear:1$"}, "pool": "tr.p.hit.sweep", "mode": "fixed",
+     "gain_db": -17.0, "pan": 0.0, "align": "attack"},
+    {"name": "tr.clear.1.click", "match": {"kind": "whoosh", "id": "^act08:clear:1$"}, "pool": "tr.p.acc.click", "mode": "fixed",
+     "gain_db": -18.0, "pan": 0.0, "align": "attack", "no_cue": true},
+    {"name": "tr.clear.2", "match": {"kind": "whoosh", "id": "^act08:clear:2$"}, "pool": "tr.p.hit.air", "mode": "fixed",
+     "gain_db": -16.0, "pan": 0.0, "align": "attack"},
+    {"name": "tr.clear.2.click", "match": {"kind": "whoosh", "id": "^act08:clear:2$"}, "pool": "tr.p.acc.click", "mode": "fixed",
+     "gain_db": -18.0, "pan": 0.0, "align": "attack", "no_cue": true}
   ]
 }
