@@ -35,3 +35,10 @@ test('vortexPoint spirals from the start into the centre and shrinks', () => {
 test('lerpRect interpolates every field', () => {
   assert.deepEqual(lerpRect({ x: 0, y: 0, w: 10, h: 20, r: 0 }, { x: 10, y: 20, w: 30, h: 40, r: 10 }, 0.5), { x: 5, y: 10, w: 20, h: 30, r: 5 });
 });
+
+test('the act 05 → 06 handoff disc sits where the pushed camera puts the left branch end', async () => {
+  const { HANDOFF, CAM_END } = await import('../shared/handoff.js');
+  assert.equal(CAM_END, 1.06);
+  assert.ok(Math.abs(HANDOFF.workspace.cx - 387.6) < 1e-9 && Math.abs(HANDOFF.workspace.cy - 836.8) < 1e-9);
+  assert.ok(Math.abs(HANDOFF.workspace.r - 26.5) < 1e-9);
+});

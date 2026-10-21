@@ -23,9 +23,11 @@ var GV = (() => {
     ACTS: () => ACTS,
     BAYER4: () => BAYER4,
     BRAND_RAMP: () => BRAND_RAMP,
+    CAM_END: () => CAM_END,
     COPY: () => copy_default,
     CUES: () => cues_default,
     DURATION: () => DURATION,
+    HANDOFF: () => HANDOFF,
     IMPACTS: () => IMPACTS,
     RIAU_SVG: () => province_riau_default,
     SEA_POINTS: () => sea_points_default,
@@ -340,10 +342,13 @@ var GV = (() => {
       { t: 46.5, act: "act04-core", what: "module ml active", box: [500, 540, 260, 260] },
       { t: 48.5, act: "act04-core", what: "module decision active", box: [660, 280, 260, 260] },
       { t: 50, act: "act04-core", what: "question answered", box: [580, 48, 760, 70] },
+      { t: 52, act: "act05-products", what: "ONE INTELLIGENCE CORE.", box: [480, 730, 960, 80] },
+      { t: 54, act: "act05-products", what: "THREE WAYS TO USE IT.", box: [480, 730, 960, 80] },
       { t: 56, act: "act05-products", what: "impact: split", box: [0, 0, 1920, 1080] },
       { t: 58, act: "act05-products", what: "GALVIS WORKSPACE", box: [190, 840, 460, 80] },
       { t: 58.5, act: "act05-products", what: "GALVIS DATA ENRICHMENT", box: [730, 840, 460, 80] },
       { t: 59, act: "act05-products", what: "GALVIS ENTERPRISE", box: [1270, 840, 460, 80] },
+      { t: 61.5, act: "act05-products", what: "left branch chosen, others dim", box: [730, 830, 1e3, 100] },
       { t: 70, act: "act06-workspace", what: "step 1 done", box: [1290, 560, 500, 380] },
       { t: 71, act: "act06-workspace", what: "step 2 done", box: [1290, 560, 500, 380] },
       { t: 72, act: "act06-workspace", what: "step 3 done", box: [1290, 560, 500, 380] },
@@ -378,8 +383,8 @@ var GV = (() => {
   var BRAND_RAMP = ["#032750", "#024ABC", "#1FAFA1", "#86C36A", "#FFFFFF"];
   var RAMP_RGB = BRAND_RAMP.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));
   var DEFAULTS = { cell: 3, levels: 4, palette: "landing", resolve: 0 };
-  function threshold(cx, cy) {
-    return (BAYER4[cy & 3][cx & 3] + 0.5) / 16;
+  function threshold(cx2, cy2) {
+    return (BAYER4[cy2 & 3][cx2 & 3] + 0.5) / 16;
   }
   function landing(rgb, t, levels) {
     const n = levels - 1;
@@ -396,9 +401,9 @@ var GV = (() => {
     const step = p - i > t ? 1 : 0;
     return RAMP_RGB[Math.min(i + step, n - 1)];
   }
-  function ditherCell(rgb, cx, cy, opts = {}) {
+  function ditherCell(rgb, cx2, cy2, opts = {}) {
     const { levels, palette, resolve } = { ...DEFAULTS, ...opts };
-    const t = threshold(cx, cy);
+    const t = threshold(cx2, cy2);
     const d = palette === "brand" ? brand(rgb, t) : landing(rgb, t, levels);
     return d.map((v, k) => Math.round(v + (rgb[k] - v) * resolve));
   }
@@ -412,12 +417,12 @@ var GV = (() => {
     const last = RAMP_RGB.length - 1;
     const T = new Float64Array(16);
     for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) T[y * 4 + x] = (BAYER4[y][x] + 0.5) / 16;
-    for (let cy = 0; cy < ch; cy++) {
-      const row = (cy & 3) * 4;
-      for (let cx = 0; cx < cw; cx++) {
-        const i = (cy * cw + cx) * 4;
+    for (let cy2 = 0; cy2 < ch; cy2++) {
+      const row = (cy2 & 3) * 4;
+      for (let cx2 = 0; cx2 < cw; cx2++) {
+        const i = (cy2 * cw + cx2) * 4;
         if (data[i + 3] === 0) continue;
-        const t = T[row + (cx & 3)];
+        const t = T[row + (cx2 & 3)];
         const r = data[i], g = data[i + 1], b = data[i + 2];
         let dr, dg, db;
         if (palette === "brand") {
@@ -722,8 +727,8 @@ var GV = (() => {
   }
 
   // shared/curtain.js
-  function bayerVisible(cx, cy, progress) {
-    return (BAYER4[cy & 3][cx & 3] + 0.5) / 16 < progress;
+  function bayerVisible(cx2, cy2, progress) {
+    return (BAYER4[cy2 & 3][cx2 & 3] + 0.5) / 16 < progress;
   }
   function mountCurtain(canvas, color, cell = 12) {
     const ctx = canvas.getContext("2d");
@@ -733,8 +738,8 @@ var GV = (() => {
         if (progress >= 1) return;
         ctx.fillStyle = color;
         const cw = Math.ceil(canvas.width / cell), ch = Math.ceil(canvas.height / cell);
-        for (let cy = 0; cy < ch; cy++) for (let cx = 0; cx < cw; cx++) {
-          if (!bayerVisible(cx, cy, progress)) ctx.fillRect(cx * cell, cy * cell, cell, cell);
+        for (let cy2 = 0; cy2 < ch; cy2++) for (let cx2 = 0; cx2 < cw; cx2++) {
+          if (!bayerVisible(cx2, cy2, progress)) ctx.fillRect(cx2 * cell, cy2 * cell, cell, cell);
         }
       }
     };
@@ -766,10 +771,10 @@ var GV = (() => {
 
   // shared/motion/ease.js
   function cubicBezier(x1, y1, x2, y2) {
-    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
-    const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
-    const sx = (u) => ((ax * u + bx) * u + cx) * u;
-    const sy = (u) => ((ay * u + by) * u + cy) * u;
+    const cx2 = 3 * x1, bx = 3 * (x2 - x1) - cx2, ax = 1 - cx2 - bx;
+    const cy2 = 3 * y1, by = 3 * (y2 - y1) - cy2, ay = 1 - cy2 - by;
+    const sx = (u) => ((ax * u + bx) * u + cx2) * u;
+    const sy = (u) => ((ay * u + by) * u + cy2) * u;
     return (x) => {
       if (x <= 0) return 0;
       if (x >= 1) return 1;
@@ -790,12 +795,12 @@ var GV = (() => {
   }
 
   // shared/motion/paths.js
-  function vortexPoint([sx, sy], [cx, cy], k, turns = 1.25) {
-    const r0 = Math.hypot(sx - cx, sy - cy);
-    const a0 = Math.atan2(sy - cy, sx - cx);
+  function vortexPoint([sx, sy], [cx2, cy2], k, turns = 1.25) {
+    const r0 = Math.hypot(sx - cx2, sy - cy2);
+    const a0 = Math.atan2(sy - cy2, sx - cx2);
     const a = a0 + turns * 2 * Math.PI * k;
     const r = r0 * Math.pow(1 - k, 1.6);
-    const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+    const x = cx2 + r * Math.cos(a), y = cy2 + r * Math.sin(a);
     return { x: k === 0 ? sx : x, y: k === 0 ? sy : y, scale: 1 - 0.85 * k, rotation: turns * 360 * k };
   }
   function lerpRect(a, b, k) {
@@ -803,5 +808,13 @@ var GV = (() => {
     for (const key of ["x", "y", "w", "h", "r"]) out[key] = a[key] + (b[key] - a[key]) * k;
     return out;
   }
+
+  // shared/handoff.js
+  var CAM_END = 1.06;
+  var END = [420, 820];
+  var R = 25;
+  var pushed = ([x, y]) => [960 + (x - 960) * CAM_END, 540 + (y - 540) * CAM_END];
+  var [cx, cy] = pushed(END);
+  var HANDOFF = { workspace: { cx, cy, r: R * CAM_END } };
   return __toCommonJS(index_exports);
 })();
