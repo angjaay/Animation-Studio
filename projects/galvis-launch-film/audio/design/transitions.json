@@ -53,7 +53,6 @@
     "tr.p.wipe.speed": ["tr.wipe.speed"],
     "tr.p.match": ["tr.match.air", "tr.match.sweep"],
     "tr.p.acc.air": ["tr.match.air"],
-    "tr.p.acc.sweep": ["tr.match.sweep"],
     "tr.p.acc.swoosh": ["tr.acc.swoosh"],
     "tr.p.acc.dark": ["tr.acc.dark"],
     "tr.p.hit.air": ["tr.hit.air"],
@@ -104,9 +103,9 @@
      "gain_db": -17.0, "pan": 0.0, "align": "attack"},
     {"name": "tr.clear.1.click", "match": {"kind": "whoosh", "id": "^act08:clear:1$"}, "pool": "tr.p.acc.click", "mode": "fixed",
      "gain_db": -18.0, "pan": 0.0, "align": "attack", "no_cue": true},
-    {"name": "tr.clear.2.click", "match": {"kind": "whoosh", "id": "^act08:clear:2$"}, "pool": "tr.p.acc.click", "mode": "fixed",
-     "gain_db": -18.0, "pan": 0.0, "align": "attack", "no_cue": true},
     {"name": "tr.clear.2", "match": {"kind": "whoosh", "id": "^act08:clear:2$"}, "pool": "tr.p.hit.air", "mode": "fixed",
-     "gain_db": -16.0, "pan": 0.0, "align": "attack"}
+     "gain_db": -16.0, "pan": 0.0, "align": "attack"},
+    {"name": "tr.clear.2.click", "match": {"kind": "whoosh", "id": "^act08:clear:2$"}, "pool": "tr.p.acc.click", "mode": "fixed",
+     "gain_db": -18.0, "pan": 0.0, "align": "attack", "no_cue": true}
   ]
 }

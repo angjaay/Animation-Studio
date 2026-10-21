@@ -105,14 +105,24 @@ test('whoosh at the match boundaries 12.0 and 34.0 s', () => {
   }
 });
 
-test('picture changes without a cues.json event get a whoosh cue (takeover 69.7 s, clears 103.75 / 105.7 s)', () => {
-  assert.equal(E.find((e) => e.id === 'act06:takeover:1').f, 69.7 * FPS);
+test('picture changes without a cues.json event get a whoosh cue, derived from the compositions (takeover, clears)', () => {
+  const A = (bar, beat = 0) => (bar - 1) * 2 + beat * 0.5; // film seconds at 120 BPM: bar 2 s, beat 0.5 s
+  const src06 = readFileSync(new URL('../compositions/06-workspace.html', import.meta.url), 'utf8');
+  const src08 = readFileSync(new URL('../compositions/08-enterprise.html', import.meta.url), 'utf8');
+  // act 06: the agent panel settles over 0.6 s from A(36) - 0.4; the accent is one sixth into that ramp
+  assert.match(src06, /GV\.since\(t, A\(36\) - 0\.4, 0\.6\)/);
+  const ramp = A(36) - 0.4;
+  assert.ok(Math.abs(E.find((e) => e.id === 'act06:takeover:1').f - (ramp + 0.1) * FPS) < 1e-3);
+  assert.ok(Math.abs(ramp - 69.6) < 1e-9);
+  // act 08: the strip clears at flashTo, the last fade starts at A(53, 3) + 0.2
+  assert.match(src08, /flashFrom = A\(48\) \+ 4 \* 2\.25/);
+  assert.match(src08, /flashTo = flashFrom \+ 0\.75/);
+  assert.match(src08, /A\(53, 3\) \+ 0\.2/);
+  const flashTo = A(48) + 4 * 2.25 + 0.75;
+  const fade = A(53, 3) + 0.2;
   assert.deepEqual(E.filter((e) => thingOf(e) === 'clear').map((e) => [e.id, e.kind, e.f]),
-    [['act08:clear:1', 'whoosh', 103.75 * FPS], ['act08:clear:2', 'whoosh', 105.7 * FPS]]);
-  const src = readFileSync(new URL('../compositions/08-enterprise.html', import.meta.url), 'utf8');
-  assert.match(src, /flashTo = flashFrom \+ 0\.75/);
-  assert.match(src, /A\(53, 3\) \+ 0\.2/);
-  assert.equal(actWindow('act08-enterprise').start + 4 + 4 * 2.25 + 0.75, 103.75);
+    [['act08:clear:1', 'whoosh', Math.round(flashTo * FPS * 1e4) / 1e4], ['act08:clear:2', 'whoosh', Math.round(fade * FPS * 1e4) / 1e4]]);
+  assert.ok(Math.abs(flashTo - 103.75) < 1e-9 && Math.abs(fade - 105.7) < 1e-9);
 });
 
 test('audio/cues.json on disk is what the script generates', () => {
