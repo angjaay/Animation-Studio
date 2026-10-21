@@ -397,7 +397,7 @@ var GV = (() => {
       { t: 108, act: "act09-reunify", what: "architecture complete (full chord)", box: [560, 300, 800, 560] },
       { t: 110, act: "act09-reunify", what: "map network lights up", box: [550, 170, 600, 400] },
       { t: 110.25, act: "act09-reunify", what: "ONE CORE.", box: [740, 845, 440, 80] },
-      { t: 110.75, act: "act09-reunify", what: "second line", box: [460, 946, 1e3, 36] },
+      { t: 110.75, act: "act09-reunify", what: "second line", box: [516, 960, 876, 24] },
       { t: 112, act: "act10-final", what: "sting", box: [0, 0, 1920, 1080] },
       { t: 113, act: "act10-final", what: "full name", box: [640, 380, 640, 32] },
       { t: 114, act: "act10-final", what: "FROM LOCATION", box: [560, 470, 800, 64] },

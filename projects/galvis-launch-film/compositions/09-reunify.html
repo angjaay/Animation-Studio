@@ -39,14 +39,15 @@
         <div id="act09-reunify-chord"></div>
         <div id="act09-reunify-diagram">
           <svg id="act09-reunify-net" viewBox="0 0 1920 1080"></svg>
-          <canvas id="act09-reunify-dots" width="1920" height="1080"></canvas>
           <div id="act09-reunify-mark"></div>
           <div id="act09-reunify-core"></div>
           <div id="act09-reunify-products"></div>
+          <!-- The curtain covers the diagram but not the rooms: they pop over the light frame act 08 left. -->
+          <canvas id="act09-reunify-curtain" width="1920" height="1080"></canvas>
+          <canvas id="act09-reunify-dots" width="1920" height="1080"></canvas>
         </div>
         <div id="act09-reunify-one"></div>
         <div id="act09-reunify-many"></div>
-        <canvas id="act09-reunify-curtain" width="1920" height="1080"></canvas>
       </div>
       <script>
         GV.register('act09-reunify', async (tl) => {
@@ -58,7 +59,7 @@
           $('core').textContent = GV.COPY['core.label'];
 
           // Bar 54 opens on the light frame act 08 left, and a navy Bayer curtain closes over it.
-          const curtain = GV.mountCurtain($('curtain'), '#F5F6F8');
+          const curtain = GV.mountCurtain($('curtain'), '#F5F6F8', 12, { origin: [960, 300] }); // opens from the core
 
           // The architecture, with the same geometry as the split in act 05.
           const SPLIT = [960, 560];
@@ -116,7 +117,7 @@
             }),
           ];
           const expoOut = (k) => (k >= 1 ? 1 : 1 - Math.pow(2, -10 * k));
-          const ROOM = { w: 168, h: 104, r: 8 }, BADGE = { w: 36, h: 36, r: 18 };
+          const ROOM = { w: 168, h: 104, r: 8 }, BADGE = { w: 44, h: 44, r: 22 };
           const rnd5 = GV.seeded(11);
           const risers = branches.flatMap((_, i) => Array.from({ length: 24 }, () => ({ i, phase: rnd5(), speed: 0.25 + rnd5() * 0.2 })));
           const drawDots = (t) => {
@@ -127,10 +128,23 @@
               const pop = expoOut(u / 0.2), fold = GV.since(u, 0.25, 0.25), climb = GV.since(u, 0.5, TRAVEL - 0.5, (k) => k * k * (3 - 2 * k));
               const pt = p.getPointAtLength(lengths[i] * (1 - climb));
               const box = GV.lerpRect({ x: 0, y: 0, ...ROOM }, { x: 0, y: 0, ...BADGE }, fold);
-              const sc = 0.6 + 0.4 * pop;
+              const sc = pop * (0.6 + 0.4 * pop); // from nothing, so 106.0 still matches act 08's last frame
               const w = box.w * sc, h = box.h * sc;
               const cx = pt.x, cy = pt.y - (1 - climb) * 70 * (1 - fold);
               dctx.globalAlpha = u > TRAVEL ? 1 - (u - TRAVEL) / 0.2 : 1;
+              // A comet tail in the product colour (up to 160 px of branch behind the badge) while it climbs.
+              if (climb > 0 && climb < 1) {
+                const tail = Math.min(160, lengths[i] * (1 - climb)), from = lengths[i] * (1 - climb);
+                for (let s = 0; s < 16; s++) {
+                  const a = p.getPointAtLength(from + (tail * s) / 16), b = p.getPointAtLength(from + (tail * (s + 1)) / 16);
+                  dctx.strokeStyle = PRODUCTS[i][1];
+                  dctx.globalAlpha = (1 - s / 16) * 0.9 * Math.min(1, climb * 8);
+                  dctx.lineWidth = 10 * (1 - s / 16);
+                  dctx.lineCap = 'round';
+                  dctx.beginPath(); dctx.moveTo(a.x, a.y); dctx.lineTo(b.x, b.y); dctx.stroke();
+                }
+                dctx.globalAlpha = u > TRAVEL ? 1 - (u - TRAVEL) / 0.2 : 1;
+              }
               dctx.save();
               dctx.beginPath(); dctx.roundRect(cx - w / 2, cy - h / 2, w, h, box.r * sc); dctx.clip();
               dctx.globalAlpha *= 1 - fold;
