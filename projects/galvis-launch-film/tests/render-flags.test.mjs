@@ -10,6 +10,11 @@ test('every render path forces software GL', () => {
   assert.match(readFileSync('scripts/render.mjs', 'utf8'), /'--no-browser-gpu'/);
 });
 
+// QA measures what the render shows only if its snapshots run the same GL as the render.
+test('every snapshot path forces software GL too', () => {
+  for (const file of ['scripts/lib/snap.mjs', 'checks/determinism.test.mjs']) assert.match(readFileSync(file, 'utf8'), /'--no-browser-gpu'/, file);
+});
+
 test('index.html loads no script from the network', () => {
   const html = readFileSync('index.html', 'utf8');
   assert.deepEqual([...html.matchAll(/<script[^>]+src="(https?:[^"]+)"/g)].map((m) => m[1]), []);

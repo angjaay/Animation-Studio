@@ -33,3 +33,22 @@ for (const act of ACTS) {
     assert.ok(html.includes(`window.__timelines["${act.id}"]`) || html.includes(`GV.register('${act.id}'`));
   });
 }
+
+// A frame callback added before an await reaches code declared after it: if that await rejects (a missing
+// asset), every seek into the act throws. Each act adds its frame clock after its last await.
+for (const act of ACTS) {
+  test(`${act.file} adds its frame clock after its last await`, () => {
+    const html = read(`compositions/${act.file}`);
+    const clock = html.indexOf('tl.to(clock');
+    if (clock < 0) return;
+    assert.ok(html.lastIndexOf('await ') < clock, `${act.file}: an await follows the frame clock`);
+  });
+}
+
+test('act 03 moves a camera wrapper that leaves the dithered dust screen-locked', () => {
+  const html = read('compositions/03-reveal.html');
+  assert.doesNotMatch(html, /\$\('root'\),\s*\{[^}]*scale/, 'the root (with the dust) is scaled');
+  const cam = html.match(/<div id="act03-reveal-cam">([\s\S]*?)<\/div>\s*<div id="act03-reveal-inside">/);
+  assert.ok(cam, 'no #act03-reveal-cam wrapper before the navy layer');
+  assert.ok(!cam[1].includes('act03-reveal-dust'), 'the dust is inside the camera');
+});

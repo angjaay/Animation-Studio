@@ -53,3 +53,8 @@ test('boundaries are every act start after 0, cut only at 24 and 112', () => {
 test('holds are ordered spans inside the film', () => {
   for (const [a, b] of CUES.holds) assert.ok(a < b && a >= 0 && b <= DURATION);
 });
+
+test('act 02 checks every plate landing (12.5 … 15.5)', () => {
+  const lands = CUES.events.filter((e) => e.act === 'act02-complexity' && /^plate \d lands$/.test(e.what)).map((e) => e.t);
+  assert.deepEqual(lands, [12.5, 13, 13.5, 14, 14.5, 15, 15.5]);
+});

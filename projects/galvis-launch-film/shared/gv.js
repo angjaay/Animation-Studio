@@ -324,6 +324,7 @@ var GV = (() => {
       { t: 12.5, act: "act02-complexity", what: "plate 1 lands", box: [480, 690, 960, 380] },
       { t: 13, act: "act02-complexity", what: "plate 2 lands", box: [480, 624, 960, 380] },
       { t: 13.5, act: "act02-complexity", what: "plate 3 lands", box: [480, 558, 960, 380] },
+      { t: 14, act: "act02-complexity", what: "plate 4 lands", box: [480, 492, 960, 380] },
       { t: 14, act: "act02-complexity", what: "line 1", box: [300, 84, 1320, 75] },
       { t: 14.5, act: "act02-complexity", what: "plate 5 lands", box: [480, 426, 960, 380] },
       { t: 15, act: "act02-complexity", what: "plate 6 lands", box: [480, 360, 960, 380] },
