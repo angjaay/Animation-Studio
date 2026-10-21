@@ -19,6 +19,7 @@ Form (seconds; the acts come from the cues):
                   and held under the end card to the 0.8 s fade
 """
 import json
+import math
 import re
 from pathlib import Path
 from typing import NamedTuple, Optional
@@ -167,6 +168,33 @@ def pizz_bars(s, start, end, changes, vel):
         t += BEAT / 2
 
 
+# The rhythmic layer keeps the body moving: the reference launch films run 2-9 onsets/s, the score without it ran
+# 0.9/s in the mix. Staccato piano on the two upper chord tones (high-low) alternates with damped crotales on the
+# same chord: a soft tick, bright enough to read as an onset. Quarters where the picture breathes (act 01, the
+# reveal's opening, the end card's first bars), eighths in acts 02-03, 05, 06 and 09, sixteenths where the film works
+# (acts 04, 07, 08). Never in a stop-down, never between the second impact and 60.0 (the logo speaks alone), and
+# not after 116.0 (the end card's chord holds).
+TICK_LEVEL = 1.4   # the layer's level: every velocity passed to ticks() is scaled by it
+TICK = {'D': ('A5', 'D5'), 'Bm': ('F#5', 'B4'), 'G': ('G5', 'D5'), 'A': ('A5', 'E5')}
+SPARK = {'D': ('A6', 'D6'), 'Bm': ('F#6', 'D6'), 'G': ('D6', 'F#6'), 'A': ('A6', 'E6')}
+TICK_VOICES = ('piano_stacc', 'crotales_damped')
+
+
+def ticks(s, start, end, changes, vel, step=BEAT / 2, spark=True):
+    """The layer from start to end every `step` s: piano on the even steps, crotales on the odd ones (left out with
+    spark=False, where other sparkle already sounds)."""
+    t = start
+    while t < end - 1e-9:
+        chord = chord_at(t, changes)
+        k = int(round((t - start) / step))
+        v = vel * TICK_LEVEL
+        if k % 2 == 0:
+            s.add(t, 'piano_stacc', TICK[chord][k // 2 % 2], v, 0.15)
+        elif spark:
+            s.add(t, 'crotales_damped', SPARK[chord][k // 2 % 2], v * 0.8, 0.05)
+        t += step
+
+
 def per_bar(start, chords):
     return [(start + i * BAR, c) for i, c in enumerate(chords)]
 
@@ -179,6 +207,7 @@ def act01(s, cues):
     s.bows('bass_arco_soft', 0.0, 12.0, lambda t: ['D2'], 0.42)
     under = {'D': 'A2', 'Bm': 'B2', 'G': 'G2', 'A': 'A2'}
     s.bows('cello_arco_soft', 0.0, 12.0, lambda t: [under[chord_at(t, changes)]], 0.34, offset=1.0)
+    ticks(s, 4.0, 12.0, changes, 0.36, step=BEAT)
     for t, chord in changes[1:]:
         s.chord(t, 'piano', [tone(chord, 0, 2), tone(chord, 2, 2)], 0.34, 4.0)
     melody = [(2.0, 'F#4'), (3.0, 'A4'), (4.0, 'D5'), (5.5, 'C#5'), (8.0, 'B4'), (9.0, 'D5'), (11.0, 'E5'),
@@ -197,6 +226,7 @@ def act02(s, cues, stop):
     """The pulse on a pedal A thickens as the plates land; bar 12 builds into the stop-down."""
     changes = [(12.0, 'D'), (16.0, 'Bm'), (20.0, 'G'), (22.0, 'A')]
     build = 22.0
+    ticks(s, 12.0, build, changes, 0.42)
     s.pulse('piano', 12.0, build, BEAT / 2, lambda t: ['A4'],
             lambda t: 0.3 + 0.12 * (t - 12.0) / 10 + (0.05 if (t * 2) % 1 == 0 else 0))
     weight = {round(e['f'] / cues['fps'], 3): e.get('weight', 1.0)
@@ -244,6 +274,8 @@ def act03(s, cues):
     s.bows('bass_arco_soft', t_hex, 34.0, lambda t: [bass_root(chord_at(t, changes))], 0.42)
     s.bows('cello_arco_soft', t_hex, 34.0, lambda t: [tone(chord_at(t, changes), 0, 3)], 0.38, offset=1.0)
     s.chord(t_hex, 'piano', ['D3', 'D4'], 0.52, 2.0)
+    ticks(s, t_hex, 28.0, changes, 0.38, step=BEAT)
+    ticks(s, 28.0, 34.0, changes, 0.42)
     s.add(t_arrow, 'piano', 'A4', 0.46, 1.5)
     s.chord(t_mark, 'piano', ['D4', 'D5'], 0.52, 2.0)
     s.add(gal, 'piano', 'A4', 0.42, 1.0)
@@ -264,6 +296,8 @@ def act04(s, cues):
     changes = per_bar(34.0, ['D', 'D', 'D', 'Bm', 'G', 'A', 'Bm', 'D', 'A'])
     pizz_bars(s, 34.0, 36.0, changes, 0.32)
     pizz_bars(s, 36.0, 52.0, changes, 0.48)
+    ticks(s, 34.0, 36.0, changes, 0.38, step=BEAT)
+    ticks(s, 36.0, 52.0, changes, 0.44, step=BEAT / 4)
     s.bows('bass_arco_soft', 34.0, 52.0, lambda t: [bass_root(chord_at(t, changes))], 0.42)
     for t, chord in changes[1:]:
         s.chord(t, 'piano', [tone(chord, 0, 3), tone(chord, 2, 3), tone(chord, 1, 4)], 0.4, 1.8)
@@ -283,6 +317,8 @@ def act05(s, cues, stop, hit):
     s.add(52.0, 'bass_arco_soft', 'D2', 0.4, 2.4)
     s.add(52.0, 'violin_arco_soft', 'A4', 0.3, 2.4)
     pizz_bars(s, 52.0, stop, changes, 0.42)
+    ticks(s, 52.0, 54.0, changes, 0.42)
+    ticks(s, 60.0, 62.0, [(60.0, 'D')], 0.28)   # after the logo has spoken, well under its ring
     s.pulse('piano', 54.0, 55.0, BEAT / 2, lambda t: ['A4'], lambda t: 0.36 + 0.08 * (t - 54.0))
     s.pulse('piano', 55.0, stop, BEAT / 4, lambda t: ['A4'], lambda t: 0.42 + 0.08 * (t - 55.0) / (stop - 55.0))
     s.add(54.0, 'bass_arco_swell', 'A1', 0.46, stop - 54.0)
@@ -302,6 +338,7 @@ def act05(s, cues, stop, hit):
 def act06(s):
     """Workspace: light piano arpeggios that touch A4 on every downbeat, vibraphone, a low cello."""
     changes = per_bar(62.0, ['D', 'Bm', 'G', 'A', 'D', 'G', 'A'])
+    ticks(s, 62.0, 76.0, changes, 0.42)
     for t, chord in changes:
         s.add(t, 'piano', 'A4', 0.52, 1.0)
         for beat, degree in ((1, 1), (2, 2), (3, 3)):
@@ -317,6 +354,11 @@ def act07(s, cues):
     """Data Enrichment: pizz drive, D5 on every downbeat, crotales for every row that fills in."""
     changes = per_bar(76.0, ['Bm', 'G', 'D', 'A', 'Bm', 'G', 'A'])
     pizz_bars(s, 76.0, 90.0, changes, 0.48)
+    row_times = cue_times(cues, 'act07:row:')
+    first, last = math.floor(row_times[0]), math.ceil(row_times[-1] + 0.25)
+    ticks(s, 76.0, first, changes, 0.44, step=BEAT / 4)
+    ticks(s, first, last, changes, 0.44, spark=False)   # the rows' own crotales and pops sparkle here
+    ticks(s, last, 90.0, changes, 0.44, step=BEAT / 4)
     s.bows('bass_arco_soft', 76.0, 90.0, lambda t: [bass_root(chord_at(t, changes))], 0.38)
     s.bows('cello_arco_soft', 76.0, 90.0, lambda t: [tone(chord_at(t, changes), 2, 2)], 0.32, offset=1.0)
     for t, chord in changes:
@@ -333,6 +375,7 @@ def act07(s, cues):
 def act08(s, cues):
     """Enterprise: full strings with F#5 on top, bass drum on every sector, crotales on the flashes."""
     changes = per_bar(90.0, ['D', 'Bm', 'G', 'A', 'D', 'Bm', 'G', 'A'])
+    ticks(s, 90.0, 106.0, changes, 0.52, step=BEAT / 4)
     s.bows('bass_arco', 90.0, 106.0, lambda t: [bass_root(chord_at(t, changes))], 0.5)
     s.bows('cello_arco', 90.0, 106.0, lambda t: [tone(chord_at(t, changes), 0, 3), tone(chord_at(t, changes), 2, 2)],
            0.42)
@@ -361,6 +404,8 @@ def act09(s, cues):
         logo_note(s, t, p, 0.5, 4.0)
         s.add(t, 'piano', p, 0.34, 1.5)
     s.add(106.0, 'bass_arco_soft', 'A1', 0.42, 2.2)
+    ticks(s, 106.0, 108.0, [(106.0, 'A')], 0.38)
+    ticks(s, 108.0, 112.0, [(108.0, 'D')], 0.4)
     s.add(106.0, 'cello_arco_soft', 'E3', 0.36, 2.2)
     t = cue_times(cues, 'act09:chord')[0]
     s.chord(t, 'piano', ['D2', 'A2', 'D3', 'F#4', 'A4'], 0.4, 4.0)
@@ -390,12 +435,13 @@ def act10(s, cues):
         s.add(when, 'piano', p, 0.34, 2.0)
     s.add(114.0, 'bass_arco_soft', 'D2', 0.4, 2.5)
     s.chord(114.0, 'cello_arco_soft', ['A2', 'D3'], 0.36, 2.5)
+    ticks(s, t, t + 3.5, [(t, 'D')], 0.34, step=BEAT)
     hold = t + 3.5
-    s.add(hold, 'gong', None, 0.26, 4.0)
-    s.add(hold, 'bass_arco_soft', 'D2', 0.46, 4.0)
-    s.chord(hold, 'cello_arco_soft', ['A2', 'D3'], 0.42, 4.0)
-    s.add(hold, 'violin_arco_soft', 'A4', 0.36, 4.0)
-    s.chord(hold, 'piano', ['D3', 'A3', 'F#4', 'A4', 'D5'], 0.42, 4.0)
+    s.add(hold, 'gong', None, 0.32, 4.0)
+    s.add(hold, 'bass_arco_soft', 'D2', 0.55, 4.0)
+    s.chord(hold, 'cello_arco_soft', ['A2', 'D3'], 0.51, 4.0)
+    s.add(hold, 'violin_arco_soft', 'A4', 0.44, 4.0)
+    s.chord(hold, 'piano', ['D3', 'A3', 'F#4', 'A4', 'D5'], 0.54, 4.0)
 
 
 def compose(cues):

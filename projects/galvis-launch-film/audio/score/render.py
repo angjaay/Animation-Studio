@@ -54,6 +54,7 @@ class Voice(NamedTuple):
     files: tuple = ('*.flac',)         # file-name globs, earlier ones preferred (brass bells over plastic)
     soft: tuple = ()                   # folders for notes under SOFT_VEL, used when they exist
     optional: str = ''                 # if set: left out when no recording exists, and this says what remains
+    width: float = 1.0                 # stereo width kept from a stereo recording (0 = mono, 1 = as recorded)
 
 
 PIANO = dict(folders=('piano-mf', 'piano'), soft=('piano-pp',), low='D2', high='D6')
@@ -65,6 +66,7 @@ VIOLIN = dict(folders=('violin-arco', 'violin_arco'), low='D4', high='A5', pan=0
 # underscore names are accepted too). Ranges are the notes the score may ask for.
 VOICES = {
     'piano':             Voice(**PIANO, pan=(-0.3, 0.3), release=0.35),
+    'piano_stacc':       Voice(**PIANO, pan=(-0.15, 0.15), release=0.12, width=0.3),
     'cello_arco':        Voice(**CELLO, attack=0.08, release=0.45),
     'cello_arco_soft':   Voice(**CELLO, attack=0.5, release=0.6),
     'cello_arco_swell':  Voice(**CELLO, release=0.03, swell=True),
@@ -77,6 +79,8 @@ VOICES = {
     'violin_arco_swell': Voice(**VIOLIN, release=0.03, swell=True),
     'vibraphone':        Voice(('vibraphone-sustain', 'vibraphone'), 'D4', 'A5', pan=(-0.6, 0.6), release=0.5),
     'crotales':          Voice(('crotales',), 'D6', 'A6', pan=(-0.7, 0.7), release=1.0, trim=-4.0),
+    'crotales_damped':   Voice(('crotales',), 'D6', 'A6', pan=(0.2, -0.2), release=0.08, trim=-4.0,
+                               width=0.3),
     'bells':             Voice(('bells',), 'D5', 'A5', pan=(-0.4, 0.4), release=1.2, trim=-1.0,
                                files=('brass-*.flac', '*.flac')),
     'gong':              Voice(('gongs', 'gong'), pan=0.0, release=1.5,
@@ -276,6 +280,9 @@ def render(notes, holes=(), assets=None, length=None):
         x = cache[(path, semis)]
         pre = int(round(PREROLL * SR * 2 ** (-semis / 12)))
         y = play(x, note.dur, v, note.vel, pre)
+        if v.width < 1:
+            mid, side = (y[:, 0] + y[:, 1]) / 2, (y[:, 0] - y[:, 1]) / 2 * v.width
+            y = np.stack([mid + side, mid - side], axis=1)
         y = panned(y, pan_of(v, note.pitch) if note.pitch else v.pan)
         start = int(round(note.t * SR)) - pre
         a, b = max(0, start), min(total, start + len(y))
