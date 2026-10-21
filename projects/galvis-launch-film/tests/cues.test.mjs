@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { barStart, actWindow, ACTS, IMPACTS, DURATION } from '../shared/cues.js';
+import { barStart, actWindow, ACTS, IMPACTS, DURATION, CUES } from '../shared/cues.js';
 
 test('bar start', () => {
   assert.equal(barStart(1), 0);
@@ -33,4 +33,23 @@ test('styleframeAt lies inside its act', () => {
 
 test('impacts on bar downbeats', () => {
   assert.deepEqual(IMPACTS.map((i) => i.t), [24, 56]);
+});
+
+test('events sit on the 1/8 grid inside their act, with a box', () => {
+  for (const e of CUES.events) {
+    assert.ok(Number.isInteger(Math.round(e.t * 4 * 1e6) / 1e6), `${e.t} off grid`);
+    const w = actWindow(e.act);
+    assert.ok(e.t >= w.start && e.t < w.end, `${e.t} outside ${e.act}`);
+    assert.equal(e.box.length, 4, `${e.t} box`);
+  }
+});
+
+test('boundaries are every act start after 0, cut only at 24 and 112', () => {
+  assert.deepEqual(CUES.boundaries.map((b) => b.t), [12, 24, 34, 52, 62, 76, 90, 106, 112]);
+  assert.deepEqual(CUES.boundaries.filter((b) => b.kind === 'cut').map((b) => b.t), [24, 112]);
+  assert.ok(CUES.boundaries.every((b) => b.kind === 'match' || b.kind === 'cut'));
+});
+
+test('holds are ordered spans inside the film', () => {
+  for (const [a, b] of CUES.holds) assert.ok(a < b && a >= 0 && b <= DURATION);
 });

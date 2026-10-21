@@ -12,5 +12,36 @@
     {"id": "act09-reunify",    "file": "09-reunify.html",    "bars": [54, 56], "bg": "light-to-dark", "styleframeAt": 111.0},
     {"id": "act10-final",      "file": "10-final.html",      "bars": [57, 60], "bg": "dark",          "styleframeAt": 117.0}
   ],
-  "impacts": [{"id": "reveal", "t": 24.0}, {"id": "split", "t": 56.0}]
+  "impacts": [{"id": "reveal", "t": 24.0}, {"id": "split", "t": 56.0}],
+  "boundaries": [
+    {"t": 12, "kind": "match"},
+    {"t": 24, "kind": "cut"},
+    {"t": 34, "kind": "match"},
+    {"t": 52, "kind": "match"},
+    {"t": 62, "kind": "match"},
+    {"t": 76, "kind": "match"},
+    {"t": 90, "kind": "match"},
+    {"t": 106, "kind": "match"},
+    {"t": 112, "kind": "cut"}
+  ],
+  "holds": [[119.2, 120]],
+  "events": [
+    {"t": 4.0, "act": "act01-world", "what": "line 1", "box": [360,110,1200,110]},
+    {"t": 8.0, "act": "act01-world", "what": "line 2", "box": [360,110,1200,110]},
+    {"t": 14.0, "act": "act02-complexity", "what": "line 1", "box": [200,60,1520,110]},
+    {"t": 18.0, "act": "act02-complexity", "what": "line 2", "box": [200,60,1520,110]},
+    {"t": 24.0, "act": "act03-reveal", "what": "impact: white flash", "box": [0,0,1920,1080]},
+    {"t": 28.0, "act": "act03-reveal", "what": "GAL", "box": [560,586,800,130]},
+    {"t": 28.5, "act": "act03-reveal", "what": "VIS", "box": [560,586,800,130]},
+    {"t": 56.0, "act": "act05-products", "what": "impact: split", "box": [0,0,1920,1080]},
+    {"t": 58.0, "act": "act05-products", "what": "GALVIS WORKSPACE", "box": [190,840,460,80]},
+    {"t": 58.5, "act": "act05-products", "what": "GALVIS DATA ENRICHMENT", "box": [730,840,460,80]},
+    {"t": 59.0, "act": "act05-products", "what": "GALVIS ENTERPRISE", "box": [1270,840,460,80]},
+    {"t": 70.0, "act": "act06-workspace", "what": "step 1 done", "box": [1290,560,500,380]},
+    {"t": 71.0, "act": "act06-workspace", "what": "step 2 done", "box": [1290,560,500,380]},
+    {"t": 72.0, "act": "act06-workspace", "what": "step 3 done", "box": [1290,560,500,380]},
+    {"t": 73.0, "act": "act06-workspace", "what": "step 4 done", "box": [1290,560,500,380]},
+    {"t": 74.5, "act": "act06-workspace", "what": "step 5 done", "box": [1290,560,500,380]},
+    {"t": 112.0, "act": "act10-final", "what": "sting", "box": [0,0,1920,1080]}
+  ]
 }

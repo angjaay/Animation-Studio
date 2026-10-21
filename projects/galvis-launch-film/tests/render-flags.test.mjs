@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 test('every render path forces software GL', () => {
   const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
   assert.match(pkg.scripts.render, /--no-browser-gpu/);
-  assert.match(readFileSync('scripts/animatic.mjs', 'utf8'), /'--no-browser-gpu'/);
+  assert.match(readFileSync('scripts/render.mjs', 'utf8'), /'--no-browser-gpu'/);
 });
 
 test('index.html loads no script from the network', () => {

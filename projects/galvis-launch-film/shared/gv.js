@@ -30,6 +30,7 @@ var GV = (() => {
     RIAU_SVG: () => province_riau_default,
     SEA_POINTS: () => sea_points_default,
     SEA_SVG: () => sea_default,
+    UI_EASE: () => UI_EASE,
     WORDMARK_DARK: () => galvis_wordmark_dark_default,
     actWindow: () => actWindow,
     at: () => at,
@@ -37,9 +38,11 @@ var GV = (() => {
     bayerVisible: () => bayerVisible,
     branchGeometry: () => branchGeometry,
     cleanCrop: () => cleanCrop,
+    cubicBezier: () => cubicBezier,
     ditherCell: () => ditherCell,
     ditherPixel: () => ditherPixel,
     ditheredCanvas: () => ditheredCanvas,
+    lerpRect: () => lerpRect,
     loadImage: () => loadImage,
     logoParts: () => logoParts,
     mountCurtain: () => mountCurtain,
@@ -48,7 +51,9 @@ var GV = (() => {
     renderLabel: () => renderLabel,
     renderLegend: () => renderLegend,
     renderWorkspace: () => renderWorkspace,
-    seeded: () => seeded
+    seeded: () => seeded,
+    since: () => since,
+    vortexPoint: () => vortexPoint
   });
 
   // shared/copy.json
@@ -269,7 +274,38 @@ var GV = (() => {
       { id: "act09-reunify", file: "09-reunify.html", bars: [54, 56], bg: "light-to-dark", styleframeAt: 111 },
       { id: "act10-final", file: "10-final.html", bars: [57, 60], bg: "dark", styleframeAt: 117 }
     ],
-    impacts: [{ id: "reveal", t: 24 }, { id: "split", t: 56 }]
+    impacts: [{ id: "reveal", t: 24 }, { id: "split", t: 56 }],
+    boundaries: [
+      { t: 12, kind: "match" },
+      { t: 24, kind: "cut" },
+      { t: 34, kind: "match" },
+      { t: 52, kind: "match" },
+      { t: 62, kind: "match" },
+      { t: 76, kind: "match" },
+      { t: 90, kind: "match" },
+      { t: 106, kind: "match" },
+      { t: 112, kind: "cut" }
+    ],
+    holds: [[119.2, 120]],
+    events: [
+      { t: 4, act: "act01-world", what: "line 1", box: [360, 110, 1200, 110] },
+      { t: 8, act: "act01-world", what: "line 2", box: [360, 110, 1200, 110] },
+      { t: 14, act: "act02-complexity", what: "line 1", box: [200, 60, 1520, 110] },
+      { t: 18, act: "act02-complexity", what: "line 2", box: [200, 60, 1520, 110] },
+      { t: 24, act: "act03-reveal", what: "impact: white flash", box: [0, 0, 1920, 1080] },
+      { t: 28, act: "act03-reveal", what: "GAL", box: [560, 586, 800, 130] },
+      { t: 28.5, act: "act03-reveal", what: "VIS", box: [560, 586, 800, 130] },
+      { t: 56, act: "act05-products", what: "impact: split", box: [0, 0, 1920, 1080] },
+      { t: 58, act: "act05-products", what: "GALVIS WORKSPACE", box: [190, 840, 460, 80] },
+      { t: 58.5, act: "act05-products", what: "GALVIS DATA ENRICHMENT", box: [730, 840, 460, 80] },
+      { t: 59, act: "act05-products", what: "GALVIS ENTERPRISE", box: [1270, 840, 460, 80] },
+      { t: 70, act: "act06-workspace", what: "step 1 done", box: [1290, 560, 500, 380] },
+      { t: 71, act: "act06-workspace", what: "step 2 done", box: [1290, 560, 500, 380] },
+      { t: 72, act: "act06-workspace", what: "step 3 done", box: [1290, 560, 500, 380] },
+      { t: 73, act: "act06-workspace", what: "step 4 done", box: [1290, 560, 500, 380] },
+      { t: 74.5, act: "act06-workspace", what: "step 5 done", box: [1290, 560, 500, 380] },
+      { t: 112, act: "act10-final", what: "sting", box: [0, 0, 1920, 1080] }
+    ]
   };
 
   // shared/cues.js
@@ -681,6 +717,46 @@ var GV = (() => {
     window.__hf.buildReady = window.__hf.buildReady || {};
     window.__hf.buildReady[id] = done;
     return done;
+  }
+
+  // shared/motion/ease.js
+  function cubicBezier(x1, y1, x2, y2) {
+    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+    const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+    const sx = (u) => ((ax * u + bx) * u + cx) * u;
+    const sy = (u) => ((ay * u + by) * u + cy) * u;
+    return (x) => {
+      if (x <= 0) return 0;
+      if (x >= 1) return 1;
+      let lo = 0, hi = 1, u = x;
+      for (let i = 0; i < 40; i++) {
+        u = (lo + hi) / 2;
+        if (sx(u) < x) lo = u;
+        else hi = u;
+      }
+      return sy(u);
+    };
+  }
+  var UI_EASE = cubicBezier(0.2, 0, 0, 1);
+  function since(t, t0, dur, ease = UI_EASE) {
+    if (t <= t0) return 0;
+    if (t >= t0 + dur) return 1;
+    return ease((t - t0) / dur);
+  }
+
+  // shared/motion/paths.js
+  function vortexPoint([sx, sy], [cx, cy], k, turns = 1.25) {
+    const r0 = Math.hypot(sx - cx, sy - cy);
+    const a0 = Math.atan2(sy - cy, sx - cx);
+    const a = a0 + turns * 2 * Math.PI * k;
+    const r = r0 * Math.pow(1 - k, 1.6);
+    const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+    return { x: k === 0 ? sx : x, y: k === 0 ? sy : y, scale: 1 - 0.85 * k, rotation: turns * 360 * k };
+  }
+  function lerpRect(a, b, k) {
+    const out = {};
+    for (const key of ["x", "y", "w", "h", "r"]) out[key] = a[key] + (b[key] - a[key]) * k;
+    return out;
   }
   return __toCommonJS(index_exports);
 })();

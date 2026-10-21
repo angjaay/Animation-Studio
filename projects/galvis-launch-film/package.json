@@ -14,7 +14,9 @@
     "predev": "npm run build",
     "test:dither": "npm run build && node scripts/compare-dither.mjs",
     "test:animatic": "node --test checks/*.test.mjs",
-    "build:3d": "esbuild shared/three/index.js --bundle --format=iife --global-name=GV3D --minify --outfile=shared/gv3d.js --log-level=warning"
+    "build:3d": "esbuild shared/three/index.js --bundle --format=iife --global-name=GV3D --minify --outfile=shared/gv3d.js --log-level=warning",
+    "qa:act": "node scripts/qa-act.mjs",
+    "test:film": "node --test checks/film.test.mjs checks/determinism.test.mjs"
   },
   "devDependencies": {
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
