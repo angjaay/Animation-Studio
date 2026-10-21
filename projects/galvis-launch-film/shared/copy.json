@@ -15,6 +15,28 @@
   "core.mod.analytics": "Spatial Analytics",
   "core.mod.ml": "Machine Learning",
   "core.mod.decision": "Decision Intelligence",
+  "core.sub.ai": [
+    "Natural Language",
+    "Spatial Intelligence"
+  ],
+  "core.sub.data": [
+    "Multi-source Integration · Automated Data Pipeline"
+  ],
+  "core.sub.eo": [
+    "Earth Observation Intelligence"
+  ],
+  "core.sub.analytics": [
+    "Spatial Analytics"
+  ],
+  "core.sub.ml": [
+    "Machine Learning & Predictive Intelligence"
+  ],
+  "core.sub.decision": [
+    "Data",
+    "Analysis",
+    "Insight",
+    "Decision"
+  ],
   "products.one": "ONE INTELLIGENCE CORE.",
   "products.three": "THREE WAYS TO USE IT.",
   "products.workspace": "GALVIS WORKSPACE",

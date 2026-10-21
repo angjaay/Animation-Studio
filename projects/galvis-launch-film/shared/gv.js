@@ -74,6 +74,28 @@ var GV = (() => {
     "core.mod.analytics": "Spatial Analytics",
     "core.mod.ml": "Machine Learning",
     "core.mod.decision": "Decision Intelligence",
+    "core.sub.ai": [
+      "Natural Language",
+      "Spatial Intelligence"
+    ],
+    "core.sub.data": [
+      "Multi-source Integration \xB7 Automated Data Pipeline"
+    ],
+    "core.sub.eo": [
+      "Earth Observation Intelligence"
+    ],
+    "core.sub.analytics": [
+      "Spatial Analytics"
+    ],
+    "core.sub.ml": [
+      "Machine Learning & Predictive Intelligence"
+    ],
+    "core.sub.decision": [
+      "Data",
+      "Analysis",
+      "Insight",
+      "Decision"
+    ],
     "products.one": "ONE INTELLIGENCE CORE.",
     "products.three": "THREE WAYS TO USE IT.",
     "products.workspace": "GALVIS WORKSPACE",
@@ -311,6 +333,13 @@ var GV = (() => {
       { t: 28.5, act: "act03-reveal", what: "VIS", box: [960, 590, 380, 115] },
       { t: 30, act: "act03-reveal", what: "full name", box: [580, 746, 760, 36] },
       { t: 32, act: "act03-reveal", what: "sub line", box: [650, 808, 620, 26] },
+      { t: 38.5, act: "act04-core", what: "module ai active", box: [840, 220, 260, 260] },
+      { t: 40.5, act: "act04-core", what: "module data active", box: [1100, 360, 260, 260] },
+      { t: 42.5, act: "act04-core", what: "module eo active", box: [1100, 680, 260, 260] },
+      { t: 44.5, act: "act04-core", what: "module analytics active", box: [740, 780, 260, 260] },
+      { t: 46.5, act: "act04-core", what: "module ml active", box: [500, 540, 260, 260] },
+      { t: 48.5, act: "act04-core", what: "module decision active", box: [660, 280, 260, 260] },
+      { t: 50, act: "act04-core", what: "question answered", box: [580, 48, 760, 70] },
       { t: 56, act: "act05-products", what: "impact: split", box: [0, 0, 1920, 1080] },
       { t: 58, act: "act05-products", what: "GALVIS WORKSPACE", box: [190, 840, 460, 80] },
       { t: 58.5, act: "act05-products", what: "GALVIS DATA ENRICHMENT", box: [730, 840, 460, 80] },

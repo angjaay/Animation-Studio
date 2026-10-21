@@ -7,6 +7,7 @@
         #act04-core-root { position: absolute; inset: 0; overflow: hidden; background: var(--navy); }
         #act04-core-glow { position: absolute; inset: 0; background: radial-gradient(circle at 960px 600px, rgba(2, 74, 188, 0.55), rgba(3, 39, 80, 0) 520px); }
         #act04-core-entry { position: absolute; inset: 0; background: var(--navy); }
+        #act04-core-outro { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse 900px 520px at 960px 360px, rgba(2, 74, 188, 0.5), rgba(3, 39, 80, 0)); }
         #act04-core-gl { position: absolute; inset: 0; width: 1920px; height: 1080px; display: block; }
         .act04-core-anchor { position: absolute; left: 0; top: 0; width: 0; height: 0; }
         #act04-core-name {
@@ -35,6 +36,10 @@
           position: absolute; left: 0; top: 0; opacity: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff;
           box-shadow: 0 0 14px 6px rgba(255, 255, 255, 0.9), 0 0 40px 14px rgba(31, 175, 161, 0.6);
         }
+        .act04-core-sub {
+          position: absolute; left: 50%; width: 360px; margin-left: -180px; text-align: center; white-space: nowrap;
+          font-family: var(--font-text); font-weight: 600; font-size: 15px; color: var(--cool-gray); opacity: 0;
+        }
         .act04-core-name {
           position: absolute; left: 50%; width: 260px; margin-left: -130px; text-align: center;
           font-family: var(--font-text); font-weight: 600; font-size: 19px; color: var(--white); line-height: 1.25;
@@ -42,6 +47,7 @@
       </style>
       <div id="act04-core-root" data-composition-id="act04-core" data-width="1920" data-height="1080">
         <div id="act04-core-glow"></div>
+        <div id="act04-core-outro"></div>
         <canvas id="act04-core-gl" width="1920" height="1080" data-layout-allow-overflow></canvas>
         <div id="act04-core-mods"></div>
         <div id="act04-core-name"></div>
@@ -72,50 +78,119 @@
           // The chamber is a Three.js scene; the logo, module visuals and labels are DOM pinned to it.
           const chamber = GV3D.mountCoreScene({ canvas: $('gl'), count: order.length });
 
-          const svg = (inner) => `<svg viewBox="0 0 124 124">${inner}</svg>`;
+          // Module visuals are alive: each draws its own story from p (0 before the module is activated,
+          // 0→1 over 1.2 s after) and t (for idle motion once done).
+          const NS = 'http://www.w3.org/2000/svg';
+          const svgEl = (tag, attrs = {}) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
+          const box = () => svgEl('svg', { viewBox: '0 0 124 124' });
+          const clamp01 = (k) => Math.min(1, Math.max(0, k));
+          const out = (k) => 1 - Math.pow(1 - clamp01(k), 3);
           const rnd = GV.seeded(4);
           const visuals = {
-            ai: () => svg(GV.COPY['core.tokens'].map((w, i) =>
-              `<rect x="${14 + i * 6}" y="${30 + i * 24}" width="${w.length * 8 + 14}" height="18" rx="9" fill="${i === 1 ? '#1FAFA1' : '#FFFFFF'}" fill-opacity="${i === 1 ? 1 : 0.9}"/>` +
-              `<text x="${21 + i * 6}" y="${43 + i * 24}" font-family="Mulish" font-weight="700" font-size="11" fill="#032750">${w}</text>`).join('')),
-            data: () => svg(Array.from({ length: 16 }, (_, k) => {
-              const x = 22 + (k % 4) * 21, y = 22 + Math.floor(k / 4) * 21;
-              return `<rect x="${x}" y="${y}" width="17" height="17" rx="3" fill="${['#024ABC', '#1FAFA1', '#86C36A', '#FFFFFF'][k % 4]}" fill-opacity="${(0.45 + rnd() * 0.55).toFixed(2)}"/>`;
-            }).join('')),
+            // The question's key words become a token ribbon.
+            ai: () => {
+              const el = box();
+              const tokens = GV.COPY['core.tokens'].map((w, i) => {
+                const g = svgEl('g');
+                g.append(svgEl('rect', { x: 14 + i * 6, y: 30 + i * 24, width: w.length * 8 + 14, height: 18, rx: 9, fill: i === 1 ? '#1FAFA1' : '#FFFFFF' }));
+                const tx = svgEl('text', { x: 21 + i * 6, y: 43 + i * 24, 'font-family': 'Mulish', 'font-weight': 700, 'font-size': 11, fill: '#032750' });
+                tx.textContent = w;
+                g.append(tx);
+                el.append(g);
+                return g;
+              });
+              const raw = [0, 1, 2].map((i) => { const l = svgEl('rect', { x: 16, y: 34 + i * 24, width: 64 + i * 10, height: 3, rx: 1.5, fill: '#FFFFFF', 'fill-opacity': 0.35 }); el.append(l); return l; });
+              return { el, draw: (p) => {
+                tokens.forEach((g, i) => { const e = out((p - i * 0.18) / 0.35); g.setAttribute('transform', `translate(${(-70 * (1 - e)).toFixed(1)} 0)`); g.setAttribute('opacity', e.toFixed(3)); });
+                raw.forEach((l) => l.setAttribute('fill-opacity', (0.35 * (1 - clamp01(p * 3))).toFixed(3)));
+              } };
+            },
+            // A messy pile of plates snaps into one standard grid.
+            data: () => {
+              const el = box();
+              const tiles = Array.from({ length: 16 }, (_, k) => {
+                const r = svgEl('rect', { width: 17, height: 17, rx: 3, fill: ['#024ABC', '#1FAFA1', '#86C36A', '#FFFFFF'][k % 4], 'fill-opacity': (0.45 + rnd() * 0.55).toFixed(2) });
+                el.append(r);
+                return { r, gx: 22 + (k % 4) * 21, gy: 22 + Math.floor(k / 4) * 21, sx: 10 + rnd() * 90, sy: 10 + rnd() * 90, rot: (rnd() - 0.5) * 70 };
+              });
+              return { el, draw: (p) => tiles.forEach((tile, k) => {
+                const e = out((p - k * 0.025) / 0.45);
+                const x = tile.sx + (tile.gx - tile.sx) * e, y = tile.sy + (tile.gy - tile.sy) * e;
+                tile.r.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(tile.rot * (1 - e)).toFixed(1)} 8.5 8.5)`);
+              }) };
+            },
+            // A scan-beam turns a raw (dithered) Sentinel tile into a greenness index, left to right.
             eo: async () => {
-              // Left half true colour, right half a greenness index from the same pixels.
-              const img = await GV.loadImage('assets/sentinel/riau-plantation.jpg');
-              const c = document.createElement('canvas');
-              c.width = 124; c.height = 124;
-              const g = c.getContext('2d');
-              g.drawImage(img, 700, 900, 520, 520, 0, 0, 124, 124);
-              const d = g.getImageData(62, 0, 62, 124);
+              const SRC = 'assets/sentinel/riau-plantation.jpg', CROP = [700 / 1920, 900 / 1907, 520 / 1920, 520 / 1907];
+              const raw = await GV.ditheredCanvas(SRC, 124, 124, { palette: 'brand', cell: 3, crop: CROP });
+              const ndvi = await GV.ditheredCanvas(SRC, 124, 124, { palette: 'brand', cell: 3, crop: CROP, resolve: 1 });
+              const ng = ndvi.getContext('2d');
+              const d = ng.getImageData(0, 0, 124, 124);
               for (let i = 0; i < d.data.length; i += 4) {
                 const [r, gr] = [d.data[i], d.data[i + 1]];
-                // Index ramp: dry yellow (#E8C860) to dense green (#3E8E4A).
-                const v = Math.max(0, Math.min(1, ((gr - r) / (gr + r + 1)) * 3 + 0.3));
+                const v = Math.max(0, Math.min(1, ((gr - r) / (gr + r + 1)) * 3 + 0.3)); // dry yellow → dense green
                 d.data[i] = 232 - v * 170; d.data[i + 1] = 200 - v * 58; d.data[i + 2] = 96 - v * 22;
               }
-              g.putImageData(d, 62, 0);
-              g.fillStyle = '#FFFFFF';
-              g.fillRect(61, 0, 2, 124);
-              return c;
+              ng.putImageData(d, 0, 0);
+              const el = document.createElement('canvas');
+              el.width = el.height = 124;
+              const g = el.getContext('2d');
+              return { el, draw: (p) => {
+                const x = Math.round(124 * out(p / 0.8));
+                g.drawImage(raw, 0, 0);
+                if (x > 0) g.drawImage(ndvi, 0, 0, x, 124, 0, 0, x, 124);
+                if (x > 0 && x < 124) { g.fillStyle = '#FFFFFF'; g.fillRect(x - 1, 0, 2, 124); }
+              } };
             },
-            analytics: () => svg(
-              [44, 34, 24].map((r, i) => `<circle cx="62" cy="62" r="${r}" fill="#1FAFA1" fill-opacity="${0.12 + i * 0.12}" stroke="#1FAFA1" stroke-width="1.2"/>`).join('') +
-              [0, 1, 2, 3].map((k) => `<path d="M${8 + k * 4} ${86 - k * 18} C40 ${70 - k * 18}, 80 ${100 - k * 18}, 120 ${80 - k * 18}" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.2"/>`).join('') +
-              '<circle cx="62" cy="62" r="5" fill="#FFFFFF"/>'),
-            ml: () => svg(
-              '<defs><linearGradient id="act04-core-prob" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#86C36A"/><stop offset="0.5" stop-color="#F2D15C"/><stop offset="1" stop-color="#E8705B"/></linearGradient></defs>' +
-              [0, 1, 2].map((k) => `<path d="M24 ${46 - k * 9} L62 ${30 - k * 9} L100 ${46 - k * 9} L62 ${62 - k * 9} Z" fill="none" stroke="#FFFFFF" stroke-opacity="${0.4 + k * 0.2}" stroke-width="1.2"/>`).join('') +
-              '<path d="M18 82 L62 62 L106 82 L62 102 Z" fill="url(#act04-core-prob)"/>'),
-            decision: () => svg(
-              '<path d="M14 92 L44 70 L70 84 L58 108 L22 108 Z" fill="#86C36A" fill-opacity="0.8"/>' +
-              '<path d="M50 40 L84 30 L104 56 L76 70 Z" fill="#1FAFA1" fill-opacity="0.9"/>' +
-              '<path d="M80 80 L108 74 L112 100 L88 104 Z" fill="#024ABC"/>' +
-              '<text x="62" y="58" text-anchor="middle" font-family="JetBrains Mono" font-weight="700" font-size="26" fill="#FFFFFF">87</text>'),
+            // Buffers grow from the point and isochrones ripple.
+            analytics: () => {
+              const el = box();
+              const rings = [44, 34, 24].map((r, i) => { const c = svgEl('circle', { cx: 62, cy: 62, r: 0, fill: '#1FAFA1', 'fill-opacity': 0.12 + i * 0.12, stroke: '#1FAFA1', 'stroke-width': 1.2 }); el.append(c); return { c, r }; });
+              const isos = [0, 1, 2, 3].map(() => { const pth = svgEl('path', { fill: 'none', stroke: '#FFFFFF', 'stroke-opacity': 0.55, 'stroke-width': 1.2 }); el.append(pth); return pth; });
+              el.append(svgEl('circle', { cx: 62, cy: 62, r: 5, fill: '#FFFFFF' }));
+              return { el, draw: (p, t) => {
+                rings.forEach(({ c, r }, i) => c.setAttribute('r', (r * out((p - (2 - i) * 0.12) / 0.5)).toFixed(2)));
+                isos.forEach((pth, k) => {
+                  const e = out((p - 0.3 - k * 0.08) / 0.4), w = 4 * Math.sin(t * 2.2 + k);
+                  pth.setAttribute('d', `M${8 + k * 4} ${86 - k * 18} C40 ${70 - k * 18 + w}, 80 ${100 - k * 18 - w}, 120 ${80 - k * 18}`);
+                  pth.setAttribute('stroke-opacity', (0.55 * e).toFixed(3));
+                });
+              } };
+            },
+            // Predictor layers drop into a stack; a probability surface forms beneath them.
+            ml: () => {
+              const el = box();
+              const defs = svgEl('defs');
+              defs.innerHTML = '<linearGradient id="act04-core-prob" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#86C36A"/><stop offset="0.5" stop-color="#F2D15C"/><stop offset="1" stop-color="#E8705B"/></linearGradient>';
+              el.append(defs);
+              const surface = svgEl('path', { d: 'M18 82 L62 62 L106 82 L62 102 Z', fill: 'url(#act04-core-prob)' });
+              el.append(surface);
+              const layers = [0, 1, 2].map((k) => { const pth = svgEl('path', { d: `M24 ${46 - k * 9} L62 ${30 - k * 9} L100 ${46 - k * 9} L62 ${62 - k * 9} Z`, fill: 'none', stroke: '#FFFFFF', 'stroke-opacity': 0.4 + k * 0.2, 'stroke-width': 1.2 }); el.append(pth); return pth; });
+              return { el, draw: (p) => {
+                layers.forEach((pth, k) => { const e = out((p - k * 0.15) / 0.35); pth.setAttribute('transform', `translate(0 ${(-40 * (1 - e)).toFixed(1)})`); pth.setAttribute('opacity', e.toFixed(3)); });
+                surface.setAttribute('opacity', out((p - 0.5) / 0.4).toFixed(3));
+              } };
+            },
+            // Priority zones fill in order and the score rolls up.
+            decision: () => {
+              const el = box();
+              const zones = [
+                ['M14 92 L44 70 L70 84 L58 108 L22 108 Z', '#86C36A'],
+                ['M50 40 L84 30 L104 56 L76 70 Z', '#1FAFA1'],
+                ['M80 80 L108 74 L112 100 L88 104 Z', '#024ABC'],
+              ].map(([d, fill]) => { const z = svgEl('path', { d, fill, stroke: '#FFFFFF', 'stroke-opacity': 0.5, 'stroke-width': 1 }); el.append(z); return z; });
+              const score = svgEl('text', { x: 62, y: 58, 'text-anchor': 'middle', 'font-family': 'JetBrains Mono', 'font-weight': 700, 'font-size': 26, fill: '#FFFFFF' });
+              el.append(score);
+              return { el, draw: (p) => {
+                zones.forEach((z, k) => z.setAttribute('fill-opacity', (0.9 * out((p - k * 0.15) / 0.3)).toFixed(3)));
+                score.textContent = p <= 0 ? '--' : String(Math.round(87 * out(p / 0.7)));
+              } };
+            },
           };
 
+          // Second labels (spec table): parts joined by a chevron; not repeated when equal to the name.
+          const CHEVRON = '<svg viewBox="0 0 24 24" width="12" height="12" style="display:inline-block;vertical-align:-1px;margin:0 5px"><path d="M8 4l8 8-8 8" fill="none" stroke="#1FAFA1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+          const esc = (x) => x.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
           const mods = [];
           for (const [i, key] of order.entries()) {
             const anchor = document.createElement('div');
@@ -124,24 +199,29 @@
             mod.className = `${id}-mod`;
             const disc = document.createElement('div');
             disc.className = `${id}-disc`;
-            const v = await visuals[key]();
-            if (typeof v === 'string') disc.innerHTML = v; else disc.append(v);
+            const vis = await visuals[key]();
+            disc.append(vis.el);
             const name = document.createElement('div');
             name.className = `${id}-name`;
             name.textContent = GV.COPY[`core.mod.${key}`];
             // Labels sit outside the ring: above the top module, below the others.
             name.style.top = i === 0 ? '-56px' : '136px';
-            mod.append(disc, name);
+            const parts = GV.COPY[`core.sub.${key}`];
+            const sub = document.createElement('div');
+            sub.className = `${id}-sub`;
+            if (parts.join(' ') !== name.textContent) sub.innerHTML = parts.map(esc).join(CHEVRON);
+            sub.style.top = i === 0 ? '-32px' : '162px';
+            mod.append(disc, name, sub);
             anchor.append(mod);
             $('mods').append(anchor);
-            mods.push({ anchor, mod, disc });
+            mods.push({ anchor, mod, disc, vis, sub });
           }
 
           // The whole chamber is a function of time: camera, orbit, glows, packet and the DOM pinned to it.
           const ease = (k) => (k <= 0 ? 0 : k >= 1 ? 1 : k * k * (3 - 2 * k));
           const lerp = (a, b, k) => a + (b - a) * k;
-          const clamp01 = (k) => Math.min(1, Math.max(0, k));
           const STEP = order.map((_, k) => A(20 + k));
+          const ACTIVE = STEP.map((s) => s + 0.5); // on the beat after each bar line, when the packet arrives
           const ARRIVE = 0.5, LEAVE = 1.1, HOME = 1.55;
           const state = (t) => {
             const fly = 1 - Math.pow(1 - clamp01(t / 1.6), 3);
@@ -153,7 +233,7 @@
               tilt: lerp(-0.5, 0, back) * ease((t - A(19)) / 1.2),
               spin: lerp(spinAt(Math.min(t, A(26))), 0, back),
               orbitScale: ease((t - A(19, 2)) / 0.6),
-              glow: STEP.map((s) => (t < s + 0.45 ? 0 : 0.55 + 0.45 * Math.exp(-(t - s - 0.45) * 2.5)) + (t >= A(26) ? 0.45 * back : 0)),
+              glow: ACTIVE.map((a) => (t < a ? 0 : 0.55 + 0.45 * Math.exp(-(t - a) * 2.5)) + (t >= A(26) ? 0.45 * back : 0)),
               cable: STEP.map((s) => (t < s + LEAVE ? 0 : t < s + HOME ? 1 : 0.6) + (t >= A(26) ? 0.4 * back : 0)),
               core: Math.min(1, 0.4 + STEP.reduce((m, s) => m + (t >= s + HOME ? 0.6 * Math.exp(-(t - s - HOME) * 3) : 0), 0) + 0.6 * back),
             };
@@ -164,12 +244,23 @@
             el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${k.toFixed(3)})${extra}`;
           };
           const packet = $('packet');
+          // Last second: the chamber falls away and the logo settles where act 05 opens (960, 510.5, 1.2×).
+          const OUTRO = A(26, 2), OUTRO_DUR = 0.9;
           const apply = (t) => {
             const st = state(t);
             chamber.render(st);
-            mods.forEach((m, i) => place(m.anchor, chamber.moduleScreen(i)));
-            const [hx, hy] = chamber.coreScreen();
-            $('heartpos').style.transform = `translate(${hx.toFixed(1)}px, ${hy.toFixed(1)}px)`;
+            mods.forEach((m, i) => {
+              place(m.anchor, chamber.moduleScreen(i));
+              m.vis.draw(t < ACTIVE[i] ? 0 : Math.min(1, (t - ACTIVE[i]) / 1.2), t);
+              const until = i < ACTIVE.length - 1 ? ACTIVE[i + 1] : A(26);
+              m.sub.style.opacity = String(Math.min(GV.since(t, ACTIVE[i], 0.25), 1 - GV.since(t, until - 0.25, 0.25)));
+            });
+            const [cx, cy] = chamber.coreScreen();
+            const o = GV.since(t, OUTRO, OUTRO_DUR, (k) => k * k * (3 - 2 * k));
+            const hx = lerp(cx, 960, o), hy = lerp(cy, 510.5, o);
+            $('heartpos').style.transform = `translate(${hx.toFixed(1)}px, ${hy.toFixed(1)}px) scale(${(1 + 0.205 * o).toFixed(4)})`;
+            for (const el of [$('gl'), $('mods'), $('glow')]) el.style.opacity = String(1 - o);
+            $('outro').style.opacity = String(o);
             // The packet: down from the question to the module, then along its cable into the core.
             const k = STEP.findLastIndex((s) => t >= s && t < s + HOME);
             if (k < 0) { packet.style.opacity = '0'; return; }
@@ -216,16 +307,21 @@
           tl.to(mods.map((m) => m.mod), { scale: 1, opacity: 1, duration: 0.5, stagger: 0.1, ease: 'back.out(1.6)' }, A(19, 2));
 
           // Bars 20-25: one question runs the engine, one module per bar (the packet is placed by apply()).
-          STEP.forEach((t0, k) => {
-            tl.to(mods[k].mod, { scale: 1.15, duration: 0.3, ease: 'back.out(2)' }, t0 + 0.45);
-            tl.to(mods[k].disc, { boxShadow: '0 0 0 3px #1FAFA1, 0 0 40px rgba(31,175,161,0.8)', duration: 0.3 }, t0 + 0.45);
-            tl.to(mods[k].mod, { scale: 1, duration: 0.3 }, t0 + 1.7);
+          // Each module lights on its beat: a hard teal ring and a pop, then it settles.
+          ACTIVE.forEach((a, k) => {
+            tl.set(mods[k].disc, { boxShadow: '0 0 0 4px #FFFFFF, 0 0 56px rgba(31,175,161,1)' }, a);
+            tl.to(mods[k].disc, { boxShadow: '0 0 0 3px #1FAFA1, 0 0 40px rgba(31,175,161,0.8)', duration: 0.5, ease: 'power2.out' }, a + 1 / 30);
+            tl.fromTo(mods[k].mod, { scale: 1 }, { scale: 1.15, duration: 0.25, ease: 'expo.out', immediateRender: false }, a);
+            tl.to(mods[k].mod, { scale: 1, duration: 0.3 }, a + 1.2);
           });
 
           // Bar 26: every module lit together; the question leaves and the header returns.
           tl.to(mods.map((m) => m.mod), { scale: 1.06, duration: 0.4, stagger: 0.04 }, A(26));
-          tl.to($('question'), { opacity: 0, duration: 0.3 }, A(26));
+          // The question is answered on bar 26: its pill flashes teal on the beat, then lifts away.
+          tl.set($('question'), { backgroundColor: 'rgba(31,175,161,0.55)', borderColor: '#1FAFA1' }, A(26));
+          tl.to($('question'), { opacity: 0, y: -24, duration: 0.45, ease: 'power2.in' }, A(26) + 0.1);
           tl.to([$('name'), $('label')], { opacity: 1, duration: 0.5, stagger: 0.1 }, A(26, 1));
+          tl.to($('packet'), { opacity: 0, duration: 0.2 }, OUTRO);
         }, 18);
       </script>
     </template>

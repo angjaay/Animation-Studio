@@ -1,6 +1,6 @@
 // Finds English phrases written straight into a composition instead of coming from GV.COPY.
 const PHRASE = /[A-Za-z]{2,}(\s+[A-Za-z&/]{2,})+/;
-const NOT_COPY = /[{}$<>=;#()]|GV\.|\bcopy\b/;
+const NOT_COPY = /[{}$<>=;#()]|GV\.|\bcopy\b|^(JetBrains Mono|Plus Jakarta Sans|Mulish)$/;
 
 // Remove ${...} interpolations (balanced, so nested calls and strings inside them go too).
 function stripInterpolations(s) {

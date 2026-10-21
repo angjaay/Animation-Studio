@@ -34,3 +34,13 @@ test('licence notices are on screen in the final act', () => {
   const html = readFileSync(new URL('../compositions/10-final.html', import.meta.url), 'utf8');
   assert.ok(html.includes("GV.COPY['final.credits']"));
 });
+
+test('core module second labels are verbatim from the spec (→ is drawn as a chevron between parts)', () => {
+  const join = (parts) => parts.join(' → ');
+  assert.equal(join(copy['core.sub.ai']), 'Natural Language → Spatial Intelligence');
+  assert.equal(join(copy['core.sub.data']), 'Multi-source Integration · Automated Data Pipeline');
+  assert.equal(join(copy['core.sub.eo']), 'Earth Observation Intelligence');
+  assert.equal(join(copy['core.sub.analytics']), 'Spatial Analytics');
+  assert.equal(join(copy['core.sub.ml']), 'Machine Learning & Predictive Intelligence');
+  assert.equal(join(copy['core.sub.decision']), 'Data → Analysis → Insight → Decision');
+});
