@@ -108,6 +108,8 @@
           let lastCrop = '', lastResolve = -1;
           const apply = (t) => {
             ui.setTyped(Math.max(0, Math.min(prompt.length, Math.round((t - typeFrom) / 0.025))));
+            // ASK to VISUALIZE: the agent panel lifts while it plans; it settles as the map takes over on 70.0.
+            ui.setFocus(GV.since(t, A(34), 0.6) * (1 - GV.since(t, A(36) - 0.4, 0.6)));
             doneAt.forEach((d, i) => {
               if (t >= d) ui.setStep(i, 'done', GV.since(t, d, UI));
               else if (t >= startAt[i]) ui.setStep(i, 'running', GV.since(t, startAt[i], UI));
@@ -145,10 +147,11 @@
           const S = GV.CAM_END;
           const dark = GV.navyGlowCanvas(S);
           const curtainCtx = $('dark').getContext('2d');
-          const curtain = GV.mountCurtain($('dark'), curtainCtx.createPattern(dark, 'no-repeat'), 6);
+          const H0 = GV.HANDOFF.workspace;
+          // The navy opens radially from the disc: only a moving band is dithered, never the whole frame.
+          const curtain = GV.mountCurtain($('dark'), curtainCtx.createPattern(dark, 'no-repeat'), 6, { origin: [H0.cx, H0.cy] });
           $('arch').innerHTML = GV.architectureSvg({ lit: 'enrichment', scale: S });
 
-          const H0 = GV.HANDOFF.workspace;
           const disc = { x: H0.cx - H0.r, y: H0.cy - H0.r, w: 2 * H0.r, h: 2 * H0.r, r: H0.r };
           const full = { x: 400, y: 135, w: 1440, h: 810, r: 16 };
           const OPEN_FROM = 0, OPEN = 1.1, CLOSE_FROM = A(38, 2), CLOSE = 0.5; // collapses into the disc on 75.5

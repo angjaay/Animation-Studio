@@ -107,9 +107,16 @@ export function renderWorkspace(host, state, { prefix = '' } = {}) {
       }
       const row = stepRows[i];
       row.style.transform = status === 'pending' ? '' : `scale(${(0.94 + 0.06 * k).toFixed(4)})`;
-      row.style.backgroundColor = status === 'done' ? `rgba(31,175,161,${(0.22 * (1 - k)).toFixed(3)})` : '';
+      row.style.backgroundColor = status === 'done' ? `rgba(31,175,161,${(0.45 * (1 - k)).toFixed(3)})` : '';
       const badge = row.querySelector('.gv-badge');
-      if (badge) badge.style.opacity = k.toFixed(3);
+      if (badge) { badge.style.opacity = k.toFixed(3); badge.style.transform = `scale(${(0.6 + 0.4 * k).toFixed(3)})`; }
+    },
+    // The agent panel lifts toward the viewer (k 0..1: scale 1 → 1.2 about its bottom-right corner) so its
+    // plan reads; the dithered map behind it is never scaled.
+    setFocus(k) {
+      agent.style.transformOrigin = '100% 100%';
+      agent.style.transform = k > 0 ? `scale(${(1 + 0.2 * k).toFixed(4)})` : '';
+      agent.style.boxShadow = `0 ${(18 + 22 * k).toFixed(1)}px ${(60 + 60 * k).toFixed(1)}px rgba(3,39,80,${(0.14 + 0.16 * k).toFixed(3)})`;
     },
     setTyped(n) {
       bubble.textContent = state.prompt.slice(0, n);
