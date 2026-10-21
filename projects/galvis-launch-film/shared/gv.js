@@ -661,10 +661,13 @@ var GV = (() => {
 
   // shared/register.js
   function register(id, build, duration) {
+    const root = document.getElementById(`${id}-root`);
+    if (root) root.style.visibility = "hidden";
     const done = (async () => {
       const tl = gsap.timeline({ paused: true });
       try {
         await build(tl);
+        if (root) root.style.visibility = "visible";
       } catch (err) {
         console.error(`[galvis] ${id} failed to build: ${err && err.message ? err.message : err}`);
       }

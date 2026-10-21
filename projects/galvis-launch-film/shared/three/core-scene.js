@@ -22,7 +22,9 @@ function glowTexture() {
   grad.addColorStop(1, 'rgba(31,175,161,0)');
   g.fillStyle = grad;
   g.fillRect(0, 0, 128, 128);
-  return new THREE.CanvasTexture(c);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }
 
 export function mountCoreScene({ canvas, count = 6, radius = 1.3, seed = 4 }) {

@@ -167,15 +167,17 @@
           const region = $('region').getContext('2d');
           const rnd = GV.seeded(7);
           const pts = GV.SEA_POINTS.map(([x, y]) => ({ x, y, at: A(43) + 0.3 + rnd() * 2.6 }));
+          const seaPaths = [...GV.SEA_SVG.matchAll(/ d="([^"]+)"/g)].map(([, d]) => new Path2D(d));
           const drawRegion = (t) => {
             region.clearRect(0, 0, 1920, 1080);
+            if (t < A(43)) return; // the wide shot is still hidden
             region.save();
             const RS = 0.72;
             region.translate(960 - (1920 * RS) / 2, 6);
             region.scale(RS, RS);
             region.strokeStyle = 'rgba(3,39,80,0.35)';
             region.lineWidth = 1.4 / RS;
-            for (const [, d] of GV.SEA_SVG.matchAll(/ d="([^"]+)"/g)) region.stroke(new Path2D(d));
+            for (const path of seaPaths) region.stroke(path);
             region.fillStyle = '#1FAFA1';
             for (const p of pts) {
               const k = Math.min(1, (t - p.at) / 0.25);

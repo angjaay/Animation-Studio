@@ -22,13 +22,13 @@ for (const palette of ['landing', 'brand']) {
   });
 }
 
-test('640x360 cells dither in at most 20 ms (median of 5)', () => {
+for (const palette of ['brand', 'landing']) test(`640x360 cells dither in at most 20 ms (${palette}, median of 5)`, () => {
   const src = sample(9);
   const times = [];
   for (let r = 0; r < 6; r++) {
     const d = src.slice();
     const t0 = performance.now();
-    ditherImageData(d, CW, CH, { palette: 'brand' });
+    ditherImageData(d, CW, CH, { palette });
     times.push(performance.now() - t0);
   }
   times.shift();

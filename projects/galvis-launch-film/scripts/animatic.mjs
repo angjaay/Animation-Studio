@@ -6,7 +6,8 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 const OUT = 'renders/animatic-v1.mp4';
 const SHEET = 'review/animatic-sheet.jpg';
-const FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf';
+// Any monospace font this machine has; drawtext needs a file path.
+const FONT = execFileSync('fc-match', ['-f', '%{file}', 'monospace'], { encoding: 'utf8' }).trim();
 
 execFileSync('npm', ['run', 'build'], { stdio: 'inherit' });
 mkdirSync('renders', { recursive: true });
