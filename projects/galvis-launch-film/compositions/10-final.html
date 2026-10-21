@@ -24,6 +24,8 @@
           font-family: var(--font-text); font-weight: 600; font-size: 15px; color: var(--white);
           text-shadow: 0 1px 6px rgba(3, 39, 80, 0.9);
         }
+        #act10-final-lockup { position: absolute; inset: 0; transform-origin: 960px 420px; }
+        #act10-final-underline { position: absolute; left: 875px; top: 600px; width: 170px; height: 4px; border-radius: 2px; background: var(--teal); transform-origin: 50% 50%; }
         #act10-final-url {
           position: absolute; left: 0; right: 0; top: 560px; text-align: center;
           font-family: var(--font-text); font-weight: 600; font-size: 24px; letter-spacing: 0.12em; color: var(--cool-gray);
@@ -48,12 +50,15 @@
       <div id="act10-final-root" data-composition-id="act10-final" data-width="1920" data-height="1080">
         <div id="act10-final-dawn"></div>
         <svg id="act10-final-contours" viewBox="0 0 1920 1080" data-layout-allow-overflow></svg>
+        <div id="act10-final-lockup">
         <div id="act10-final-logo"></div>
         <div id="act10-final-sweep"></div>
         <div id="act10-final-full"></div>
         <div id="act10-final-chain"></div>
         <div id="act10-final-tagline"></div>
         <div id="act10-final-url"></div>
+        <i id="act10-final-underline"></i>
+        </div>
         <div id="act10-final-credits"></div>
         <div id="act10-final-black"></div>
       </div>
@@ -67,19 +72,31 @@
           $('credits').textContent = GV.COPY['final.credits'];
           $('logo').innerHTML = GV.WORDMARK_DARK.replace(/id="([^"]+)"/g, `id="${id}-$1"`).replace(/url\(#([^)]+)\)/g, `url(#${id}-$1)`);
 
-          // Soft topographic contours: seeded sine stacks, 8% white.
+          // Soft topographic contours (noise-contour-etch, #476): seeded sine stacks whose phases drift with
+          // time, so the lines change shape rather than slide.
           const rnd = GV.seeded(10);
-          const lines = [];
-          for (let k = 0; k < 7; k++) {
-            const y0 = 120 + k * 120, amp = 18 + rnd() * 26, f = 0.002 + rnd() * 0.002, ph = rnd() * 6.28;
+          const contourDefs = Array.from({ length: 7 }, (_, k) => ({ y0: 120 + k * 120, amp: 18 + rnd() * 26, f: 0.002 + rnd() * 0.002, ph: rnd() * 6.28, sp: 0.35 + rnd() * 0.3 }));
+          $('contours').innerHTML = contourDefs.map(() => '<path fill="none" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="1.5"/>').join('');
+          const contourPaths = [...$('contours').querySelectorAll('path')];
+          const drawContours = (t) => contourDefs.forEach(({ y0, amp, f, ph, sp }, k) => {
             let d = '';
-            for (let x = -20; x <= 1940; x += 20) d += `${x === -20 ? 'M' : 'L'}${x} ${(y0 + amp * Math.sin(x * f + ph) + 8 * Math.sin(x * f * 3.1 + ph * 2)).toFixed(1)} `;
-            lines.push(`<path d="${d}" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1.5"/>`);
-          }
-          $('contours').innerHTML = lines.join('');
+            const p = ph + t * sp, a = amp * (1 + 0.25 * Math.sin(t * 0.7 + k));
+            for (let x = -20; x <= 1940; x += 20) d += `${x === -20 ? 'M' : 'L'}${x} ${(y0 + a * Math.sin(x * f + p) + 8 * Math.sin(x * f * 3.1 + p * 2)).toFixed(1)} `;
+            contourPaths[k].setAttribute('d', d);
+          });
+          const clock = { t: 0 };
+          tl.to(clock, { t: 8, duration: 8, ease: 'none', onUpdate: () => { drawContours(clock.t); dawnAt(clock.t); } }, 0);
+          drawContours(0);
 
-          const dawn = await GV.ditheredCanvas('assets/earth/dawn.png', 1920, 420, { palette: 'landing', cell: 3, crop: [0, 0.32, 1, 0.42] });
+          // Dawn earth, lightly dithered (spec: "ber-dither tipis"), screen-locked.
+          const dawn = await GV.ditheredCanvas('assets/earth/dawn.png', 1920, 420, { palette: 'landing', cell: 3, resolve: 0.15, crop: [0, 0.32, 1, 0.42] });
           $('dawn').append(dawn);
+          // The sun keeps rising under the lockup: the dawn resolves from 0.15 to 0.45 across the act (redrawn).
+          let lastDawn = 0.15;
+          const dawnAt = (t) => {
+            const r = 0.15 + 0.3 * Math.min(1, t / 7.2);
+            if (Math.abs(r - lastDawn) > 0.004) { dawn.layer.set({ resolve: r }); dawn.layer.draw(); lastDawn = r; }
+          };
 
           $('full').textContent = GV.COPY['reveal.full'];
           const phrases = GV.COPY['final.chain'].map((text) => {
@@ -98,23 +115,28 @@
           tl.set($('sweep'), { opacity: 1 }, A(57) + 0.3);
           tl.to($('sweep'), { backgroundPosition: '0% 0', duration: 0.8, ease: 'power1.inOut' }, A(57) + 0.3);
           tl.set($('sweep'), { opacity: 0 }, A(57) + 1.1);
-          const rise = { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' };
+          const rise = { opacity: 1, y: 0, duration: 0.5, ease: 'expo.out' };
           gsap.set([$('full'), $('tagline'), $('url'), $('credits'), ...phrases], { opacity: 0, y: 16 });
           tl.to($('full'), rise, A(57, 2));
 
-          // Bar 58: from location, to intelligence, to decision, 0.6 s apart. Bar 59: the tagline.
+          // Bar 58: from location, to intelligence, to decision, one per beat. Bar 59: the tagline.
           phrases.forEach((el, i) => {
-            const t = A(58) + i * 0.6;
+            const t = A(58, i);
             tl.to(el, { ...rise, duration: 0.3 }, t);
-            tl.to(el, { opacity: 0, y: -12, duration: 0.2 }, i < phrases.length - 1 ? t + 0.6 - 0.2 : A(59) - 0.2);
+            tl.to(el, { opacity: 0, y: -12, duration: 0.15 }, i < phrases.length - 1 ? t + 0.5 - 0.15 : A(59) - 0.2);
           });
           tl.to($('tagline'), rise, A(59));
 
           // Bar 60: address and credits, then everything goes to black from 119.2 s.
           tl.to([$('url'), $('credits')], { ...rise, stagger: 0.15 }, A(60));
+          // The address gets a teal underline drawn out from the centre on the beat.
+          gsap.set($('underline'), { scaleX: 0 });
+          tl.to($('underline'), { scaleX: 1, duration: 0.4, ease: 'expo.out' }, A(60));
+          // A slow push on the whole lockup through the last two bars.
+          tl.fromTo($('lockup'), { scale: 1 }, { scale: 1.03, duration: A(60, 2) + 0.2 - A(59), ease: 'none', immediateRender: false }, A(59));
           gsap.set($('black'), { opacity: 0 });
           tl.to($('black'), { opacity: 1, duration: 0.8, ease: 'power1.in' }, A(60, 2) + 0.2);
-          tl.to($('contours'), { y: -24, duration: 8, ease: 'none' }, 0);
+
         }, 8);
       </script>
     </template>

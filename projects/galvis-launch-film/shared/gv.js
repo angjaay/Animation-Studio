@@ -397,7 +397,13 @@ var GV = (() => {
       { t: 110, act: "act09-reunify", what: "map network lights up", box: [550, 170, 600, 400] },
       { t: 110.25, act: "act09-reunify", what: "ONE CORE.", box: [740, 845, 440, 80] },
       { t: 110.75, act: "act09-reunify", what: "second line", box: [460, 946, 1e3, 36] },
-      { t: 112, act: "act10-final", what: "sting", box: [0, 0, 1920, 1080] }
+      { t: 112, act: "act10-final", what: "sting", box: [0, 0, 1920, 1080] },
+      { t: 113, act: "act10-final", what: "full name", box: [640, 380, 640, 32] },
+      { t: 114, act: "act10-final", what: "FROM LOCATION", box: [560, 470, 800, 64] },
+      { t: 114.5, act: "act10-final", what: "TO INTELLIGENCE", box: [560, 470, 800, 64] },
+      { t: 115, act: "act10-final", what: "TO DECISION", box: [560, 470, 800, 64] },
+      { t: 116, act: "act10-final", what: "tagline", box: [300, 470, 1320, 64] },
+      { t: 118, act: "act10-final", what: "galvis.io", box: [880, 570, 160, 40] }
     ]
   };
 
