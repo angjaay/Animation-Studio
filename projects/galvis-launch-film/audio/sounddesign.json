@@ -1,0 +1,31 @@
+{
+ "_doc": "GALVIS launch film soundtrack (real-sound format, audio/tools/mix.py). The score is composed in code and played from University of Iowa MIS recordings (audio/score -> audio/out/music.wav); the sound effects are real Mixkit recordings placed on the picture's cue events by one fragment per category in audio/design/ (prefixes im. tr. ui. mo.). audio/build.py renders the score, mixes, masters, encodes audio/soundtrack.m4a and writes audio/CREDITS.md. Every listed fragment must exist: build.py stops on a missing one.",
+ "cues": "audio/cues.json",
+ "include": [
+  "audio/design/impacts.json",
+  "audio/design/transitions.json",
+  "audio/design/ui.json",
+  "audio/design/motion.json"
+ ],
+ "_music_doc": "The score is rendered on the film's own grid (120 BPM, bar 1 at 0.0 s, 120.0 s long), so it plays untouched as one segment from 0: no stretch, no edit. The first note sounds at 0.0 (sound from the first frame) and opens on a 50 ms fade, so sample 0 does not click (qa: first 5 ms under -40 dBFS); the score fades itself out over 119.2-120.",
+ "music": {
+  "file": "audio/out/music.wav",
+  "src_bpm": 120,
+  "target_bpm": 120,
+  "stretch": "none",
+  "segments": [
+   {"label": "the whole score, bars 1-60, on the picture's grid", "src_from": 0.0, "src_to": 120.0, "at": 0.0,
+    "fade_in": 0.05, "fade_out": 0.0}
+  ]
+ },
+ "_buses_doc": "Fader rides, film seconds -> dB. (1) 22.0-23.75, the riser into 24.0: the score's cymbal-roll swell and the SFX riser climb in the same 5-8 kHz band (qa read the riser only +4.6 dB over the bed), so the music steps 2 dB down on the bar line at 22.0 and the riser leads; it comes back inside the stop-down hole (music is silent there). Not at 56.0: that riser already reads +8.3 dB. (2) Act 06 (62-76): the music dips 3 dB under the typing and clicks from the bar line at 66.0 (first key, first word) to the bar line at 76.0 (act 07 wipe), each step a 50 ms ramp into the bar line so it hides under that downbeat's transient; the UI peaks then sit about 10 dB under the act's music peak, 13 dB under it before the dip. (3) The end card: the recordings of the 116.0 chord run out about 118.2 while the score holds the chord to 120, so the bus lifts 3.5 dB over 117.6-118.6 to keep the chord at body level under the URL (118.0), then fades out over 118.9-119.4, with the picture going black at 119.2 (earshot: fade under 1 s, final moment at body level). EQ: a 2.5 dB low shelf at 60 Hz on the music: Iowa MIS has no bass drum, so the score's sub share sat just under the reference films' range (earshot critique: sub 20-60 Hz -17.8 dB, refs from -17.7 dB).",
+ "buses": {
+  "music": {"eq": {"lowshelf": [60, 2.5]},
+            "auto": [[0, 0], [21.95, 0], [22.0, -2], [23.8, -2], [23.95, 0], [65.95, 0], [66.0, -3], [75.95, -3], [76.0, 0],
+                    [117.6, 0], [118.6, 3.5], [118.9, 3.5], [119.4, -30], [120, -30]]},
+  "sfx": {},
+  "amb": {}
+ },
+ "_master_doc": "-14 LUFS integrated for web / social. The ceiling is the starting point: build.py lowers it until the AAC 192k encode measures <= -1.5 dBTP. Bass folded to mono below 120 Hz (spec).",
+ "master": {"lufs": -14, "ceiling": 0.77, "no_glue": true, "mono_hz": 120}
+}
