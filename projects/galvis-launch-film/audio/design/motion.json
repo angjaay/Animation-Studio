@@ -1,0 +1,225 @@
+{
+ "_doc": "motion fragment: the three moments of motion that carry meaning. (1) act 02, the seven plates landing on the stack (12.5-15.5 s, cues act02:plate:1..7, weight 0.5 -> 1): a soft thud, quieter and higher for the light early plates, 6 dB per doubling of weight (plate 1 is 6 dB under plate 7) and 1.5 -> -1 semitones, plus a very quiet dry tick so the landing reads on small speakers. (2) act 07, the ten profile rows (80.0-83.77 s, act07:row:1..10, spacing 0.5 s then 0.27 s): a soft pop per row, climbing 0 -> +3 semitones across the ten so the profile fills up; right of centre (the card is at x 1060-1740). (3) act 09, the three comets (cues act09:comet:1..3 at 106.0 / 106.5 / 107.0 s are the badge pops at the branch ends; each then climbs the branch 0.5-0.9 s later): a rising swoosh whose apex lands 0.8 s after the cue, near the fastest point of the climb, so the three swooshes arrive at 106.8 / 107.3 / 107.8 s just before the full chord at 108.0 s; panned to the branch (left, middle, right) and a touch louder each time. Unsounded on purpose: act03 hexagon / mark landings and act08 sector landings (impacts / music own that moment or it is too busy), act09 chord (the full chord is the score's). The act 04 module pings (act04:module:k) are voiced by the score's vibraphone and sounded by no rule here; no rule matches kind bell or veil. Levels are relative (Task 6 balances the buses): plates peak about -22 dBFS, pops -24, comets -19..-20 (loudest channel).",
+ "samples": {
+  "mo.thud": {
+   "_doc": "Mixkit 1901 'Bed pillow hit the mattress': a soft low thud (centroid 400 Hz); the thump rises at 0.18-0.20 s after a faint rustle of the pillow in the air, so the trim starts at 0.155 (10 ms fade-in over the rustle) and ends at 0.45 s, before the pillow's second bounce at 0.49 s. HP 85 Hz (order 4): the raw body sits at 55 Hz, inaudible on a laptop.",
+   "file": "audio/assets/mixkit/1901.wav",
+   "start": 0.15,
+   "end": 0.45,
+   "mono": true,
+   "eq": {
+    "hp": 85,
+    "hp_order": 4,
+    "lp": 2500,
+    "lp_order": 2
+   },
+   "norm_peak_db": -3.0,
+   "fade_in": 0.008,
+   "fade_out": 0.15
+  },
+  "mo.tick": {
+   "_doc": "Mixkit 2070 'Light impact on the ground': a dry 20 ms knock (centroid 1.7 kHz) that gives the thud its contact; 0.12 s of the file, then silence.",
+   "file": "audio/assets/mixkit/2070.wav",
+   "start": 0.0,
+   "end": 0.12,
+   "mono": true,
+   "eq": {
+    "hp": 300,
+    "hp_order": 2,
+    "lp": 4500,
+    "lp_order": 2
+   },
+   "norm_peak_db": -3.0,
+   "fade_in": 0.001,
+   "fade_out": 0.05
+  },
+  "mo.pop.a": {
+   "_doc": "the dry knock of 2070 resampled up 5 semitones (hand-sized, a small bubble of a pop).",
+   "file": "audio/assets/mixkit/2070.wav",
+   "start": 0.0,
+   "end": 0.14,
+   "mono": true,
+   "pitch": 5,
+   "eq": {
+    "hp": 280,
+    "hp_order": 2,
+    "lp": 5500,
+    "lp_order": 2
+   },
+   "norm_peak_db": -3.0,
+   "fade_in": 0.001,
+   "fade_out": 0.05
+  },
+  "mo.pop.b": {
+   "_doc": "the body of the pillow thud (1901 from 0.19 s) up 9 semitones: a soft 'poof' layered 8 dB under the knock so each pop has a round body (alternating knock / poof took the pool apart: two characters).",
+   "file": "audio/assets/mixkit/1901.wav",
+   "start": 0.19,
+   "end": 0.4,
+   "mono": true,
+   "pitch": 9,
+   "eq": {
+    "hp": 150,
+    "hp_order": 2,
+    "lp": 5000,
+    "lp_order": 2
+   },
+   "norm_peak_db": -3.0,
+   "fade_in": 0.002,
+   "fade_out": 0.08
+  },
+  "mo.comet": {
+   "_doc": "Mixkit 169 'Futuristic sweep pass by' (the only candidate whose spectrum really rises: centroid 2.8 -> 5.0 kHz over 0.1-0.55 s, level up 24 dB to the apex at 0.75 s). Trim 0.10-0.92 s: the rise and the apex, then the Doppler fall is cut in 0.12 s. Folded to mono: the file is a pass-by that sweeps across the stereo field by itself (one channel 20-30 dB under the other at the apex), which fought the pan toward each branch; the comet is a point climbing a branch, so the rule's pan places it.",
+   "file": "audio/assets/mixkit/169.wav",
+   "start": 0.1,
+   "end": 0.92,
+   "eq": {
+    "hp": 400,
+    "hp_order": 2
+   },
+   "norm_peak_db": -3.0,
+   "fade_in": 0.02,
+   "fade_out": 0.12,
+   "mono": true
+  }
+ },
+ "pools": {
+  "mo.p.thud": [
+   "mo.thud"
+  ],
+  "mo.p.tick": [
+   "mo.tick"
+  ],
+  "mo.p.pop": [
+   "mo.pop.a"
+  ],
+  "mo.p.comet": [
+   "mo.comet"
+  ],
+  "mo.p.pop.body": [
+   "mo.pop.b"
+  ]
+ },
+ "rules": [
+  {
+   "name": "mo.plate.thud",
+   "match": {
+    "kind": "land",
+    "id": "^act02:plate:",
+    "from": 12.0,
+    "to": 16.0
+   },
+   "pool": "mo.p.thud",
+   "mode": "fixed",
+   "gain_db": -19.0,
+   "weight_db": 6.0,
+   "weight_ref": 1.0,
+   "pitch_ramp": [
+    1.5,
+    -1.0
+   ],
+   "jitter_db": 0.5,
+   "pan": 0.0,
+   "align": "attack"
+  },
+  {
+   "name": "mo.plate.tick",
+   "match": {
+    "kind": "land",
+    "id": "^act02:plate:",
+    "from": 12.0,
+    "to": 16.0
+   },
+   "pool": "mo.p.tick",
+   "mode": "fixed",
+   "gain_db": -29.0,
+   "weight_db": 6.0,
+   "weight_ref": 1.0,
+   "pan": 0.0,
+   "align": "attack"
+  },
+  {
+   "name": "mo.row.pop",
+   "match": {
+    "kind": "pop",
+    "id": "^act07:row:"
+   },
+   "pool": "mo.p.pop",
+   "mode": "fixed",
+   "gain_db": -21.0,
+   "jitter_db": 1.0,
+   "pitch_ramp": [
+    0.0,
+    3.0
+   ],
+   "pan": 0.35,
+   "align": "attack"
+  },
+  {
+   "name": "mo.row.pop.body",
+   "match": {
+    "kind": "pop",
+    "id": "^act07:row:"
+   },
+   "pool": "mo.p.pop.body",
+   "mode": "fixed",
+   "gain_db": -29.0,
+   "pitch_ramp": [
+    0.0,
+    3.0
+   ],
+   "pan": 0.35,
+   "align": "attack"
+  },
+  {
+   "name": "mo.comet.1",
+   "match": {
+    "kind": "comet",
+    "id": "^act09:comet:1$"
+   },
+   "pool": "mo.p.comet",
+   "mode": "fixed",
+   "gain_db": -19.0,
+   "pitch": [
+    0.0,
+    0.0
+   ],
+   "pan": -0.4,
+   "align": "peak",
+   "offset": 0.8
+  },
+  {
+   "name": "mo.comet.2",
+   "match": {
+    "kind": "comet",
+    "id": "^act09:comet:2$"
+   },
+   "pool": "mo.p.comet",
+   "mode": "fixed",
+   "gain_db": -18.0,
+   "pitch": [
+    1.0,
+    1.0
+   ],
+   "pan": 0.0,
+   "align": "peak",
+   "offset": 0.8
+  },
+  {
+   "name": "mo.comet.3",
+   "match": {
+    "kind": "comet",
+    "id": "^act09:comet:3$"
+   },
+   "pool": "mo.p.comet",
+   "mode": "fixed",
+   "gain_db": -18.5,
+   "pitch": [
+    2.0,
+    2.0
+   ],
+   "pan": 0.4,
+   "align": "peak",
+   "offset": 0.8
+  }
+ ]
+}
