@@ -1,0 +1,29 @@
+{
+ "_doc": "GALVIS launch film soundtrack (real-sound format, audio/tools/mix.py). The score is composed in code and played from University of Iowa MIS recordings (audio/score -> audio/out/music.wav); the sound effects are real Mixkit recordings placed on the picture's cue events by one fragment per category in audio/design/ (prefixes im. tr. ui. mo.). audio/build.py renders the score, mixes, masters, encodes audio/soundtrack.m4a and writes audio/CREDITS.md. A listed fragment that is not on disk yet is left out by build.py (it says so), so every fragment joins the mix on its own once merged.",
+ "cues": "audio/cues.json",
+ "include": [
+  "audio/design/impacts.json",
+  "audio/design/transitions.json",
+  "audio/design/ui.json",
+  "audio/design/motion.json"
+ ],
+ "_music_doc": "The score is rendered on the film's own grid (120 BPM, bar 1 at 0.0 s, 120.0 s long), so it plays untouched as one segment from 0: no stretch, no edit. The first note sounds at 0.0 (sound from the first frame) and opens on a 50 ms fade, so sample 0 does not click (qa: first 5 ms under -40 dBFS); the score fades itself out over 119.2-120.",
+ "music": {
+  "file": "audio/out/music.wav",
+  "src_bpm": 120,
+  "target_bpm": 120,
+  "stretch": "none",
+  "segments": [
+   {"label": "the whole score, bars 1-60, on the picture's grid", "src_from": 0.0, "src_to": 120.0, "at": 0.0,
+    "fade_in": 0.05, "fade_out": 0.0}
+  ]
+ },
+ "_buses_doc": "Fader rides, film seconds -> dB. Act 06 (62-76): the music dips 3 dB under the typing and clicks from the bar line at 66.0 (first key, first word) to the bar line at 76.0 (act 07 wipe), each step a 50 ms ramp into the bar line so it hides under that downbeat's transient.",
+ "buses": {
+  "music": {"auto": [[0, 0], [65.95, 0], [66.0, -3], [75.95, -3], [76.0, 0], [120, 0]]},
+  "sfx": {},
+  "amb": {}
+ },
+ "_master_doc": "-14 LUFS integrated for web / social. The ceiling is the starting point: build.py lowers it until the AAC 192k encode measures <= -1.5 dBTP. Bass folded to mono below 120 Hz (spec).",
+ "master": {"lufs": -14, "ceiling": 0.77, "no_glue": true, "mono_hz": 120}
+}
