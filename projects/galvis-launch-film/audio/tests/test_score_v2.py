@@ -160,6 +160,24 @@ class TestCompose(unittest.TestCase):
             else:
                 self.assertIsNone(n.pitch, n)
 
+    def test_rhythmic_layer_follows_the_acts(self):
+        layer = [n for n in self.notes if n.inst in compose.TICK_VOICES]
+        self.assertEqual([n for n in layer if abs(n.t * 16 - round(n.t * 16)) > 1e-9], [])  # sixteenth grid
+        for a, b in HOLES + [(56.0, 60.0)]:  # the stop-downs; the second impact and the logo speak alone
+            self.assertEqual([n for n in layer if a <= n.t < b], [], (a, b))
+        self.assertEqual([n for n in layer if n.t >= 116.0], [])  # the end card's chord holds alone
+
+        def rate(a, b):
+            return len({n.t for n in layer if a <= n.t < b}) / (b - a)
+        sparse = {'act 01': rate(0, 12), 'act 10': rate(112, 120)}
+        dense = {'act 04': rate(36, 52), 'act 07': rate(76, 90), 'act 08': rate(90, 106)}
+        middle = {'act 02': rate(12, 22), 'act 06': rate(62, 76), 'act 09': rate(106, 112)}
+        self.assertTrue(all(0 < r <= 2 for r in sparse.values()), sparse)
+        self.assertTrue(all(3 <= r <= 4 for r in middle.values()), middle)
+        self.assertTrue(all(r >= 5.5 for r in dense.values()), dense)
+        logo = min(n.vel for n in self.notes if n.inst == 'vibraphone' and 58.0 <= n.t <= 59.0)
+        self.assertLess(max(n.vel for n in layer if 56.0 <= n.t < 62.0), 0.8 * logo)
+
     def test_note_names_accept_both_sharp_spellings_and_flats(self):
         self.assertEqual({compose.midi(s) for s in ('F#4', 'Fs4', 'Gb4')}, {66})
         self.assertEqual(compose.note_name(66), 'F#4')
