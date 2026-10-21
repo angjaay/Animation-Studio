@@ -1,10 +1,13 @@
 """Score v2: composition (notes from the cues) and the sampler that plays them from Iowa MIS recordings.
 
 The render tests play the full score from a fixture bank generated here into a temp dir (decaying tones with a
-click attack, laid out like audio/assets/iowa/<instrument>/<note>.flac). They are test-only, not film content.
+click attack, laid out like audio/fetch.py's audio/assets/iowa/, with no bass drum, as sourced). Every fixture lasts
+3 s or less, shorter than most real recordings, so the score itself has to keep sounding. Test-only, not film content.
 Run from the project root:  audio/.venv/bin/python -m unittest discover -s audio/tests
 """
+import contextlib
 import hashlib
+import io
 import json
 import math
 import sys
@@ -36,7 +39,7 @@ def pitch_class(name):
 def fixture_tone(midi, kind, rng):
     """5 ms of silence (the trim's pre-roll), a click, then a decaying harmonic tone."""
     f = 440.0 * 2 ** ((midi - 69) / 12)
-    seconds, tau = {'sustain': (3.0, 2.5), 'ring': (6.0, 1.5), 'short': (1.0, 0.25)}[kind]
+    seconds, tau = {'sustain': (3.0, 2.5), 'ring': (3.0, 1.2), 'short': (1.0, 0.25)}[kind]
     t = np.arange(int(seconds * SR)) / SR
     tone = sum(a * np.sin(2 * np.pi * f * k * t) for k, a in ((1, 1.0), (2, 0.4), (3, 0.2)) if f * k < 20000)
     x = tone * np.exp(-t / tau)
@@ -51,31 +54,40 @@ def fixture_hit(rng, seconds=3.0, tau=0.8):
     return np.concatenate([np.zeros(int(0.005 * SR)), 0.5 * x / np.abs(x).max()])
 
 
-KINDS = {'piano': 'ring', 'cello_arco': 'sustain', 'cello_pizz': 'short', 'bass_arco': 'sustain',
-         'violin_arco': 'sustain', 'vibraphone': 'ring', 'crotales': 'ring', 'bells': 'ring'}
+KINDS = {'piano-mf': 'ring', 'piano-pp': 'ring', 'cello-arco': 'sustain', 'cello-pizz': 'short',
+         'bass-arco': 'sustain', 'violin-arco': 'sustain', 'vibraphone-sustain': 'ring', 'crotales': 'ring',
+         'bells': 'ring'}
 
 
-def make_bank(root, step=1):
-    """Every `step` semitones over each folder's range; sharps spelled 's' in some folders and '#' in others."""
+def make_bank(root, step=1, optional=False):
+    """Every `step` semitones over each folder's range, in the first folder name of each voice (plus its soft
+    folder); sharps spelled 's' in some folders and '#' in others; files named like fetch.py names them."""
     rng = np.random.default_rng(1)
-    ranges = {}
+    pitched, unpitched = {}, {}
     for v in render.VOICES.values():
-        if v.low:
-            lo, hi = ranges.get(v.folder, (999, 0))
-            ranges[v.folder] = (min(lo, compose.midi(v.low)), max(hi, compose.midi(v.high)))
-        else:
-            ranges.setdefault(v.folder, None)
-    for i, (folder, rng_) in enumerate(sorted(ranges.items())):
+        if v.optional and not optional:
+            continue
+        for folder in v.folders[:1] + v.soft:
+            if v.low:
+                lo, hi = pitched.get(folder, (999, 0))
+                pitched[folder] = (min(lo, compose.midi(v.low)), max(hi, compose.midi(v.high)))
+            else:
+                name = v.files[0].replace('*[0-9]', '1').replace('*', 'hit')
+                unpitched.setdefault(folder, set()).add(name)
+    for i, (folder, (lo, hi)) in enumerate(sorted(pitched.items())):
         d = root / 'iowa' / folder
         d.mkdir(parents=True)
-        if rng_ is None:
-            sf.write(d / 'hit.flac', fixture_hit(rng), SR)
-            continue
-        for m in range(rng_[0], rng_[1] + 1, step):
+        for m in range(lo, hi + 1, step):
             name = compose.note_name(m)
             if i % 2:
                 name = name.replace('#', 's')
-            sf.write(d / f'{name}.flac', fixture_tone(m, KINDS[folder], rng), SR)
+            prefix = 'brass-' if folder == 'bells' else ''
+            sf.write(d / f'{prefix}{name}.flac', fixture_tone(m, KINDS[folder], rng), SR)
+    for folder, names in sorted(unpitched.items()):
+        d = root / 'iowa' / folder
+        d.mkdir(parents=True)
+        for name in sorted(names):
+            sf.write(d / name, fixture_hit(rng), SR)
 
 
 # ------------------------------------------------------------------ compose
@@ -118,9 +130,14 @@ class TestCompose(unittest.TestCase):
         insts = {n.inst for n in self.at(112.5)}
         self.assertTrue({'gong', 'bells', 'piano'} <= insts, insts)
 
-    def test_starts_at_zero_and_last_note_by_116_5(self):
+    def test_starts_at_zero_and_last_onset_is_the_end_card_chord_at_116(self):
         self.assertEqual(min(n.t for n in self.notes), 0.0)
-        self.assertLessEqual(max(n.t for n in self.notes), 116.5)
+        self.assertEqual(max(n.t for n in self.notes), 116.0)
+
+    def test_a_cue_group_of_the_wrong_size_is_an_error(self):
+        cues = dict(CUES, events=[e for e in CUES['events'] if e['id'] != 'act07:row:10'])
+        with self.assertRaisesRegex(ValueError, "'act07:row:': 9 cues .* 10"):
+            compose.compose(cues)
 
     def test_every_note_is_playable(self):
         for n in self.notes:
@@ -177,7 +194,67 @@ class TestBank(unittest.TestCase):
             self.assertEqual(len(vib), 1, lines)
             self.assertIn('F4', vib[0])
             self.assertNotIn('E4', vib[0])
-            self.assertTrue(any('iowa/gong' in line for line in lines), lines)
+            self.assertTrue(any('iowa/gongs' in line for line in lines), lines)
+
+    def test_fetch_layout_soft_piano_preferred_files_and_optional_bass_drum(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            iowa = Path(tmp) / 'iowa'
+            for folder, names in {'piano-mf': ['D4'], 'piano-pp': ['D4'], 'bells': ['plastic-A4', 'brass-A4'],
+                                  'gongs': ['thaigong-D4', 'tamtam40-bow', 'tamtam40'],
+                                  'cymbals': ['crash18-viennese', 'roll20-mallet']}.items():
+                (iowa / folder).mkdir(parents=True)
+                for name in names:
+                    sf.write(iowa / folder / f'{name}.flac', np.zeros(SR // 10), SR)
+            notes = [compose.Note(0.0, 'piano', 'D4', 0.3, 1.0), compose.Note(0.0, 'piano', 'D4', 0.6, 1.0),
+                     compose.Note(0.0, 'bells', 'A4', 0.5, 1.0), compose.Note(0.0, 'gong', None, 0.5, 1.0),
+                     compose.Note(0.0, 'cymbal_roll_swell', None, 0.5, 1.0),
+                     compose.Note(0.0, 'cymbal_crash', None, 0.5, 1.0), compose.Note(0.0, 'bass_drum', None, 0.5, 1.0)]
+            plan = render.resolve(notes, tmp)
+            used = {n.inst + ('/soft' if n.vel < render.SOFT_VEL else ''): plan[render.source_key(iowa, n)]
+                    for n in notes}
+            self.assertEqual(used['piano/soft'][0].parent.name, 'piano-pp')
+            self.assertEqual(used['piano'][0].parent.name, 'piano-mf')
+            self.assertEqual(used['bells'][0].name, 'brass-A4.flac')
+            self.assertEqual(used['gong'][0].name, 'tamtam40.flac')
+            self.assertEqual(used['cymbal_roll_swell'][0].name, 'roll20-mallet.flac')
+            self.assertEqual(used['cymbal_crash'][0].name, 'crash18-viennese.flac')
+            self.assertIsNone(used['bass_drum'])
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                out = render.render(notes, assets=tmp, length=2.0)
+            self.assertIn('bass_drum', err.getvalue())
+            self.assertIn('gong + double bass', err.getvalue())
+            self.assertEqual(out.shape, (2 * SR, 2))
+
+
+class TestEndFade(unittest.TestCase):
+    def test_the_end_fade_is_shorter_than_a_second_and_ends_on_the_last_sample(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp) / 'iowa' / 'piano-mf'
+            d.mkdir(parents=True)
+            t = np.arange(6 * SR) / SR
+            sf.write(d / 'D4.flac', np.concatenate([np.zeros(240), 0.5 * np.sin(2 * np.pi * 293.66 * t)]), SR)
+            out = render.render([compose.Note(0.0, 'piano', 'D4', 0.6, 6.0)], assets=tmp, length=3.0)
+
+        def level(a):
+            seg = out[int(a * SR):int((a + 0.05) * SR)]
+            return 10 * np.log10((seg ** 2).mean())
+        self.assertLess(abs(level(2.05) - level(1.9)), 0.5)   # untouched 0.95 s before the end
+        self.assertLess(level(2.9), level(1.9) - 20)          # faded by the last 0.1 s
+        self.assertEqual(np.abs(out[-1]).max(), 0.0)
+
+
+class TestShift(unittest.TestCase):
+    def test_shift_moves_the_pitch_by_the_right_interval(self):
+        t = np.arange(SR) / SR
+        x = np.repeat(np.sin(2 * np.pi * 440.0 * t)[:, None], 2, axis=1)
+        for semis in (1, 2, -1, -2):
+            y = render.shift(x, semis)[:, 0]
+            n = 1 << 20
+            spectrum = np.abs(np.fft.rfft(y * np.hanning(len(y)), n))
+            f = np.argmax(spectrum) * SR / n
+            want = 440.0 * 2 ** (semis / 12)
+            self.assertLess(abs(f / want - 1), 0.005, (semis, f, want))
 
 
 class TestRender(unittest.TestCase):
@@ -188,8 +265,10 @@ class TestRender(unittest.TestCase):
         make_bank(root, step=2)  # whole tones: half the notes need a one-semitone shift
         notes = compose.compose(CUES)
         cls.plan = render.resolve(notes, root)
-        cls.out = render.render(notes, holes=HOLES, assets=root, length=LENGTH)
-        cls.again = render.render(notes, holes=HOLES, assets=root, length=LENGTH)
+        cls.notice = io.StringIO()
+        with contextlib.redirect_stderr(cls.notice):
+            cls.out = render.render(notes, holes=HOLES, assets=root, length=LENGTH)
+            cls.again = render.render(notes, holes=HOLES, assets=root, length=LENGTH)
 
     @classmethod
     def tearDownClass(cls):
@@ -207,7 +286,7 @@ class TestRender(unittest.TestCase):
         self.assertEqual(self.out.shape, (int(LENGTH * SR), 2))
 
     def test_samples_shift_at_most_two_semitones(self):
-        shifts = [s for _, s in self.plan.values()]
+        shifts = [s for _, s in filter(None, self.plan.values())]
         self.assertTrue(shifts and max(abs(s) for s in shifts) <= 2)
         self.assertIn(1, [abs(s) for s in shifts])
 
@@ -235,6 +314,25 @@ class TestRender(unittest.TestCase):
             if run and not in_hole and run > worst[0]:
                 worst = (run, t)
         self.assertLessEqual(worst[0] * win / SR, 0.2, f'silent run ending at {worst[1]:.2f} s')
+
+    def test_loudest_3_s_within_4_lu_of_integrated(self):
+        over, at = render.loudest(self.out)
+        self.assertLessEqual(over, render.LOUDEST_3S, f'{over:+.1f} LU at {at:.1f} s')
+
+    def test_no_bass_drum_recording_is_announced(self):
+        self.assertIn('bass_drum', self.notice.getvalue())
+
+    def rms_db(self, a, b):
+        seg = self.out[int(round(a * SR)):int(round(b * SR))]
+        return 10 * np.log10((seg ** 2).mean() + 1e-20)
+
+    def test_the_music_holds_under_the_end_card(self):
+        # with every recording 3 s or shorter, the notes themselves must carry the sound from the sting to 119.0
+        for w in (0.25, 0.1):  # 0.1 s windows: no gap of 0.2 s can hide between them
+            for k in range(int(round((119.0 - 112.5) / w))):
+                a = 112.5 + k * w
+                self.assertGreater(self.rms_db(a, a + w), -40.0, f'{w} s window at {a:.2f} s')
+        self.assertEqual(np.abs(self.out[-1]).max(), 0.0)
 
     def test_stereo_width(self):
         mid, side = (self.out[:, 0] + self.out[:, 1]) / 2, (self.out[:, 0] - self.out[:, 1]) / 2

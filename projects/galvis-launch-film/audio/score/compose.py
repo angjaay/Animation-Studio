@@ -15,7 +15,8 @@ Form (seconds; the acts come from the cues):
   76-90   act 07  Data Enrichment: pizz, crotales sparkle per row, motif D5
   90-106  act 08  Enterprise: full strings, bass drum per sector, motif F#5
   106-112 act 09  the three notes climb back and become the D-F#-A chord at 108.0
-  112-120 act 10  sting at 112.5 with the tonal tail, the chord held to the end
+  112-120 act 10  sting at 112.5, the logo echoed in its tail, the chord re-voiced at 116.0 under the tagline
+                  and held under the end card to the 0.8 s fade
 """
 import json
 import re
@@ -61,6 +62,15 @@ def load_cues(path=CUES):
 def cue_times(cues, prefix):
     """Seconds of the cue events whose id starts with `prefix`, in order."""
     return sorted(e['f'] / cues['fps'] for e in cues['events'] if e['id'].startswith(prefix))
+
+
+def paired(cues, prefix, values):
+    """[(time, value)] for the cues of one group; the score writes one value per cue, so the counts must agree."""
+    times = cue_times(cues, prefix)
+    if len(times) != len(values):
+        raise ValueError(f'cue group {prefix!r}: {len(times)} cues in the cue sheet, the score is written for '
+                         f'{len(values)}')
+    return list(zip(times, values))
 
 
 def stopdowns(cues):
@@ -178,7 +188,6 @@ def act02(s, cues, stop):
     build = 22.0
     s.pulse('piano', 12.0, build, BEAT / 2, lambda t: ['A4'],
             lambda t: 0.3 + 0.12 * (t - 12.0) / 10 + (0.05 if (t * 2) % 1 == 0 else 0))
-    plates = cue_times(cues, 'act02:plate:')
     weight = {round(e['f'] / cues['fps'], 3): e.get('weight', 1.0)
               for e in cues['events'] if e['id'].startswith('act02:plate:')}
     layers = [
@@ -197,7 +206,7 @@ def act02(s, cues, stop):
         lambda t0, w: s.bows('cello_arco_soft', t0, build, lambda t: [tone(chord_at(t, changes), 1, 3)],
                              0.28 + 0.08 * w),
     ]
-    for t0, layer in zip(plates, layers):
+    for t0, layer in paired(cues, 'act02:plate:', layers):
         layer(t0, weight[round(t0, 3)])
     # bar 12: sixteenths, strings swell, cymbal roll, all cut by the stop-down
     s.pulse('piano', build, stop, BEAT / 4, lambda t: ['A4'], lambda t: 0.3 + 0.12 * (t - build) / (stop - build))
@@ -249,7 +258,7 @@ def act04(s, cues):
         s.chord(t, 'piano', [tone(chord, 0, 3), tone(chord, 2, 3), tone(chord, 1, 4)], 0.4, 1.8)
     for t, _ in changes[2:]:
         s.add(t, 'bass_drum', None, 0.3, 1.5)
-    for t, p in zip(cue_times(cues, 'act04:module:'), ['A4', 'B4', 'D5', 'E5', 'F#5', 'A5']):
+    for t, p in paired(cues, 'act04:module:', ['A4', 'B4', 'D5', 'E5', 'F#5', 'A5']):
         s.add(t, 'vibraphone', p, 0.58, 1.5)
         s.add(t + 0.75, 'vibraphone', p, 0.3, 0.75)   # dotted-eighth echo, played
         s.add(t + 1.5, 'vibraphone', p, 0.16, 0.5)
@@ -303,10 +312,10 @@ def act07(s, cues):
         s.add(t, 'piano', 'D5', 0.5, 1.2)
         s.add(t, 'piano', tone(chord, 0, 2), 0.4, 1.8)
         s.add(t + BAR / 2, 'piano', tone(chord, 1, 4), 0.36, 0.9)
-    rows = ['A5', 'B5', 'D6', 'E6', 'F#6', 'E6', 'D6', 'B5', 'A5', 'D6']
-    for t, p in zip(cue_times(cues, 'act07:row:'), rows):
+    rows = ['D6', 'E6', 'F#6', 'A6', 'F#6', 'E6', 'D6', 'E6', 'F#6', 'A6']
+    for t, p in paired(cues, 'act07:row:', rows):
         s.add(t, 'crotales', p, 0.4, 2.5)
-    for t, p in zip(cue_times(cues, 'act07:flow:'), ['G4', 'B4', 'D5', 'G5']):
+    for t, p in paired(cues, 'act07:flow:', ['G4', 'B4', 'D5', 'G5']):
         s.add(t, 'vibraphone', p, 0.34, 1.0)
 
 
@@ -331,13 +340,13 @@ def act08(s, cues):
     for t, _ in changes:
         if all(abs(t - x) > 0.5 for x in sectors):
             s.add(t, 'bass_drum', None, 0.34, 1.5)
-    for t, p in zip(cue_times(cues, 'act08:flash:'), ['A5', 'D6', 'F#6']):
+    for t, p in paired(cues, 'act08:flash:', ['D6', 'F#6', 'A6']):
         s.add(t, 'crotales', p, 0.45, 2.5)
 
 
 def act09(s, cues):
     """The three product notes climb back over an A pedal and become the D-F#-A chord at 108."""
-    for t, p in zip(cue_times(cues, 'act09:comet:'), ['A4', 'D5', 'F#5']):
+    for t, p in paired(cues, 'act09:comet:', ['A4', 'D5', 'F#5']):
         s.add(t, 'bells', p, 0.5, 4.0)
         s.add(t, 'piano', p, 0.34, 1.5)
     s.add(106.0, 'bass_arco_soft', 'A1', 0.42, 2.2)
@@ -354,7 +363,8 @@ def act09(s, cues):
 
 
 def act10(s, cues):
-    """The sting: the logo chord on everything at once; then the chord re-voiced and held to the end."""
+    """The sting: the logo chord on everything at once; the piano echoes the three notes under the phrase lines
+    while the strings re-bow; at 116.0 (the tagline) the chord is re-voiced and rings to the end of the film."""
     t = cue_times(cues, 'act10:logo')[0]
     s.add(t, 'gong', None, 0.45, 7.0)
     s.add(t, 'bass_drum', None, 0.46, 3.0)
@@ -365,7 +375,12 @@ def act10(s, cues):
     s.chord(t, 'bells', ['A4', 'D5', 'F#5'], 0.44, 6.0)
     s.chord(t, 'piano', ['D2', 'D3', 'A3', 'F#4', 'A4'], 0.4, 6.0)
     s.add(t, 'crotales', 'D6', 0.34, 4.0)
+    for when, p in paired(cues, 'act10:phrase:', ['A4', 'D5', 'F#5']):
+        s.add(when, 'piano', p, 0.34, 2.0)
+    s.add(114.0, 'bass_arco_soft', 'D2', 0.4, 2.5)
+    s.chord(114.0, 'cello_arco_soft', ['A2', 'D3'], 0.36, 2.5)
     hold = t + 3.5
+    s.add(hold, 'gong', None, 0.26, 4.0)
     s.add(hold, 'bass_arco_soft', 'D2', 0.46, 4.0)
     s.chord(hold, 'cello_arco_soft', ['A2', 'D3'], 0.42, 4.0)
     s.add(hold, 'violin_arco_soft', 'A4', 0.36, 4.0)

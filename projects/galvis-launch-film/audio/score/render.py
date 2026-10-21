@@ -1,17 +1,21 @@
 """Sampler: plays the composed score from University of Iowa MIS recordings and writes audio/out/music.wav.
 
 Usage (from the project dir):  $AUDIO_PY audio/score/render.py
-Recordings are read from <assets>/iowa/<folder>/<note>.flac (48 kHz, trimmed to the attack - 5 ms; note names like
-D4, F#4 or Fs4; unpitched folders may hold any one file). <assets> is the `assets` argument, else $AUDIO_ASSETS,
-else audio/assets (filled by audio/fetch.py). A note plays the nearest recording of its instrument, resampled by at
-most +-2 semitones; anything further is an error that lists every missing recording.
+        $AUDIO_PY audio/score/render.py --strict   (exit 1 when the loudest 3 s exceed the limit)
+Recordings are read from <assets>/iowa/<folder>/<name>.flac (48 kHz, trimmed to the attack - 5 ms). Pitched files
+end in a note name (D4, F#4, Fs4, brass-A5); VOICES says which folder, and which file names first, each voice plays.
+<assets> is the `assets` argument, else $AUDIO_ASSETS, else audio/assets (filled by audio/fetch.py). A note plays the
+nearest recording of its instrument, resampled by at most +-2 semitones; anything further is an error that lists
+every missing recording. A voice marked optional (the bass drum) is left out, with a notice, when it has no recording.
 
 Signal path: each note -> its voice's envelope and pan -> one bus per stretch between stop-downs -> a stereo room
 (seeded noise impulse) -> side high-passed at 120 Hz -> the bus is cut to silence at its stop-down -> sum -> 0.8 s
 fade at the end -> normalised to -20 LUFS (the mix sets the final level) with peaks under -1 dBFS -> 24-bit WAV.
 Deterministic: no clock, seeded noise, notes in a fixed order.
 """
+import argparse
 import os
+import re
 import sys
 from fractions import Fraction
 from pathlib import Path
@@ -20,7 +24,7 @@ from typing import NamedTuple, Optional, Union
 import numpy as np
 import pyloudnorm
 import soundfile as sf
-from scipy.signal import butter, fftconvolve, resample_poly, sosfilt
+from scipy.signal import butter, fftconvolve, lfilter, resample_poly, sosfilt
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from compose import compose, load_cues, midi, note_name, stopdowns  # noqa: E402
@@ -34,10 +38,12 @@ PEAK = 10 ** (-1 / 20)
 END_FADE = 0.8
 CUT = 0.015            # fade into a stop-down
 ROOM_WET = 0.3
+SOFT_VEL = 0.4         # notes below this play a voice's soft recordings (piano pp) when there are any
+LOUDEST_3S = 4.0       # LU over integrated: the steady-body rule for the short-term loudness
 
 
 class Voice(NamedTuple):
-    folder: str                        # under <assets>/iowa/
+    folders: tuple                     # folder names under <assets>/iowa/, the first that exists is used
     low: Optional[str] = None          # playable range; None = unpitched
     high: Optional[str] = None
     pan: Union[float, tuple] = 0.0     # -1 left .. 1 right, or (low, high) spread across the range
@@ -45,28 +51,42 @@ class Voice(NamedTuple):
     release: float = 0.3               # fade after the note's duration, s (never shorter than 10 ms)
     swell: bool = False                # crescendo from silence over the note's duration
     trim: float = 0.0                  # dB, balance between instruments
+    files: tuple = ('*.flac',)         # file-name globs, earlier ones preferred (brass bells over plastic)
+    soft: tuple = ()                   # folders for notes under SOFT_VEL, used when they exist
+    optional: str = ''                 # if set: left out when no recording exists, and this says what remains
 
 
-# The one table from the score's voices to the recordings. Ranges are what audio/sources.json fetches.
+PIANO = dict(folders=('piano-mf', 'piano'), soft=('piano-pp',), low='D2', high='D6')
+CELLO = dict(folders=('cello-arco', 'cello_arco'), low='D2', high='A4', pan=-0.35)
+BASS = dict(folders=('bass-arco', 'bass_arco'), low='D1', high='A2', pan=0.0, trim=1.0)
+VIOLIN = dict(folders=('violin-arco', 'violin_arco'), low='D4', high='A5', pan=0.4, trim=-2.0)
+
+# The one table from the score's voices to the recordings (folder names as audio/fetch.py writes them; the
+# underscore names are accepted too). Ranges are the notes the score may ask for.
 VOICES = {
-    'piano':             Voice('piano', 'D2', 'D6', pan=(-0.3, 0.3), release=0.35),
-    'cello_arco':        Voice('cello_arco', 'D2', 'A4', pan=-0.35, attack=0.08, release=0.45),
-    'cello_arco_soft':   Voice('cello_arco', 'D2', 'A4', pan=-0.35, attack=0.5, release=0.6),
-    'cello_arco_swell':  Voice('cello_arco', 'D2', 'A4', pan=-0.35, release=0.03, swell=True),
-    'cello_pizz':        Voice('cello_pizz', 'D2', 'A4', pan=-0.25, release=0.12),
-    'bass_arco':         Voice('bass_arco', 'D1', 'A2', pan=0.0, attack=0.06, release=0.5, trim=1.0),
-    'bass_arco_soft':    Voice('bass_arco', 'D1', 'A2', pan=0.0, attack=0.6, release=0.7, trim=1.0),
-    'bass_arco_swell':   Voice('bass_arco', 'D1', 'A2', pan=0.0, release=0.03, swell=True, trim=1.0),
-    'violin_arco':       Voice('violin_arco', 'D4', 'A5', pan=0.4, attack=0.08, release=0.45, trim=-2.0),
-    'violin_arco_soft':  Voice('violin_arco', 'D4', 'A5', pan=0.4, attack=0.5, release=0.6, trim=-2.0),
-    'violin_arco_swell': Voice('violin_arco', 'D4', 'A5', pan=0.4, release=0.03, swell=True, trim=-2.0),
-    'vibraphone':        Voice('vibraphone', 'D4', 'A5', pan=(-0.6, 0.6), release=0.5),
-    'crotales':          Voice('crotales', 'A5', 'F#6', pan=(-0.7, 0.7), release=1.0, trim=-4.0),
-    'bells':             Voice('bells', 'A4', 'F#5', pan=(-0.4, 0.4), release=1.2, trim=-1.0),
-    'gong':              Voice('gong', pan=0.0, release=1.5),
-    'cymbal_roll_swell': Voice('cymbal_roll', pan=0.0, release=0.03, swell=True, trim=-4.0),
-    'cymbal_crash':      Voice('cymbal_crash', pan=0.0, release=1.2, trim=-5.0),
-    'bass_drum':         Voice('bass_drum', pan=0.0, release=0.8, trim=2.0),
+    'piano':             Voice(**PIANO, pan=(-0.3, 0.3), release=0.35),
+    'cello_arco':        Voice(**CELLO, attack=0.08, release=0.45),
+    'cello_arco_soft':   Voice(**CELLO, attack=0.5, release=0.6),
+    'cello_arco_swell':  Voice(**CELLO, release=0.03, swell=True),
+    'cello_pizz':        Voice(('cello-pizz', 'cello_pizz'), 'D2', 'A4', pan=-0.25, release=0.12),
+    'bass_arco':         Voice(**BASS, attack=0.06, release=0.5),
+    'bass_arco_soft':    Voice(**BASS, attack=0.6, release=0.7),
+    'bass_arco_swell':   Voice(**BASS, release=0.03, swell=True),
+    'violin_arco':       Voice(**VIOLIN, attack=0.08, release=0.45),
+    'violin_arco_soft':  Voice(**VIOLIN, attack=0.5, release=0.6),
+    'violin_arco_swell': Voice(**VIOLIN, release=0.03, swell=True),
+    'vibraphone':        Voice(('vibraphone-sustain', 'vibraphone'), 'D4', 'A5', pan=(-0.6, 0.6), release=0.5),
+    'crotales':          Voice(('crotales',), 'D6', 'A6', pan=(-0.7, 0.7), release=1.0, trim=-4.0),
+    'bells':             Voice(('bells',), 'A4', 'F#5', pan=(-0.4, 0.4), release=1.2, trim=-1.0,
+                               files=('brass-*.flac', '*.flac')),
+    'gong':              Voice(('gongs', 'gong'), pan=0.0, release=1.5,
+                               files=('tamtam40.flac', 'tamtam*[0-9].flac', 'tamtam*.flac', '*.flac')),
+    'cymbal_roll_swell': Voice(('cymbals', 'cymbal_roll'), pan=0.0, release=0.03, swell=True, trim=-4.0,
+                               files=('roll20-mallet.flac', 'roll*.flac')),
+    'cymbal_crash':      Voice(('cymbals', 'cymbal_crash'), pan=0.0, release=1.2, trim=-5.0,
+                               files=('crash18-viennese.flac', 'crash*.flac')),
+    'bass_drum':         Voice(('bass-drum', 'bass_drum'), pan=0.0, release=0.8, trim=2.0,
+                               optional='the impacts are gong + double bass, the sectors and heartbeats unaccented'),
 }
 
 
@@ -75,49 +95,71 @@ def assets_root(assets=None):
 
 
 # ------------------------------------------------------------------ recordings
-def scan(folder):
-    """{midi: path} for the note-named files in a folder (unparseable names are skipped)."""
-    found = {}
-    for p in sorted(folder.glob('*.flac')):
-        try:
-            found.setdefault(midi(p.stem), p)
-        except ValueError:
-            pass
+NOTE_AT_END = re.compile(r'(?:^|[-_])([A-G](?:#|s|b)?\d)$')
+
+
+def folder_of(root, voice, vel):
+    """The folder a note plays from: the soft one for quiet notes when it exists, else the first that exists."""
+    names = (voice.soft if vel < SOFT_VEL else ()) + voice.folders
+    return next((root / n for n in names if (root / n).is_dir()), root / voice.folders[0])
+
+
+def candidates(folder, voice):
+    """The recordings a voice may use from a folder: {midi: path} if pitched, else [path] (preferred first)."""
+    found = {} if voice.low else []
+    for pattern in voice.files:
+        for p in sorted(folder.glob(pattern)):
+            if not voice.low:
+                if p not in found:
+                    found.append(p)
+                continue
+            m = NOTE_AT_END.search(p.stem)
+            if m:
+                found.setdefault(midi(m.group(1)), p)
     return found
 
 
+def source_key(root, note):
+    v = VOICES[note.inst]
+    return (folder_of(root, v, note.vel), v.files, note.pitch)
+
+
 def resolve(notes, assets=None):
-    """{(folder, pitch): (path, semitones)} for every note, or FileNotFoundError listing all that are missing."""
+    """{source key: (path, semitones) or None} for every note (None: an optional voice with no recording), or
+    FileNotFoundError listing everything that is missing."""
     root = assets_root(assets) / 'iowa'
-    plan, missing, scans = {}, {}, {}
-    for inst, pitch in sorted({(n.inst, n.pitch or '') for n in notes}):
-        v = VOICES[inst]
-        folder = root / v.folder
-        if v.folder not in scans:
-            scans[v.folder] = (scan(folder), sorted(folder.glob('*.flac'))) if folder.is_dir() else ({}, [])
-        pitched, files = scans[v.folder]
-        key = (v.folder, pitch or None)
+    plan, missing, found = {}, {}, {}
+    for note in sorted(notes, key=lambda n: (n.inst, n.pitch or '', n.vel)):
+        key = source_key(root, note)
         if key in plan:
             continue
-        if not pitch:
-            if files:
-                plan[key] = (files[0], 0)
+        v = VOICES[note.inst]
+        folder = key[0]
+        if (folder, v.files) not in found:
+            found[(folder, v.files)] = candidates(folder, v) if folder.is_dir() else ({} if v.low else [])
+        have = found[(folder, v.files)]
+        if not have and v.optional:
+            plan[key] = None
+        elif not note.pitch:
+            if have:
+                plan[key] = (have[0], 0)
             else:
-                missing.setdefault(folder, [])
-            continue
-        want = midi(pitch)
-        near = sorted(pitched, key=lambda m: (abs(m - want), -m))
-        if near and abs(near[0] - want) <= MAX_SHIFT:
-            plan[key] = (pitched[near[0]], want - near[0])
+                missing.setdefault((folder, v.files), [])
         else:
-            missing.setdefault(folder, []).append(pitch)
+            want = midi(note.pitch)
+            near = sorted(have, key=lambda m: (abs(m - want), -m))
+            if near and abs(near[0] - want) <= MAX_SHIFT:
+                plan[key] = (have[near[0]], want - near[0])
+            else:
+                missing.setdefault((folder, v.files), []).append(note.pitch)
     if missing:
         lines = []
-        for folder, pitches in sorted(missing.items()):
-            have = ', '.join(note_name(m) for m in sorted(scans[folder.name][0])) or 'nothing'
+        for (folder, files), pitches in sorted(missing.items()):
+            got = found[(folder, files)]
+            has = ', '.join(note_name(m) for m in sorted(got)) if isinstance(got, dict) else ', '.join(p.name for p in got)
             want = (', '.join(sorted(set(pitches), key=midi)) + f' (within {MAX_SHIFT} semitones)' if pitches
-                    else 'any one recording')
-            lines.append(f'{folder}: needs {want}; has {have}')
+                    else 'one of ' + ' / '.join(files))
+            lines.append(f'{folder}: needs {want}; has {has or "nothing"}')
         raise FileNotFoundError('missing Iowa MIS recordings (run audio/fetch.py, or set AUDIO_ASSETS):\n  '
                                 + '\n  '.join(lines))
     return plan
@@ -213,6 +255,13 @@ def render(notes, holes=(), assets=None, length=None):
     """Stereo 48 kHz float array of the notes. `holes` are (stop-down, impact) pairs: everything sounding before an
     impact is cut to silence at its stop-down. `length` in seconds (default: until the last release ends)."""
     plan = resolve(notes, assets)
+    root = assets_root(assets) / 'iowa'
+    left_out = sorted({n.inst for n in notes if plan[source_key(root, n)] is None})
+    for inst in left_out:
+        count = sum(n.inst == inst for n in notes)
+        print(f'note: no {inst} recording in {root}/{VOICES[inst].folders[0]}; its {count} notes are left out '
+              f'({VOICES[inst].optional})', file=sys.stderr)
+    notes = [n for n in notes if n.inst not in left_out]
     if length is None:
         length = max(n.t + n.dur + VOICES[n.inst].release for n in notes) + 1.0
     total = int(round(length * SR))
@@ -221,7 +270,7 @@ def render(notes, holes=(), assets=None, length=None):
     cache = {}
     for note in sorted(notes, key=lambda n: (n.t, n.inst, n.pitch or '', n.vel, n.dur)):
         v = VOICES[note.inst]
-        path, semis = plan[(v.folder, note.pitch)]
+        path, semis = plan[source_key(root, note)]
         if (path, semis) not in cache:
             cache[(path, semis)] = shift(load(path), semis)
         x = cache[(path, semis)]
@@ -255,30 +304,55 @@ def write(x, path):
     sf.write(str(path), x, SR, subtype='PCM_24', format='WAV')
 
 
+def short_term(x, window=3.0, hop=0.1):
+    """[(LUFS, start s)] over sliding windows: ungated BS.1770 loudness (K-weighting, channel powers summed), the
+    EBU short-term measure when window = 3 s."""
+    shelf = ([1.53512485958697, -2.69169618940638, 1.19839281085285], [1.0, -1.69065929318241, 0.73248077421585])
+    highpass = ([1.0, -2.0, 1.0], [1.0, -1.99004745483398, 0.99007225036621])
+    k = lfilter(*highpass, lfilter(*shelf, x, axis=0), axis=0)
+    power = np.concatenate([[0.0], np.cumsum((k ** 2).sum(axis=1))])
+    w, h = int(window * SR), int(hop * SR)
+    starts = np.arange(0, len(x) - w + 1, h)
+    mean = (power[starts + w] - power[starts]) / w
+    return list(zip(-0.691 + 10 * np.log10(np.maximum(mean, 1e-12)), starts / SR))
+
+
+def loudest(x):
+    """(LU of the loudest 3 s over the integrated loudness, where it starts in s)."""
+    top, at = max(short_term(x))
+    return top - pyloudnorm.Meter(SR).integrated_loudness(x), at
+
+
 def report(x):
     """Integrated loudness, peak, the loudest 3 s over integrated, stereo width (side under mid)."""
-    meter = pyloudnorm.Meter(SR)
-    lufs = meter.integrated_loudness(x)
-    w, hop = 3 * SR, SR // 2
-    windows = [(meter.integrated_loudness(x[i:i + w]), i / SR) for i in range(0, len(x) - w + 1, hop)]
-    top, at = max(windows)
+    lufs = pyloudnorm.Meter(SR).integrated_loudness(x)
+    over, at = loudest(x)
     mid, side = (x[:, 0] + x[:, 1]) / 2, (x[:, 0] - x[:, 1]) / 2
     width = 10 * np.log10((side ** 2).mean() / (mid ** 2).mean())
     return (f'{len(x) / SR:.3f} s, {lufs:.2f} LUFS, peak {20 * np.log10(np.abs(x).max()):.2f} dBFS, loudest 3 s '
-            f'{top - lufs:+.1f} LU at {at:.1f} s, side {width:.1f} dB under mid')
+            f'{over:+.1f} LU at {at:.1f} s, side {width:.1f} dB under mid')
 
 
-def main(assets=None):
+def main(argv=None, assets=None):
+    args = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    args.add_argument('--strict', action='store_true', help=f'exit 1 if the loudest 3 s exceed {LOUDEST_3S} LU')
+    strict = args.parse_args(argv).strict
     cues = load_cues()
     notes = compose(cues)
     out = render(notes, holes=stopdowns(cues), assets=assets, length=cues['total'] / cues['fps'])
     path = PROJECT / 'audio' / 'out' / 'music.wav'
     write(out, path)
     print(f'{path.relative_to(PROJECT)}: {len(notes)} notes, {report(out)}')
+    over, at = loudest(out)
+    if over > LOUDEST_3S:
+        print(f'WARNING: loudest 3 s at {at:.1f} s is {over:+.1f} LU over integrated (limit {LOUDEST_3S:+.1f} LU): '
+              'lower the velocities there', file=sys.stderr)
+        return 1 if strict else 0
+    return 0
 
 
 if __name__ == '__main__':
     try:
-        main()
+        sys.exit(main())
     except FileNotFoundError as err:
         sys.exit(str(err))
