@@ -288,8 +288,11 @@ var GV = (() => {
     ],
     holds: [[119.2, 120]],
     events: [
-      { t: 4, act: "act01-world", what: "line 1", box: [360, 110, 1200, 110] },
-      { t: 8, act: "act01-world", what: "line 2", box: [360, 110, 1200, 110] },
+      { t: 4, act: "act01-world", what: "line 1", box: [385, 130, 1150, 80] },
+      { t: 6, act: "act01-world", what: "cities light up", box: [960, 540, 480, 540] },
+      { t: 7, act: "act01-world", what: "vegetation lights up", box: [700, 540, 740, 540] },
+      { t: 8, act: "act01-world", what: "line 2", box: [385, 130, 1150, 80] },
+      { t: 10, act: "act01-world", what: "constellation", box: [480, 540, 720, 540] },
       { t: 14, act: "act02-complexity", what: "line 1", box: [200, 60, 1520, 110] },
       { t: 18, act: "act02-complexity", what: "line 2", box: [200, 60, 1520, 110] },
       { t: 24, act: "act03-reveal", what: "impact: white flash", box: [0, 0, 1920, 1080] },

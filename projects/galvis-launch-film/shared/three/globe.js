@@ -20,6 +20,21 @@ const EARTH_FRAG = /* glsl */ `
   uniform sampler2D night;
   uniform vec3 sun;
   uniform float exposure;
+  // Layers that light up over Southeast Asia (0..1, may overshoot briefly as an accent).
+  uniform float cities;
+  uniform float vegetation;
+  uniform float water;
+  uniform float contours;
+  uniform float contourReach; // longitude the contour etch has reached
+  const vec4 SEA = vec4(92.0, -11.0, 141.0, 28.0); // lon0, lat0, lon1, lat1
+
+  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float vnoise(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+  }
+  float relief(vec2 p) { return vnoise(p) * 0.6 + vnoise(p * 2.1 + 7.3) * 0.3 + vnoise(p * 4.3 - 2.1) * 0.1; }
   varying vec2 vUv;
   varying vec3 vNormalW;
   varying vec3 vNormalV;
@@ -30,6 +45,26 @@ const EARTH_FRAG = /* glsl */ `
     vec3 nightC = texture2D(night, vUv).rgb;
     nightC = nightC * nightC * 1.5;
     vec3 c = mix(nightC, dayC, lit);
+
+    vec2 ll = vec2(vUv.x * 360.0 - 180.0, vUv.y * 180.0 - 90.0);
+    float inSea = smoothstep(SEA.x - 4.0, SEA.x, ll.x) * smoothstep(SEA.z + 4.0, SEA.z, ll.x)
+                * smoothstep(SEA.y - 4.0, SEA.y, ll.y) * smoothstep(SEA.w + 4.0, SEA.w, ll.y);
+    vec3 dayRaw = texture2D(day, vUv).rgb;
+    float lights = dot(texture2D(night, vUv).rgb, vec3(0.299, 0.587, 0.114));
+    float green = smoothstep(0.02, 0.10, dayRaw.g - max(dayRaw.r, dayRaw.b));
+    float sea = smoothstep(0.03, 0.12, dayRaw.b - max(dayRaw.r, dayRaw.g));
+    float land = 1.0 - sea;
+    // Cities glow teal, by day too.
+    c += vec3(0.12, 0.69, 0.63) * smoothstep(0.10, 0.50, lights) * cities * inSea * 2.6;
+    // Vegetation and water take the brand's green and bright navy.
+    c = mix(c, c * 0.55 + vec3(0.53, 0.76, 0.42) * 0.75, clamp(green * vegetation, 0.0, 1.2) * inSea * 0.75);
+    c = mix(c, vec3(0.04, 0.33, 0.86), clamp(sea * water, 0.0, 1.2) * inSea * 0.45);
+    // Contours etched west to east from a seeded relief field, on land only.
+    float h = relief(ll * 0.55) * 9.0;
+    float iso = abs(fract(h) - 0.5);
+    float line = 1.0 - smoothstep(0.0, 0.09, 0.5 - iso);
+    float etched = smoothstep(contourReach, contourReach - 1.5, ll.x);
+    c += vec3(1.0) * line * land * inSea * etched * contours * 0.35;
     // Dawn: a narrow warm band on the day side of the terminator.
     c += vec3(1.0, 0.55, 0.25) * exp(-(d * d) / 0.0035) * smoothstep(-0.05, 0.02, d) * 0.30;
     // Thin atmosphere on the lit limb.
@@ -77,7 +112,10 @@ export function mountGlobe({ canvas, day, night }) {
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, canvas.width / canvas.height, 0.01, 50);
-  const uniforms = { day: { value: texture(day) }, night: { value: texture(night) }, sun: { value: new THREE.Vector3(1, 0, 0) }, exposure: { value: 1 } };
+  const uniforms = {
+    day: { value: texture(day) }, night: { value: texture(night) }, sun: { value: new THREE.Vector3(1, 0, 0) }, exposure: { value: 1 },
+    cities: { value: 0 }, vegetation: { value: 0 }, water: { value: 0 }, contours: { value: 0 }, contourReach: { value: -180 },
+  };
   const globe = new THREE.Mesh(new THREE.SphereGeometry(1, 192, 128), new THREE.ShaderMaterial({ uniforms, vertexShader: EARTH_VERT, fragmentShader: EARTH_FRAG }));
   const halo = new THREE.Mesh(
     new THREE.SphereGeometry(1.07, 96, 64),
@@ -88,8 +126,9 @@ export function mountGlobe({ canvas, day, night }) {
   const v = new THREE.Vector3(), n = new THREE.Vector3(), eye = new THREE.Vector3();
 
   return {
-    // state: { rotY, sun: [x,y,z], eye: [x,y,z], target: [x,y,z], exposure }
-    render({ rotY, sun, eye: e, target, exposure = 1 }) {
+    // state: { rotY, sun: [x,y,z], eye: [x,y,z], target: [x,y,z], exposure, layers: { cities, vegetation, water, contours, contourReach } }
+    render({ rotY, sun, eye: e, target, exposure = 1, layers = {} }) {
+      for (const key of ['cities', 'vegetation', 'water', 'contours', 'contourReach']) if (key in layers) uniforms[key].value = layers[key];
       globe.rotation.y = rotY;
       halo.rotation.y = rotY;
       uniforms.sun.value.set(...sun).normalize();
