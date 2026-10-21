@@ -16,6 +16,7 @@
     "test:animatic": "node --test checks/*.test.mjs",
     "build:3d": "esbuild shared/three/index.js --bundle --format=iife --global-name=GV3D --minify --outfile=shared/gv3d.js --log-level=warning",
     "qa:act": "node scripts/qa-act.mjs",
+    "audio:cues": "node scripts/export-sound-cues.mjs",
     "test:film": "node --test checks/film.test.mjs checks/determinism.test.mjs"
   },
   "devDependencies": {
