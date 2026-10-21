@@ -5,3 +5,4 @@ renders/
 audio/temp-score.wav
 audio/__pycache__/
 .hyperframes/render-outputs.json
+audio/assets/
