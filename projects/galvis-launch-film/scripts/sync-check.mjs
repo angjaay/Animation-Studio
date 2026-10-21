@@ -1,11 +1,11 @@
 // Audio/visual sync on the rendered film: each hit (24.0 reveal, 56.0 split, 112.5 sting) must land
 // on the frame where the picture visibly changes: the same frame, and a change of at least 2 grey levels.
-// Usage: node scripts/sync-check.mjs [renders/animatic-v1.mp4]
+// Usage: node scripts/sync-check.mjs [renders/film-v4.mp4]
 import { execFileSync } from 'node:child_process';
 import { CUES } from '../shared/cues.js';
 import SOUND from '../audio/cues.json' with { type: 'json' };
 
-const MP4 = process.argv[2] ?? 'renders/animatic-v1.mp4';
+const MP4 = process.argv[2] ?? 'renders/film-v4.mp4';
 const FPS = CUES.fps;
 const FRAME = 1 / FPS;
 // the sting is the sound cue's (audio/cues.json kind "sting": 112.5, where the logo lands)

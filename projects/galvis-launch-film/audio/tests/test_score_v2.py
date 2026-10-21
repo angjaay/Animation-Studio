@@ -130,7 +130,11 @@ class TestCompose(unittest.TestCase):
 
     def test_impacts_are_low_layers_only(self):
         for t in (24.0, 56.0):
-            self.assertEqual({n.inst for n in self.at(t)}, {'gong', 'bass_drum', 'bass_arco'}, t)
+            self.assertEqual({n.inst for n in self.at(t)}, {'gong', 'bass_arco'}, t)
+
+    def test_no_bass_drum_notes(self):
+        """Iowa MIS has no bass drum: the score writes none (the SFX layer carries the low hits)"""
+        self.assertEqual([n for n in self.notes if n.inst == 'bass_drum'], [])
 
     def test_module_activations_rise_on_vibraphone(self):
         pings = [e['f'] / CUES['fps'] for e in CUES['events'] if e['id'].startswith('act04:module:')]
@@ -348,9 +352,6 @@ class TestRender(unittest.TestCase):
     def test_loudest_3_s_within_4_lu_of_integrated(self):
         over, at = render.loudest(self.out)
         self.assertLessEqual(over, render.LOUDEST_3S, f'{over:+.1f} LU at {at:.1f} s')
-
-    def test_no_bass_drum_recording_is_announced(self):
-        self.assertIn('bass_drum', self.notice.getvalue())
 
     def rms_db(self, a, b):
         seg = self.out[int(round(a * SR)):int(round(b * SR))]

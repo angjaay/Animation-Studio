@@ -30,7 +30,9 @@ Film: `renders/film-v4.mp4` (tidak di-commit; `node scripts/render.mjs --quality
 | Event visual dengan onset ±100 ms | 81 % | 87 % |
 
 Sinkron (`scripts/sync-check.mjs`): impact 24,0 s dan 56,0 s +10 ms, sting 112,5 s 0 ms. Sonic logo A4 / D5 / F♯5
-di 58,0 / 58,5 / 59,0 s (vibraphone + shimmer oktaf crotales), akor penuh di 108,0 s.
+di 58,0 / 58,5 / 59,0 s (vibraphone; shimmer oktaf: lonceng A5 di atas A4, crotales D6 / F♯6), akor penuh di
+108,0 s. QA `qa.py` mencatat "clicks: warn" di 48,5015 s dan 110,0015 s: itu serangan mallet vibraphone A5 sendiri
+(transien rekaman Iowa), bukan potongan atau cacat edit.
 
 ## Juri suara (mg-styles-15, `sound_sync`)
 

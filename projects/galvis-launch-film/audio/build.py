@@ -3,15 +3,18 @@
 
     $AUDIO_PY audio/build.py          (npm run audio:build)
 
+0. gates                             every fragment audio/sounddesign.json lists is on disk; every recording matches its
+                                     audio/sources.json sha256 (fetch.verify) and every recording used is named there
 1. audio/score/render.py --strict    the score from Iowa MIS recordings -> audio/out/music.wav
-2. audio/tools/mix.py --trace        audio/sounddesign.json (every listed fragment must exist) -> premaster + stems
+2. audio/tools/mix.py --trace        audio/sounddesign.json -> premaster + stems
 3. audio/tools/master.py             -14 LUFS, true-peak limited; the ceiling is lowered until the AAC 192k encode
-                                     (audio/soundtrack.m4a) measures <= -1.5 dBTP
+                                     (audio/out/soundtrack.m4a) measures <= -1.5 dBTP
 4. audio/tools/qa.py                 placements, sync, edges, masking, the master gate -> audio/out/qa/qa.json
-5. audit.py + credits.py             (inside fetch.patched_licences(): the Iowa MIS licence class) -> audio/CREDITS.md
+5. audit.py + credits.py             (inside fetch.patched_licences(): the Iowa MIS licence class) -> audio/out/CREDITS.md
+6. publish                           only now, with every gate passed: audio/soundtrack.m4a and audio/CREDITS.md
 
 Everything generated goes to audio/out/ (gitignored) except audio/soundtrack.m4a and audio/CREDITS.md, which are
-committed. Same inputs give byte-identical outputs. Needs the recordings (audio/fetch.py) and the audio venv
+committed; a failed step leaves the committed pair untouched. Same inputs give byte-identical outputs. Needs the recordings (audio/fetch.py) and the audio venv
 ($AUDIO_PY, else audio/.venv): the steps run with the interpreter that runs this script.
 """
 import json
@@ -92,7 +95,8 @@ def master(premaster, wav, m, ceiling):
 
 
 def master_to_m4a(premaster, m):
-    """master, encode, measure the m4a; lower the ceiling by the overshoot until the m4a is <= MAX_TP"""
+    """master, encode, measure the m4a; lower the ceiling by the overshoot until the m4a is <= MAX_TP.
+    Returns (the m4a in audio/out, ceiling, true peak): publish() copies it once every later gate has passed."""
     wav, tmp = OUT / 'soundtrack.wav', OUT / 'soundtrack.m4a'
     ceiling = float(m.get('ceiling', 0.77))
     for attempt in range(1, ATTEMPTS + 1):
@@ -102,10 +106,46 @@ def master_to_m4a(premaster, m):
         print(f'master attempt {attempt}: ceiling {ceiling:.4f} ({20 * np.log10(ceiling):+.2f} dBFS) -> m4a {tp:+.2f} dBTP',
               flush=True)
         if tp <= MAX_TP:
-            shutil.copyfile(tmp, M4A)
-            return ceiling, tp
+            return tmp, ceiling, tp
         ceiling *= 10 ** ((MAX_TP - TP_MARGIN - tp) / 20)
     sys.exit(f'build.py: the m4a stays above {MAX_TP} dBTP after {ATTEMPTS} ceilings')
+
+
+def load_fetch():
+    sys.path.insert(0, str(AUDIO))
+    import fetch
+    return fetch
+
+
+def under_assets(path):
+    """'audio/assets/mixkit/1.wav' -> 'mixkit/1.wav' (the sources.json "file"); other paths are returned as they are"""
+    prefix = 'audio/assets/'
+    return path[len(prefix):] if path.startswith(prefix) else path
+
+
+def design_recordings(design):
+    """every recording the design's samples and slices (top level and fragments) play, relative to audio/assets"""
+    used = set()
+    for d in [design] + [json.loads((PROJECT / i).read_text()) for i in design.get('include', [])]:
+        for group in ('samples', 'slices'):
+            used |= {under_assets(v['file']) for v in (d.get(group) or {}).values()}
+        used |= {under_assets(a['file']) for a in d.get('ambience') or []}
+    return sorted(used)
+
+
+def recording_problems(sources, assets, used):
+    """fetch.verify (every sources.json recording present, sha256 as pinned, Iowa conversions intact) plus every
+    recording the build uses that no sources.json entry names"""
+    named = {e['file'] for e in sources['entries']}
+    unknown = [f'{u}: used by the build but named by no audio/sources.json entry' for u in sorted(set(used) - named)]
+    return load_fetch().verify(sources, assets) + unknown
+
+
+def check_recordings():
+    """recording_problems for this build: the design's recordings and the score's"""
+    fetch = load_fetch()
+    used = design_recordings(json.loads(DESIGN.read_text())) + [under_assets(p) for p in score_recordings()]
+    return recording_problems(fetch.load_sources(AUDIO / 'sources.json'), AUDIO / 'assets', used)
 
 
 def score_recordings():
@@ -120,8 +160,7 @@ def score_recordings():
 
 def licences_and_credits(design_path, report_path):
     """audit.py and credits.py over the recordings that are audible: the Mixkit effects and the score's Iowa notes"""
-    sys.path.insert(0, str(AUDIO))
-    import fetch
+    fetch = load_fetch()
     music = json.loads(Path(design_path).read_text())['music']['file']
     report = json.loads(Path(report_path).read_text())
     score = set(score_recordings())
@@ -152,26 +191,37 @@ def licences_and_credits(design_path, report_path):
         must(audit, 'audit.py (licence blocker)')
         cred = fetch.real_sound('credits').main(['--root', str(PROJECT), '--report', rel(credits_report),
                                                  '--manifests', rel(mdir), '--design', rel(cdesign),
-                                                 '--audit', rel(mdir / 'audit.json'), '--out', 'audio/CREDITS.md',
+                                                 '--audit', rel(mdir / 'audit.json'), '--out', rel(OUT / 'CREDITS.md'),
                                                  '--desc', rel(OUT / 'CREDITS_description.txt'), '--title', TITLE])
         must(cred, 'credits.py (a recording without a confirmed licence)')
-    md = AUDIO / 'CREDITS.md'
+    md = OUT / 'CREDITS.md'
     text = md.read_text()
     if '## Music\n\n' not in text:
         sys.exit('build.py: CREDITS.md has no "## Music" section for the score note (credits.py output changed?)')
     md.write_text(text.replace('## Music\n\n', f'## Music\n\n{SCORE_NOTE}\n\n', 1))
+    return md
+
+
+def publish(m4a, credits_md):
+    """the committed outputs, written only after every gate has passed"""
+    shutil.copyfile(m4a, M4A)
+    shutil.copyfile(credits_md, AUDIO / 'CREDITS.md')
 
 
 def main():
     QA.mkdir(parents=True, exist_ok=True)
-    must(run(sys.executable, AUDIO / 'score' / 'render.py', '--strict'), 'score render')
-
     design = json.loads(DESIGN.read_text())
     try:
         check_includes(design)
     except FileNotFoundError as err:
         sys.exit(f'build.py: {err}')
+    problems = check_recordings()
+    if problems:
+        sys.exit('build.py: the recordings do not match audio/sources.json (run audio/fetch.py):\n  '
+                 + '\n  '.join(problems))
     design_path = DESIGN
+
+    must(run(sys.executable, AUDIO / 'score' / 'render.py', '--strict'), 'score render')
 
     premaster, report, trace = OUT / 'premaster.wav', QA / 'mix_report.json', QA / 'adds.json'
     must(run(sys.executable, '-I', TOOLS / 'mix.py', '--root', PROJECT, '--design', rel(design_path),
@@ -179,7 +229,7 @@ def main():
              '--report', rel(report), '--cues-out', rel(QA / 'cues_sounded.json'), '--trace', rel(trace),
              '--cache', rel(OUT / 'cache')), 'mix.py')
 
-    ceiling, tp = master_to_m4a(premaster, design.get('master', {}))
+    m4a, ceiling, tp = master_to_m4a(premaster, design.get('master', {}))
 
     qa = run(sys.executable, '-I', TOOLS / 'qa.py', '--root', PROJECT, '--design', rel(design_path),
              '--report', rel(report), '--trace', rel(trace), '--stems', rel(OUT / 'stems'),
@@ -187,7 +237,8 @@ def main():
              '--cues-sounded', rel(QA / 'cues_sounded.json'), '--cache', rel(OUT / 'cache'), '--out', rel(QA / 'qa.json'))
     must(qa, 'qa.py')
 
-    licences_and_credits(design_path, report)
+    credits_md = licences_and_credits(design_path, report)
+    publish(m4a, credits_md)
     print(f'{rel(M4A)}: ceiling {ceiling:.4f}, {tp:+.2f} dBTP; {rel(AUDIO / "CREDITS.md")} written')
 
 

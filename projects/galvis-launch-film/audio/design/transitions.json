@@ -39,7 +39,7 @@
       "eq": {"hp": 250, "hp_order": 2, "lp": 6500, "lp_order": 2}
     },
     "tr.acc.pop": {
-      "_about": "Task 7 fix. Mixkit 2070 'Light impact on the ground' +5 semitones (same recipe as mo.pop.a): the small pop as the collapsing window disappears into the disc at 75.5.",
+      "_about": "Task 7 fix. Mixkit 2070 'Light impact on the ground' +5 semitones (the recipe of the act 07 row pop, which the final review dropped): the small pop as the collapsing window disappears into the disc at 75.5.",
       "file": "audio/assets/mixkit/2070.wav", "start": 0.0, "end": 0.14, "mono": true, "pitch": 5, "norm_peak_db": -3.0, "fade_in": 0.001, "fade_out": 0.05,
       "eq": {"hp": 280, "hp_order": 2, "lp": 5500, "lp_order": 2}
     },

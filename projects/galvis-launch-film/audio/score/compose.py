@@ -8,12 +8,12 @@ how long the note is held, in seconds (the release follows it).
 Form (seconds; the acts come from the cues):
   0-12    act 01  orbit: bass/cello drone breathing every bar, piano pp, lights at the pings
   12-24   act 02  piano pulse on a pedal A; one layer joins at each plate that lands; build, stop-down 23.75
-  24-34   act 03  impact (gong, bass drum, double bass); the core note D and its piano motif D-A-D
+  24-34   act 03  impact (gong, double bass); the core note D and its piano motif D-A-D
   34-52   act 04  core engine: pizz cello ostinato, one rising vibraphone note per module activation
   52-62   act 05  build to the second stop-down; impact 56.0; sonic logo A4 / D5 / F#5 (vibraphone, octave shimmer)
   62-76   act 06  Workspace: light piano and vibraphone, the logo's first note A4 as motif
   76-90   act 07  Data Enrichment: pizz, crotales sparkle per row, motif D5
-  90-106  act 08  Enterprise: full strings, bass drum per sector, motif F#5
+  90-106  act 08  Enterprise: full strings, motif F#5 (the sector landings are the SFX layer's)
   106-112 act 09  the three notes climb back and become the D-F#-A chord at 108.0
   112-120 act 10  sting at 112.5, the logo echoed in its tail, the chord re-voiced at 116.0 under the tagline
                   and held under the end card to the 0.8 s fade
@@ -262,7 +262,6 @@ def act02(s, cues, stop):
 def impact(s, t):
     """Low layers only on the frame; the designed impact and riser are the SFX layer's."""
     s.add(t, 'gong', None, 0.85, 8.0)
-    s.add(t, 'bass_drum', None, 0.9, 3.0)
     s.chord(t, 'bass_arco', ['D1', 'D2'], 0.68, 3.0)
 
 
@@ -292,7 +291,7 @@ def act03(s, cues):
 
 
 def act04(s, cues):
-    """Core engine: pizz ostinato and a heartbeat; each module lights one vibraphone note, rising."""
+    """Core engine: pizz ostinato; each module lights one vibraphone note, rising."""
     changes = per_bar(34.0, ['D', 'D', 'D', 'Bm', 'G', 'A', 'Bm', 'D', 'A'])
     pizz_bars(s, 34.0, 36.0, changes, 0.32)
     pizz_bars(s, 36.0, 52.0, changes, 0.48)
@@ -301,8 +300,6 @@ def act04(s, cues):
     s.bows('bass_arco_soft', 34.0, 52.0, lambda t: [bass_root(chord_at(t, changes))], 0.42)
     for t, chord in changes[1:]:
         s.chord(t, 'piano', [tone(chord, 0, 3), tone(chord, 2, 3), tone(chord, 1, 4)], 0.4, 1.8)
-    for t, _ in changes[2:]:
-        s.add(t, 'bass_drum', None, 0.3, 1.5)
     for t, p in paired(cues, 'act04:module:', ['A4', 'B4', 'D5', 'E5', 'F#5', 'A5']):
         s.add(t, 'vibraphone', p, 0.58, 1.5)
         s.add(t + 0.75, 'vibraphone', p, 0.3, 0.75)   # dotted-eighth echo, played
@@ -373,7 +370,7 @@ def act07(s, cues):
 
 
 def act08(s, cues):
-    """Enterprise: full strings with F#5 on top, bass drum on every sector, crotales on the flashes."""
+    """Enterprise: full strings with F#5 on top, crotales on the flashes (the sector landings are the SFX layer's)."""
     changes = per_bar(90.0, ['D', 'Bm', 'G', 'A', 'D', 'Bm', 'G', 'A'])
     ticks(s, 90.0, 106.0, changes, 0.52, step=BEAT / 4)
     s.bows('bass_arco', 90.0, 106.0, lambda t: [bass_root(chord_at(t, changes))], 0.5)
@@ -388,12 +385,6 @@ def act08(s, cues):
         s.add(t + BAR / 2, 'piano', tone(chord, 0, 2), 0.32, 1.0)
         s.chord(t, 'piano', [tone(chord, d, 4) for d in (0, 1, 2)], 0.34, 1.5)
     pizz_bars(s, 90.0, 106.0, changes, 0.4)
-    sectors = cue_times(cues, 'act08:sector:')
-    for t in sectors:
-        s.add(t, 'bass_drum', None, 0.7, 3.0)
-    for t, _ in changes:
-        if all(abs(t - x) > 0.5 for x in sectors):
-            s.add(t, 'bass_drum', None, 0.34, 1.5)
     for t, p in paired(cues, 'act08:flash:', ['D6', 'F#6', 'A6']):
         s.add(t, 'crotales', p, 0.45, 2.5)
 
@@ -423,7 +414,6 @@ def act10(s, cues):
     while the strings re-bow; at 116.0 (the tagline) the chord is re-voiced and rings to the end of the film."""
     t = cue_times(cues, 'act10:logo')[0]
     s.add(t, 'gong', None, 0.45, 7.0)
-    s.add(t, 'bass_drum', None, 0.46, 3.0)
     s.add(t, 'cymbal_crash', None, 0.34, 4.0)
     s.add(t, 'bass_arco', 'D2', 0.46, 3.5)
     s.add(t, 'cello_arco', 'D3', 0.42, 3.5)

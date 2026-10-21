@@ -92,6 +92,17 @@ class TestSync(unittest.TestCase):
             self.assertGreater(20 * np.log10(spec[k] / spec[wide].max()), -12.0, f'{e["pitch"]} at {t}')
 
 
+class TestSfxSync(unittest.TestCase):
+    """per-effect sync from the last build's QA (qa.py: every sounded cue event, attack / peak / end vs its frame)"""
+
+    def test_every_effect_on_its_cue(self):
+        path = AUDIO / 'out' / 'qa' / 'qa.json'
+        if not path.is_file():
+            self.skipTest(f'{path} is missing: run audio/build.py first')
+        sync = json.loads(path.read_text())['sections']['sync']
+        self.assertEqual(sync['status'], 'ok', sync['summary'])
+
+
 class TestFilmPlaysTheSoundtrack(unittest.TestCase):
     def test_index_plays_the_soundtrack(self):
         html = (PROJECT / 'index.html').read_text()

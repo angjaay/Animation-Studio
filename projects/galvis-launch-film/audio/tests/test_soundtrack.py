@@ -6,6 +6,8 @@ Run from the project root:  audio/.venv/bin/python -m unittest discover -s audio
 """
 import json
 import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -117,7 +119,6 @@ class TestDesign(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        import sys
         sys.path.insert(0, str(AUDIO))
         import build
         cls.build = build
@@ -153,25 +154,139 @@ class TestDesign(unittest.TestCase):
         self.assertIn([76.0, 0], self.design['buses']['music']['auto'])
 
     def test_ceiling_is_lowered_until_the_m4a_is_under_the_limit(self):
+        """the loop encodes into audio/out only: audio/soundtrack.m4a is not touched before the gates pass"""
         from unittest import mock
         b, ceilings = self.build, []
         with mock.patch.object(b, 'master', lambda pre, wav, m, c: ceilings.append(c) or 0), \
                 mock.patch.object(b, 'encode', lambda wav, m4a: None), mock.patch.object(b, 'decode', lambda p: None), \
                 mock.patch.object(b, 'true_peak_db', side_effect=[-1.2, -1.45, -1.62]), \
                 mock.patch.object(b.shutil, 'copyfile') as copy, mock.patch('builtins.print'):
-            ceiling, tp = b.master_to_m4a('premaster.wav', {'ceiling': 0.77})
+            m4a, ceiling, tp = b.master_to_m4a('premaster.wav', {'ceiling': 0.77})
+        self.assertEqual(m4a, b.OUT / 'soundtrack.m4a')
         self.assertEqual(tp, -1.62)
         self.assertEqual(len(ceilings), 3)
         self.assertAlmostEqual(20 * np.log10(ceilings[1] / ceilings[0]), -1.5 - 0.1 + 1.2)
         self.assertAlmostEqual(20 * np.log10(ceilings[2] / ceilings[1]), -1.5 - 0.1 + 1.45)
         self.assertEqual(ceiling, ceilings[2])
-        copy.assert_called_once()
+        copy.assert_not_called()
 
     def test_music_is_the_rendered_score_on_the_grid(self):
         m = self.design['music']
         self.assertEqual(m['file'], 'audio/out/music.wav')
         self.assertEqual((m['src_bpm'], m.get('stretch')), (120, 'none'))
         self.assertEqual([(s['src_from'], s['at']) for s in m['segments']], [(0.0, 0.0)])
+
+
+class TestBuildGates(unittest.TestCase):
+    """build.py stops before rendering on a bad recording or a missing fragment, and publishes audio/soundtrack.m4a and
+    audio/CREDITS.md only after QA, the licence audit and the credits have passed"""
+
+    @classmethod
+    def setUpClass(cls):
+        sys.path.insert(0, str(AUDIO))
+        import build
+        cls.build = build
+
+    def fixture(self, tmp):
+        import hashlib
+        assets = Path(tmp)
+        (assets / 'mixkit').mkdir()
+        (assets / 'mixkit' / '1.wav').write_bytes(b'RIFF recording one')
+        entry = {'id': 'mixkit-1', 'source': 'mixkit', 'file': 'mixkit/1.wav', 'url': 'https://example.invalid/1.wav',
+                 'sha256': hashlib.sha256(b'RIFF recording one').hexdigest()}
+        return assets, {'entries': [entry]}
+
+    def test_clean_recordings_pass(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            assets, sources = self.fixture(tmp)
+            self.assertEqual(self.build.recording_problems(sources, assets, ['mixkit/1.wav']), [])
+
+    def test_a_tampered_recording_is_a_problem(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            assets, sources = self.fixture(tmp)
+            (assets / 'mixkit' / '1.wav').write_bytes(b'RIFF something else')
+            problems = self.build.recording_problems(sources, assets, ['mixkit/1.wav'])
+            self.assertTrue(any('sha256 mismatch' in p for p in problems), problems)
+
+    def test_a_recording_no_sources_entry_names_is_a_problem(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            assets, sources = self.fixture(tmp)
+            (assets / 'mixkit' / '2.wav').write_bytes(b'RIFF unknown')
+            problems = self.build.recording_problems(sources, assets, ['mixkit/1.wav', 'mixkit/2.wav'])
+            self.assertEqual(len(problems), 1, problems)
+            self.assertIn('mixkit/2.wav', problems[0])
+
+    def test_the_build_uses_every_design_recording_from_the_assets(self):
+        used = self.build.design_recordings(json.loads((AUDIO / 'sounddesign.json').read_text()))
+        self.assertTrue(used and all(not u.startswith('audio/') for u in used), used)
+        self.assertIn('mixkit/790.wav', used)
+
+    def gated_main(self, problems=(), includes_ok=True, credits_ok=True):
+        """run build.main() with every step mocked; returns (exit, calls in order)"""
+        from unittest import mock
+        b, calls = self.build, []
+
+        def check(design):
+            calls.append('check_includes')
+            if not includes_ok:
+                raise FileNotFoundError('audio/design/nope.json')
+
+        def credits(*a):
+            calls.append('credits')
+            if not credits_ok:
+                sys.exit('credits failed')
+            return b.OUT / 'CREDITS.md'
+
+        with mock.patch.object(b, 'check_includes', check), \
+                mock.patch.object(b, 'check_recordings', lambda: calls.append('recordings') or list(problems)), \
+                mock.patch.object(b, 'run', lambda *a: calls.append(Path(str(a[2] if a[1] == '-I' else a[1])).name) or 0), \
+                mock.patch.object(b, 'master_to_m4a', lambda *a: calls.append('master') or (b.OUT / 'soundtrack.m4a', 0.77, -1.9)), \
+                mock.patch.object(b, 'licences_and_credits', credits), \
+                mock.patch.object(b, 'publish', lambda *a: calls.append('publish')), mock.patch('builtins.print'):
+            try:
+                b.main()
+                code = None
+            except SystemExit as ex:
+                code = ex.code
+        return code, calls
+
+    def test_the_whole_build_order(self):
+        code, calls = self.gated_main()
+        self.assertIsNone(code)
+        self.assertEqual(calls, ['check_includes', 'recordings', 'render.py', 'mix.py', 'master', 'qa.py', 'credits',
+                                 'publish'])
+
+    def test_a_bad_recording_stops_the_build_before_the_render(self):
+        code, calls = self.gated_main(problems=['mixkit-1: sha256 mismatch'])
+        self.assertIn('sha256 mismatch', str(code))
+        self.assertEqual(calls, ['check_includes', 'recordings'])
+
+    def test_a_missing_fragment_stops_the_build_before_the_render(self):
+        code, calls = self.gated_main(includes_ok=False)
+        self.assertIn('nope.json', str(code))
+        self.assertEqual(calls, ['check_includes'])
+
+    def test_nothing_is_published_when_the_credits_fail(self):
+        code, calls = self.gated_main(credits_ok=False)
+        self.assertEqual(code, 'credits failed')
+        self.assertNotIn('publish', calls)
+
+
+class TestBuiltQA(unittest.TestCase):
+    """the QA report of the last build (audio/out/qa/qa.json, written by audio/build.py)"""
+
+    @classmethod
+    def setUpClass(cls):
+        path = AUDIO / 'out' / 'qa' / 'qa.json'
+        if not path.is_file():
+            raise unittest.SkipTest(f'{path} is missing: run audio/build.py first')
+        cls.qa = json.loads(path.read_text())['sections']
+
+    def test_no_masked_effect_outside_the_typing_burst(self):
+        """the act 06 keys (40 a second) mask each other by design; every other effect must read over the mix"""
+        masked = [(e['t'], e['label']) for e in self.qa['audibility']['events']
+                  if e['verdict'] == 'masked' and not e['label'].startswith('act06:key:')]
+        self.assertEqual(masked, [])
 
 
 if __name__ == '__main__':
