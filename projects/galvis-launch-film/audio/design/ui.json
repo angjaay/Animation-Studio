@@ -1,0 +1,253 @@
+{
+ "_doc": "ui fragment (act 06, the workspace window). Everything lives in the agent panel on the right of the window, so every UI sound is panned right (0.6 = x 1570 px, the middle of the step rows at 1360-1780). Levels are RELATIVE to the music peaks, which are about -3..-6 dBFS premaster (measured on the temp score): UI peaks sit 12-15 dB under them (keys -24 each, about -18 as a 40/s burst; click -18; step notes -17), Task 6 balances the buses. Cues: act06:key:1..55 (one per prompt character, 25 ms apart from 66.0 s), act06:step:1..5 (70.0 71.0 72.0 73.0 74.5), act06:word:1 (ASK, 66.0: the panel starts to lift and the prompt starts to type; the click sits 30 ms before it). Nothing here sounds the four act-06 word pops or the 75.5 collapse whoosh (transitions / music own those).",
+ "slices": {
+  "ui.keys": {
+   "_doc": "laptop typing (Mixkit 2531, 19.6 s of single presses). 20 clean takes picked from the --dump of the default slicer (head below -40 dB, tail below -38 dB, attack <= 7 ms, 0.085-0.141 s long, spread over the file so the takes come from different keys). len 0.07 + 30 ms fade keeps each take short: at 25 ms per character up to 3 takes overlap, long tails would turn it to mush. The recording's own bottom-out thock is kept; HP 180 Hz takes the desk rumble off, LP 9 kHz takes the paper-thin top that would be harsh at 40 keys per second.",
+   "file": "audio/assets/mixkit/2531.wav",
+   "pre": 0.004,
+   "len": 0.07,
+   "mono": true,
+   "pick": [
+    3,
+    4,
+    15,
+    16,
+    18,
+    22,
+    25,
+    49,
+    56,
+    59,
+    61,
+    72,
+    87,
+    90,
+    96,
+    99,
+    104,
+    113,
+    127,
+    150
+   ],
+   "eq": {
+    "hp": 180,
+    "hp_order": 4,
+    "lp": 9000,
+    "lp_order": 2
+   },
+   "norm_peak_db": -3.0,
+   "fade_out": 0.03
+  }
+ },
+ "samples": {
+  "ui.click": {
+   "_doc": "Mixkit 1116 'Single classic click': click + release, attack at 0.112 s. The panel is clicked into focus right before the lift. LP 6.5 kHz (its centre of gravity is 7 kHz: it would cut through the keys).",
+   "file": "audio/assets/mixkit/1116.wav",
+   "start": 0.1,
+   "end": 0.23,
+   "mono": true,
+   "eq": {
+    "hp": 250,
+    "hp_order": 2,
+    "lp": 6500,
+    "lp_order": 2
+   },
+   "norm_peak_db": -3.0,
+   "fade_out": 0.04
+  },
+  "ui.notify.D6": {
+   "file": "audio/assets/iowa/crotales/D6.flac",
+   "start": 0.0,
+   "end": 1.1,
+   "mono": true,
+   "eq": {
+    "hp": 900,
+    "hp_order": 2,
+    "lp": 4200,
+    "lp_order": 2
+   },
+   "norm_peak_db": -3.0,
+   "fade_in": 0.002,
+   "fade_out": 0.6
+  },
+  "ui.notify.E6": {
+   "file": "audio/assets/iowa/crotales/E6.flac",
+   "start": 0.0,
+   "end": 1.1,
+   "mono": true,
+   "eq": {
+    "hp": 900,
+    "hp_order": 2,
+    "lp": 4200,
+    "lp_order": 2
+   },
+   "norm_peak_db": -3.0,
+   "fade_in": 0.002,
+   "fade_out": 0.6
+  },
+  "ui.notify.Fs6": {
+   "file": "audio/assets/iowa/crotales/Fs6.flac",
+   "start": 0.0,
+   "end": 1.1,
+   "mono": true,
+   "eq": {
+    "hp": 900,
+    "hp_order": 2,
+    "lp": 4200,
+    "lp_order": 2
+   },
+   "norm_peak_db": -3.0,
+   "fade_in": 0.002,
+   "fade_out": 0.6
+  },
+  "ui.notify.A6": {
+   "file": "audio/assets/iowa/crotales/A6.flac",
+   "start": 0.0,
+   "end": 1.1,
+   "mono": true,
+   "eq": {
+    "hp": 900,
+    "hp_order": 2,
+    "lp": 4200,
+    "lp_order": 2
+   },
+   "norm_peak_db": -3.0,
+   "fade_in": 0.002,
+   "fade_out": 0.6
+  }
+ },
+ "pools": {
+  "ui.p.key": [
+   "ui.keys#*"
+  ],
+  "ui.p.click": [
+   "ui.click"
+  ],
+  "ui.p.notify.D6": [
+   "ui.notify.D6"
+  ],
+  "ui.p.notify.E6": [
+   "ui.notify.E6"
+  ],
+  "ui.p.notify.Fs6": [
+   "ui.notify.Fs6"
+  ],
+  "ui.p.notify.A6": [
+   "ui.notify.A6"
+  ]
+ },
+ "rules": [
+  {
+   "name": "ui.key",
+   "match": {
+    "kind": "key",
+    "id": "^act06:key:"
+   },
+   "pool": "ui.p.key",
+   "mode": "cycle",
+   "gain_db": -21.0,
+   "jitter_db": 1.5,
+   "pan": 0.6,
+   "align": "attack"
+  },
+  {
+   "name": "ui.click",
+   "match": {
+    "kind": "pop",
+    "id": "^act06:word:1$"
+   },
+   "pool": "ui.p.click",
+   "mode": "fixed",
+   "gain_db": -18.0,
+   "pan": 0.6,
+   "align": "attack",
+   "offset": -0.03,
+   "no_cue": true
+  },
+  {
+   "name": "ui.notify.1",
+   "match": {
+    "kind": "step",
+    "id": "^act06:step:1$",
+    "from": 70.0,
+    "to": 75.0
+   },
+   "pool": "ui.p.notify.D6",
+   "mode": "fixed",
+   "gain_db": -17.0,
+   "pan": 0.6,
+   "align": "attack"
+  },
+  {
+   "name": "ui.notify.2",
+   "match": {
+    "kind": "step",
+    "id": "^act06:step:2$",
+    "from": 70.0,
+    "to": 75.0
+   },
+   "pool": "ui.p.notify.E6",
+   "mode": "fixed",
+   "gain_db": -17.0,
+   "pan": 0.6,
+   "align": "attack"
+  },
+  {
+   "name": "ui.notify.3",
+   "match": {
+    "kind": "step",
+    "id": "^act06:step:3$",
+    "from": 70.0,
+    "to": 75.0
+   },
+   "pool": "ui.p.notify.Fs6",
+   "mode": "fixed",
+   "gain_db": -17.0,
+   "pan": 0.6,
+   "align": "attack"
+  },
+  {
+   "name": "ui.notify.4",
+   "match": {
+    "kind": "step",
+    "id": "^act06:step:4$",
+    "from": 70.0,
+    "to": 75.0
+   },
+   "pool": "ui.p.notify.A6",
+   "mode": "fixed",
+   "gain_db": -17.0,
+   "pan": 0.6,
+   "align": "attack"
+  },
+  {
+   "name": "ui.notify.5a",
+   "match": {
+    "kind": "step",
+    "id": "^act06:step:5$",
+    "from": 70.0,
+    "to": 75.0
+   },
+   "pool": "ui.p.notify.D6",
+   "mode": "fixed",
+   "gain_db": -19.0,
+   "pan": 0.6,
+   "align": "attack"
+  },
+  {
+   "name": "ui.notify.5b",
+   "match": {
+    "kind": "step",
+    "id": "^act06:step:5$",
+    "from": 70.0,
+    "to": 75.0
+   },
+   "pool": "ui.p.notify.A6",
+   "mode": "fixed",
+   "gain_db": -22.0,
+   "pan": 0.6,
+   "align": "attack"
+  }
+ ],
+ "_notify_doc": "step-done notifications: real Iowa crotale notes (realness 0.96+), not Mixkit 3109 (a weak match for 'soft bell chime', and its tail rings G6, outside D major). The five steps climb the D-major tones the crotales have: D6 E6 F#6 A6 on steps 1-4 (progress going up), and the last step (the summary card) lands on D6 + A6 together, an open fifth that closes on the tonic. 1.1 s trim, 0.6 s fade; LP 4.2 kHz takes the metal strike off so it reads as a soft ding, HP 900 Hz. Nowhere near the logo's A4 / D5 / F#5 at 58-59 s (12 s away, an octave higher or more)."
+}
