@@ -1,0 +1,24 @@
+<!doctype html>
+<html><head><meta charset="UTF-8" /></head><body>
+<template>
+  <style>
+    #root{position:absolute;inset:0;}
+    #shade-top{position:absolute;left:0;top:0;width:1080px;height:580px;background:linear-gradient(rgba(6,8,10,.97) 0%,rgba(6,8,10,.9) 42%,rgba(6,8,10,0) 100%);}
+    #shade-bot{position:absolute;left:0;top:1010px;width:1080px;height:340px;background:linear-gradient(rgba(6,8,10,0) 0%,rgba(6,8,10,.9) 50%,rgba(6,8,10,.97) 100%);}
+    #shade-dim{position:absolute;inset:0;background:#06080A;}
+  </style>
+  <div id="root" data-composition-id="shade" data-width="1080" data-height="1350">
+    <div id="shade-top"></div><div id="shade-bot"></div><div id="shade-dim"></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // the closing slides sit on a calmer ground
+      tl.fromTo('#shade-dim', { opacity: 0 }, { opacity: 0.35, duration: 1.2, ease: 'power2.inOut' }, 62);
+      tl.to('#shade-dim', { opacity: 0.55, duration: 0.8, ease: 'power2.inOut' }, 68);
+      tl.set({}, {}, 73.5);
+      window.__timelines["shade"] = tl;
+    })();
+  </script>
+</template>
+</body></html>

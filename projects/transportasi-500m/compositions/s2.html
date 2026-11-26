@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+@font-face{font-family:'Plus Jakarta Sans';src:url('assets/fonts/PlusJakartaSans-VF.ttf') format('truetype');font-weight:200 800;}
+@font-face{font-family:'Share Tech Mono';src:url('assets/fonts/ShareTechMono-Regular.ttf') format('truetype');font-weight:400;}
+#root{position:absolute;inset:0;overflow:hidden;}
+.ui{position:absolute;inset:0;}
+.a{position:absolute;margin:0;white-space:nowrap;}
+.mono{font-family:'Share Tech Mono',monospace;text-transform:uppercase;font-weight:400;}
+.pj{font-family:'Plus Jakarta Sans',sans-serif;}
+.tag{font-size:22px;line-height:25px;letter-spacing:.2em;color:#9EB0BA;}
+.title{font-weight:700;color:#EAF1F5;letter-spacing:-.01em;line-height:1.06;white-space:normal;}
+.sub{font-weight:500;font-size:30px;line-height:1.35;color:#9EB0BA;white-space:normal;}
+.status{font-size:18px;line-height:20px;letter-spacing:.12em;color:#9EB0BA;opacity:.7;}
+.lbl{font-size:22px;line-height:25px;letter-spacing:.12em;color:#EAF1F5;text-shadow:0 1px 2px rgba(6,8,10,.95),0 0 10px rgba(6,8,10,.85);}
+.plus{font-size:18px;line-height:20px;color:rgba(234,241,245,.75);text-shadow:0 0 6px rgba(6,8,10,.9);}
+.plabel{font-size:20px;line-height:23px;letter-spacing:.14em;color:#9EB0BA;}
+.panel{position:absolute;background:rgba(10,16,21,.78);outline:1px solid rgba(234,241,245,.14);}
+.rule{position:absolute;height:1px;background:rgba(234,241,245,.12);}
+.corners{position:absolute;overflow:visible;}
+.numrow{position:absolute;display:flex;align-items:baseline;gap:6px;white-space:nowrap;}
+.num{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;}
+.unit{font-family:'Share Tech Mono',monospace;}
+.bar{position:absolute;}
+.w{display:inline-block;}
+.halo{text-shadow:0 1px 2px rgba(6,8,10,.95),0 0 10px rgba(6,8,10,.85);}
+
+      </style>
+      <div id="root" data-composition-id="s2" data-width="1080" data-height="1350">
+        <div id="s2-ui" class="ui">
+<p id="s2-tag" class="a mono tag" style="left:74px;top:176px;width:700px;">Cara mengukur</p>
+<h1 id="s2-title" class="a pj title" style="left:74px;top:217px;width:700px;font-size:68px;"><span class="w s2-title-w">Lingkar</span> <span class="w s2-title-w">500</span> <span class="w s2-title-w">meter</span></h1>
+<div id="s2-accent" class="a" style="left:74px;top:305px;width:72px;height:3px;background:#5CC8FF"></div>
+<p id="s2-sub" class="a pj sub" style="left:74px;top:324px;width:700px;">Sekitar 6 menit berjalan kaki. Warga di dalam lingkar ini kami hitung terlayani.</p>
+<svg id="s2-ring" class="a" style="left:0;top:0;overflow:visible" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs><mask id="s2-ring-m" maskUnits="userSpaceOnUse" x="0" y="0" width="1080" height="1350">
+    <circle id="s2-ring-mc" cx="600" cy="830" r="170" fill="none" stroke="#fff" stroke-width="12" pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="1" transform="rotate(-90 600 830)"/></mask></defs>
+  <radialGradient id="s2-disc-g"><stop offset="0" stop-color="#06080A" stop-opacity=".62"/><stop offset=".72" stop-color="#06080A" stop-opacity=".5"/><stop offset="1" stop-color="#06080A" stop-opacity="0"/></radialGradient>
+  <circle id="s2-disc" cx="600" cy="830" r="250" fill="url(#s2-disc-g)"/>
+  <circle id="s2-fill" cx="600" cy="830" r="170" fill="#5CC8FF" fill-opacity=".07"/>
+  <circle cx="600" cy="830" r="170" fill="none" stroke="#BFEBFF" stroke-width="2.5" stroke-dasharray="10 8" mask="url(#s2-ring-m)"/>
+  <circle id="s2-inner" cx="600" cy="830" r="85" fill="none" stroke="#EAF1F5" stroke-opacity=".18" stroke-width="1"/>
+  <rect id="s2-ch" x="406" y="830" width="388" height="1" fill="#EAF1F5" fill-opacity=".18"/>
+  <rect id="s2-cv" x="600" y="636" width="1" height="388" fill="#EAF1F5" fill-opacity=".18"/>
+  <g id="s2-radg"><rect id="s2-rad" x="600" y="829" width="170" height="2" fill="#5CC8FF"/></g>
+  <g id="s2-ret"><circle cx="600" cy="830" r="22" fill="none" stroke="#5CC8FF" stroke-width="1.5"/><circle cx="600.5" cy="830.5" r="2.5" fill="#5CC8FF"/>
+    <rect x="599" y="794" width="2" height="12" fill="#5CC8FF"/><rect x="599" y="854" width="2" height="12" fill="#5CC8FF"/>
+    <rect x="564" y="829" width="12" height="2" fill="#5CC8FF"/><rect x="624" y="829" width="12" height="2" fill="#5CC8FF"/></g>
+</svg>
+<p id="s2-rlab" class="a mono plabel halo" style="left:645px;top:800px;color:#EAF1F5;letter-spacing:.12em;">R = 500 M</p>
+<p id="s2-wlab" class="a mono plabel halo" style="left:508px;top:1016px;color:#EAF1F5;letter-spacing:.12em;">≈ 6 menit jalan kaki</p>
+<p id="s2-plus0" class="a mono plus s2-plus" data-layout-ignore style="left:458px;top:646px">+</p><p id="s2-lbl0" class="a mono lbl s2-lbl" style="left:476px;top:643px">Menteng</p>
+<p id="s2-plus1" class="a mono plus s2-plus" data-layout-ignore style="left:385px;top:947px">+</p><p id="s2-lbl1" class="a mono lbl s2-lbl" style="left:403px;top:944px">Setiabudi</p>
+<p id="s2-plus2" class="a mono plus s2-plus" data-layout-ignore style="left:670px;top:989px">+</p><p id="s2-lbl2" class="a mono lbl s2-lbl" style="left:688px;top:986px">Tebet</p>
+<div id="s2-leg1" class="a" style="left:74px;top:506px"><span style="position:absolute;left:0;top:4px;width:28px;height:18px;background:rgba(92,200,255,.75)"></span><span class="a mono lbl" style="left:40px;top:0">Dalam 500 m</span></div><div id="s2-leg2" class="a" style="left:304px;top:506px"><span style="position:absolute;left:0;top:4px;width:28px;height:18px;background:rgba(255,138,76,.75)"></span><span class="a mono lbl" style="left:40px;top:0">Di luar 500 m</span></div>
+<p id="s2-status" class="a mono status" style="left:74px;top:1214px;">Sektor Jakarta Pusat · 6.20°S 106.84°E</p>
+        </div>
+      </div>
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          const S = TR.scene(tl, 10);
+          const fx = TR.fx;
+          S.decode('#s2-tag', 0.1, 0.35);
+          fx.lineBlur(tl, '#s2-title', 0.18, 0.2);
+          fx.bar(tl, '#s2-accent', 0.3);
+          fx.lineBlur(tl, '#s2-sub', 0.5, 0.22);
+          // the reticle locks on, crosshairs extend, the ring is swept like a radar
+          tl.fromTo('#s2-disc', { opacity: 0 }, { opacity: 1, duration: 0.6, ease: 'power2.out' }, 0.9);
+          tl.fromTo('#s2-ret', { opacity: 0, scale: 1.7, rotation: 45, svgOrigin: '600 830' }, { opacity: 1, scale: 1, rotation: 0, duration: 0.45, ease: 'expo.out' }, 1.0);
+          tl.fromTo('#s2-ch', { scaleX: 0, svgOrigin: '600 830' }, { scaleX: 1, duration: 0.5, ease: 'expo.out' }, 1.2);
+          tl.fromTo('#s2-cv', { scaleY: 0, svgOrigin: '600 830' }, { scaleY: 1, duration: 0.5, ease: 'expo.out' }, 1.25);
+          tl.fromTo('#s2-rad', { scaleX: 0, svgOrigin: '600 830' }, { scaleX: 1, duration: 0.25, ease: 'power2.out' }, 1.45);
+          tl.fromTo('#s2-radg', { rotation: -360, svgOrigin: '600 830' }, { rotation: 0, duration: 1.1, ease: 'power2.inOut' }, 1.6);
+          tl.fromTo('#s2-ring-mc', { attr: { 'stroke-dashoffset': 1 } }, { attr: { 'stroke-dashoffset': 0 }, duration: 1.1, ease: 'power2.inOut' }, 1.6);
+          tl.fromTo('#s2-fill', { opacity: 0 }, { opacity: 1, duration: 0.6, ease: 'power2.out' }, 2.4);
+          tl.fromTo('#s2-inner', { opacity: 0, scale: 0.6, svgOrigin: '600 830' }, { opacity: 1, scale: 1, duration: 0.5, ease: 'expo.out' }, 2.5);
+          S.decode('#s2-rlab', 2.75, 0.4);
+          S.decode('#s2-wlab', 3.0, 0.5);
+          // legend items arrive with their colour on the map
+          fx.lineBlur(tl, '#s2-leg2', 2.05, 0.2);
+          fx.lineBlur(tl, '#s2-leg1', 6.05, 0.2);
+          fx.plus(tl, '.s2-plus', 3.6, 0.16);
+          S.decode('.s2-lbl', 3.68, 0.45, 0.16);
+          S.decode('#s2-status', 0.2, 0.5);
+          fx.out(tl, '#s2-ui', 9.72);
+
+          S.flush();
+          window.__timelines["s2"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

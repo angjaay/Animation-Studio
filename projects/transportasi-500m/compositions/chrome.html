@@ -1,0 +1,60 @@
+<!doctype html>
+<html><head><meta charset="UTF-8" /></head><body>
+<template>
+  <style>
+@font-face{font-family:'Plus Jakarta Sans';src:url('assets/fonts/PlusJakartaSans-VF.ttf') format('truetype');font-weight:200 800;}
+@font-face{font-family:'Share Tech Mono';src:url('assets/fonts/ShareTechMono-Regular.ttf') format('truetype');font-weight:400;}
+    #root{position:absolute;inset:0;}
+    .a{position:absolute;margin:0;white-space:nowrap;}
+    .mono{font-family:'Share Tech Mono',monospace;text-transform:uppercase;}
+    .gc{font-size:14px;line-height:16px;letter-spacing:.12em;color:rgba(158,176,186,.5);}
+    #chrome-header{position:absolute;left:74px;top:44px;width:932px;height:75px;}
+    #chrome-src{left:74px;top:1261px;font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;line-height:23px;color:#9EB0BA;}
+    #chrome-year{left:74px;top:1297px;font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;line-height:15px;color:#fff;}
+    #chrome-share{left:895px;top:1293px;font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;line-height:24px;color:#fff;}
+    .scan{position:absolute;inset:0;pointer-events:none;}
+    .scan-line{position:absolute;left:0;top:0;width:1080px;height:120px;background:linear-gradient(rgba(92,200,255,0),rgba(92,200,255,.10) 85%,rgba(191,235,255,.9) 98%,rgba(92,200,255,0));}
+  </style>
+  <div id="root" data-composition-id="chrome" data-width="1080" data-height="1350">
+    <svg id="chrome-frame" class="a" style="left:40px;top:136px;opacity:.5" width="1000" height="1110" viewBox="0 0 1000 1110">
+      <path id="chrome-f1" d="M0 30 V0 H30" fill="none" stroke="#EAF1F5" stroke-width="2"/>
+      <path id="chrome-f2" d="M970 0 H1000 V30" fill="none" stroke="#EAF1F5" stroke-width="2"/>
+      <path id="chrome-f3" d="M1000 1080 V1110 H970" fill="none" stroke="#EAF1F5" stroke-width="2"/>
+      <path id="chrome-f4" d="M30 1110 H0 V1080" fill="none" stroke="#EAF1F5" stroke-width="2"/>
+    </svg>
+    <div id="chrome-grid" data-layout-ignore><p class="a mono gc" style="left:160px;top:150px">A</p><p class="a mono gc" style="left:300px;top:150px">B</p><p class="a mono gc" style="left:440px;top:150px">C</p><p class="a mono gc" style="left:580px;top:150px">D</p><p class="a mono gc" style="left:720px;top:150px">E</p><p class="a mono gc" style="left:860px;top:150px">F</p><p class="a mono gc" style="left:16px;top:552px">5</p><p class="a mono gc" style="left:16px;top:692px">6</p><p class="a mono gc" style="left:16px;top:832px">7</p><p class="a mono gc" style="left:16px;top:972px">8</p></div>
+    <img id="chrome-header" src="assets/img/header.png" alt="GISACT"/>
+    <p id="chrome-src" class="a">Sumber: BPS, WorldPop, OpenStreetMap, GTFS · Analisis GISACT</p>
+    <p id="chrome-year" class="a"><span style="font-weight:600">GISACT </span><span style="font-weight:400">| 2026</span></p>
+    <p id="chrome-share" class="a"><span style="font-weight:700">Share</span><span style="font-weight:400"> this !</span></p>
+<div id="scan0" class="clip scan" data-start="15.9" data-duration="0.7" data-track-index="0"><div class="scan-line"></div></div>
+<div id="scan1" class="clip scan" data-start="25.9" data-duration="0.7" data-track-index="1"><div class="scan-line"></div></div>
+<div id="scan2" class="clip scan" data-start="35.9" data-duration="0.7" data-track-index="0"><div class="scan-line"></div></div>
+<div id="scan3" class="clip scan" data-start="40.8" data-duration="0.7" data-track-index="1"><div class="scan-line"></div></div>
+<div id="scan4" class="clip scan" data-start="47.9" data-duration="0.7" data-track-index="0"><div class="scan-line"></div></div>
+<div id="scan5" class="clip scan" data-start="55.9" data-duration="0.7" data-track-index="1"><div class="scan-line"></div></div>
+<div id="scan6" class="clip scan" data-start="61.9" data-duration="0.7" data-track-index="0"><div class="scan-line"></div></div>
+<div id="scan7" class="clip scan" data-start="67.9" data-duration="0.7" data-track-index="1"><div class="scan-line"></div></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // HUD boot: the frame corners draw out from the centre, the grid ticks on
+      tl.fromTo('#chrome-f1', { x: 470, y: 525, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.7, ease: 'expo.out' }, 0.05);
+      tl.fromTo('#chrome-f2', { x: -470, y: 525, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.7, ease: 'expo.out' }, 0.05);
+      tl.fromTo('#chrome-f3', { x: -470, y: -525, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.7, ease: 'expo.out' }, 0.05);
+      tl.fromTo('#chrome-f4', { x: 470, y: -525, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.7, ease: 'expo.out' }, 0.05);
+      tl.fromTo('#chrome-grid .gc', { opacity: 0 }, { opacity: 1, duration: 0.12, stagger: 0.04, ease: 'none' }, 0.35);
+      // the grid belongs to the map slides only
+      tl.to('#chrome-grid', { opacity: 0, duration: 0.3, ease: 'power2.in' }, 55.8);
+      // scan sweeps on every change of region
+      document.querySelectorAll('.scan').forEach((el) => {
+        const t = parseFloat(el.dataset.start);
+        tl.fromTo(el.querySelector('.scan-line'), { y: -140, opacity: 1 }, { y: 1350, duration: 0.6, ease: 'power2.inOut' }, t);
+      });
+      tl.set({}, {}, 73.5);
+      window.__timelines["chrome"] = tl;
+    })();
+  </script>
+</template>
+</body></html>

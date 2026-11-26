@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+@font-face{font-family:'Plus Jakarta Sans';src:url('assets/fonts/PlusJakartaSans-VF.ttf') format('truetype');font-weight:200 800;}
+@font-face{font-family:'Share Tech Mono';src:url('assets/fonts/ShareTechMono-Regular.ttf') format('truetype');font-weight:400;}
+#root{position:absolute;inset:0;overflow:hidden;}
+.ui{position:absolute;inset:0;}
+.a{position:absolute;margin:0;white-space:nowrap;}
+.mono{font-family:'Share Tech Mono',monospace;text-transform:uppercase;font-weight:400;}
+.pj{font-family:'Plus Jakarta Sans',sans-serif;}
+.tag{font-size:22px;line-height:25px;letter-spacing:.2em;color:#9EB0BA;}
+.title{font-weight:700;color:#EAF1F5;letter-spacing:-.01em;line-height:1.06;white-space:normal;}
+.sub{font-weight:500;font-size:30px;line-height:1.35;color:#9EB0BA;white-space:normal;}
+.status{font-size:18px;line-height:20px;letter-spacing:.12em;color:#9EB0BA;opacity:.7;}
+.lbl{font-size:22px;line-height:25px;letter-spacing:.12em;color:#EAF1F5;text-shadow:0 1px 2px rgba(6,8,10,.95),0 0 10px rgba(6,8,10,.85);}
+.plus{font-size:18px;line-height:20px;color:rgba(234,241,245,.75);text-shadow:0 0 6px rgba(6,8,10,.9);}
+.plabel{font-size:20px;line-height:23px;letter-spacing:.14em;color:#9EB0BA;}
+.panel{position:absolute;background:rgba(10,16,21,.78);outline:1px solid rgba(234,241,245,.14);}
+.rule{position:absolute;height:1px;background:rgba(234,241,245,.12);}
+.corners{position:absolute;overflow:visible;}
+.numrow{position:absolute;display:flex;align-items:baseline;gap:6px;white-space:nowrap;}
+.num{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;}
+.unit{font-family:'Share Tech Mono',monospace;}
+.bar{position:absolute;}
+.w{display:inline-block;}
+.halo{text-shadow:0 1px 2px rgba(6,8,10,.95),0 0 10px rgba(6,8,10,.85);}
+
+      </style>
+      <div id="root" data-composition-id="s3" data-width="1080" data-height="1350">
+        <div id="s3-ui" class="ui">
+<p id="s3-tag" class="a mono tag" style="left:74px;top:176px;width:700px;">[01/04] Jabodetabek</p>
+<h1 id="s3-title" class="a pj title" style="left:74px;top:217px;width:700px;font-size:68px;"><span class="w s3-title-w">Jaringan</span> <span class="w s3-title-w">terluas,</span> <span class="w s3-title-w">belum</span> <span class="w s3-title-w">merata</span></h1>
+<div id="s3-accent" class="a" style="left:74px;top:377px;width:72px;height:3px;background:#5CC8FF"></div>
+<p id="s3-sub" class="a pj sub" style="left:74px;top:396px;width:700px;">Kawasan Metropolitan Jakarta · 32,5 juta warga</p>
+<p id="s3-plus0" class="a mono plus s3-plus" data-layout-ignore style="left:116px;top:644px">+</p><p id="s3-lbl0" class="a mono lbl s3-lbl" style="left:134px;top:641px">Kab. Tangerang</p>
+<p id="s3-plus1" class="a mono plus s3-plus" data-layout-ignore style="left:707px;top:659px">+</p><p id="s3-lbl1" class="a mono lbl s3-lbl" style="left:725px;top:656px">Kab. Bekasi</p>
+<p id="s3-plus2" class="a mono plus s3-plus" data-layout-ignore style="left:423px;top:812px">+</p><p id="s3-lbl2" class="a mono lbl s3-lbl" style="left:441px;top:809px">Kota Depok</p>
+<p id="s3-plus3" class="a mono plus s3-plus" data-layout-ignore style="left:356px;top:985px">+</p><p id="s3-lbl3" class="a mono lbl s3-lbl" style="left:374px;top:982px">Kota Bogor</p>
+<div id="s3-ro" class="panel" style="left:556px;top:930px;width:450px;height:266px"></div>
+<svg id="s3-ro-c" class="corners" style="left:556px;top:930px" width="450" height="266" viewBox="0 0 450 266"><path d="M0 18 V0 H18 M432 0 H450 V18 M450 248 V266 H432 M18 266 H0 V248" fill="none" stroke="#EAF1F5" stroke-opacity="0.7" stroke-width="2"/></svg>
+<p id="s3-ro-h" class="a mono plabel" style="left:572px;top:943px;">Jangkauan 500 m</p>
+<div id="s3-ro-rule" class="rule" style="left:556px;top:970px;width:446px"></div>
+<p id="s3-ro-tl" class="a mono plabel" style="left:572px;top:986px;">Terlayani</p>
+<p id="s3-ro-bl" class="a mono plabel" style="left:736px;top:986px;">Belum terlayani</p>
+<div id="s3-ro-tr" class="numrow" style="left:572px;top:1061px;height:52px"><span id="s3-ro-tn" class="num" style="font-size:52px;color:#5CC8FF">8,4</span><span class="unit" style="font-size:22px;color:#5CC8FF">JT</span></div>
+<div id="s3-ro-br" class="numrow" style="left:736px;top:1016px;height:108px"><span id="s3-ro-bn" class="num" style="font-size:108px;color:#FF8A4C">24,1</span><span class="unit" style="font-size:30px;color:#FF8A4C">JT</span></div>
+<div id="s3-ro-bt" class="bar" style="left:572px;top:1140px;width:108px;height:8px;background:#5CC8FF"></div>
+<div id="s3-ro-bb" class="bar" style="left:682px;top:1140px;width:308px;height:8px;background:#FF8A4C"></div>
+<p id="s3-ro-tp" class="a mono plabel" style="left:572px;top:1156px;color:#5CC8FF;letter-spacing:.1em;">26% terlayani</p>
+<p id="s3-ro-bp" class="a mono plabel" style="left:690px;top:1156px;width:300px;color:#FF8A4C;letter-spacing:.1em;text-align:right;">74% belum</p>
+<div id="s3-leg1" class="a" style="left:74px;top:1150px"><span style="position:absolute;left:0;top:4px;width:28px;height:18px;background:rgba(92,200,255,.75)"></span><span class="a mono lbl" style="left:40px;top:0">Dalam 500 m</span></div><div id="s3-leg2" class="a" style="left:304px;top:1150px"><span style="position:absolute;left:0;top:4px;width:28px;height:18px;background:rgba(255,138,76,.75)"></span><span class="a mono lbl" style="left:40px;top:0">Di luar 500 m</span></div>
+<p id="s3-status" class="a mono status" style="left:74px;top:1214px;">Sektor Jabodetabek · 6.21°S 106.85°E</p>
+        </div>
+      </div>
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          const S = TR.scene(tl, 10);
+          const fx = TR.fx;
+          S.decode('#s3-tag', 0.1, 0.4);
+          fx.wordsInk(tl, '.s3-title-w', 0.18);
+          fx.bar(tl, '#s3-accent', 0.45);
+          fx.lineBlur(tl, '#s3-sub', 0.7, 0.22);
+          S.decode('#s3-status', 0.2, 0.6);
+          fx.plus(tl, '.s3-plus', 3.45, 0.13);
+          S.decode('.s3-lbl', 3.53, 0.42, 0.13);
+          fx.lineBlur(tl, '#s3-leg1, #s3-leg2', 3.65, 0.2);
+          const r = 4.00;
+          fx.open(tl, '#s3-ro', r); fx.lock(tl, '#s3-ro-c', r + 0.08);
+          S.decode('#s3-ro-h', r + 0.15, 0.4);
+          S.decode('#s3-ro-tl, #s3-ro-bl', r + 0.25, 0.4, 0.1);
+          fx.lineBlur(tl, '#s3-ro-tr', r + 0.42, 0.16); fx.lineBlur(tl, '#s3-ro-br', r + 0.52, 0.16);
+          S.count('#s3-ro-tn', r + 0.45, 1.2, 8.4);
+          S.count('#s3-ro-bn', r + 0.55, 1.45, 24.1);
+          tl.fromTo('#s3-ro-bt', { scaleX: 0, transformOrigin: '0% 50%' }, { scaleX: 1, duration: 0.9, ease: 'expo.out' }, r + 0.5);
+          tl.fromTo('#s3-ro-bb', { scaleX: 0, transformOrigin: '0% 50%' }, { scaleX: 1, duration: 1.2, ease: 'expo.out' }, r + 0.75);
+          S.decode('#s3-ro-tp, #s3-ro-bp', r + 1.3, 0.45, 0.12);
+          fx.out(tl, '#s3-ui', 9.72);
+
+          S.flush();
+          window.__timelines["s3"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

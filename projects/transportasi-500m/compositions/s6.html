@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+@font-face{font-family:'Plus Jakarta Sans';src:url('assets/fonts/PlusJakartaSans-VF.ttf') format('truetype');font-weight:200 800;}
+@font-face{font-family:'Share Tech Mono';src:url('assets/fonts/ShareTechMono-Regular.ttf') format('truetype');font-weight:400;}
+#root{position:absolute;inset:0;overflow:hidden;}
+.ui{position:absolute;inset:0;}
+.a{position:absolute;margin:0;white-space:nowrap;}
+.mono{font-family:'Share Tech Mono',monospace;text-transform:uppercase;font-weight:400;}
+.pj{font-family:'Plus Jakarta Sans',sans-serif;}
+.tag{font-size:22px;line-height:25px;letter-spacing:.2em;color:#9EB0BA;}
+.title{font-weight:700;color:#EAF1F5;letter-spacing:-.01em;line-height:1.06;white-space:normal;}
+.sub{font-weight:500;font-size:30px;line-height:1.35;color:#9EB0BA;white-space:normal;}
+.status{font-size:18px;line-height:20px;letter-spacing:.12em;color:#9EB0BA;opacity:.7;}
+.lbl{font-size:22px;line-height:25px;letter-spacing:.12em;color:#EAF1F5;text-shadow:0 1px 2px rgba(6,8,10,.95),0 0 10px rgba(6,8,10,.85);}
+.plus{font-size:18px;line-height:20px;color:rgba(234,241,245,.75);text-shadow:0 0 6px rgba(6,8,10,.9);}
+.plabel{font-size:20px;line-height:23px;letter-spacing:.14em;color:#9EB0BA;}
+.panel{position:absolute;background:rgba(10,16,21,.78);outline:1px solid rgba(234,241,245,.14);}
+.rule{position:absolute;height:1px;background:rgba(234,241,245,.12);}
+.corners{position:absolute;overflow:visible;}
+.numrow{position:absolute;display:flex;align-items:baseline;gap:6px;white-space:nowrap;}
+.num{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;}
+.unit{font-family:'Share Tech Mono',monospace;}
+.bar{position:absolute;}
+.w{display:inline-block;}
+.halo{text-shadow:0 1px 2px rgba(6,8,10,.95),0 0 10px rgba(6,8,10,.85);}
+
+      </style>
+      <div id="root" data-composition-id="s6" data-width="1080" data-height="1350">
+        <div id="s6-ui" class="ui">
+<div id="s6-vig" class="a" style="left:0;top:0;width:1080px;height:1350px;background:radial-gradient(ellipse 454px 486px at 640px 610px, rgba(6,8,10,0) 55%, rgba(6,8,10,.72) 100%)"></div>
+<p id="s6-tag" class="a mono tag" style="left:74px;top:176px;width:580px;">[03/04] Cekungan Bandung · perbesar</p>
+<h1 id="s6-title" class="a pj title" style="left:74px;top:217px;width:580px;font-size:68px;"><span class="w s6-title-w">Sampai</span> <span class="w s6-title-w">Soreang,</span> <span class="w s6-title-w">tapi</span> <span class="w s6-title-w">lewat</span> <span class="w s6-title-w">tol</span></h1>
+<div id="s6-accent" class="a" style="left:74px;top:377px;width:72px;height:3px;background:#FF8A4C"></div>
+<p id="s6-sub" class="a pj sub" style="left:74px;top:396px;width:580px;">Bus berhenti di Leuwi Panjang, lalu langsung di Soreang. Warga di antaranya belum terlayani.</p>
+<svg id="s6-svg" class="a" style="left:0;top:0;overflow:visible" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs>
+    <linearGradient id="s6-fade" x1="0" y1="330" x2="0" y2="790" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF8A4C" stop-opacity="0"/><stop offset=".3" stop-color="#FF8A4C"/><stop offset="1" stop-color="#FF8A4C"/></linearGradient>
+    <filter id="s6-glow" x="-50%" y="-10%" width="200%" height="120%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <mask id="s6-draw" maskUnits="userSpaceOnUse" x="0" y="0" width="1080" height="1350"><path id="s6-drawp" d="M 612 330 L 600 420 L 610 460 L 600 540 L 585 600 L 560 660 L 545 710 L 518 790" fill="none" stroke="#fff" stroke-width="24" stroke-linejoin="round" pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="1"/></mask>
+  </defs>
+  <g mask="url(#s6-draw)">
+    <path id="s6-route" d="M 612 330 L 600 420 L 610 460 L 600 540 L 585 600 L 560 660 L 545 710 L 518 790" fill="none" stroke="url(#s6-fade)" stroke-width="3" stroke-linejoin="round" filter="url(#s6-glow)"/>
+    <path d="M 612 330 L 600 420 L 610 460 L 600 540 L 585 600 L 560 660 L 545 710 L 518 790" fill="none" stroke="url(#s6-fade)" stroke-width="16" stroke-dasharray="2 34" opacity=".9"/>
+  </g>
+  <circle id="s6-bus" cx="612" cy="330" r="7" fill="#FF8A4C" filter="url(#s6-glow)"/>
+  <path id="s6-lead" d="M592 590 L648 572" fill="none" stroke="#FF8A4C" stroke-opacity=".8" stroke-width="1.5" pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="1"/>
+  <g id="s6-k1" transform="translate(770 402)"><path d="M10 1.25 H1.25 V10 M50 1.25 H58.75 V10 M10 58.75 H1.25 V50 M50 58.75 H58.75 V50" fill="none" stroke="#EAF1F5" stroke-width="2.5"/></g>
+  <g id="s6-k2" transform="translate(488 760)"><path d="M10 1.25 H1.25 V10 M50 1.25 H58.75 V10 M10 58.75 H1.25 V50 M50 58.75 H58.75 V50" fill="none" stroke="#EAF1F5" stroke-width="2.5"/></g>
+  <circle id="s6-d1" cx="800" cy="432" r="6" fill="#5CC8FF"/>
+  <circle id="s6-d2" cx="518" cy="790" r="6" fill="#5CC8FF"/>
+</svg>
+<div id="s6-chip1" class="a" style="left:820px;top:414px;width:214px;height:64px;background:rgba(6,8,10,.95);outline:1px solid rgba(235,242,245,.18)"></div>
+<p id="s6-l1" class="a mono lbl" style="left:832px;top:422px;">Leuwi Panjang</p>
+<p id="s6-s1" class="a mono plabel" style="left:832px;top:450px;font-size:18px;line-height:20px;letter-spacing:.12em;">Stop 01</p>
+<div id="s6-chip2" class="a" style="left:540px;top:768px;width:150px;height:64px;background:rgba(6,8,10,.95);outline:1px solid rgba(235,242,245,.18)"></div>
+<p id="s6-l2" class="a mono lbl" style="left:552px;top:776px;">Soreang</p>
+<p id="s6-s2" class="a mono plabel" style="left:552px;top:804px;font-size:18px;line-height:20px;letter-spacing:.12em;">Stop 02</p>
+<div id="s6-plate" class="a" style="left:648px;top:512px;width:368px;height:214px;background:rgba(6,8,10,.95)"></div>
+<div class="numrow" style="left:668px;top:528px;height:132px;gap:6px"><span id="s6-hero" class="num" style="font-size:132px;color:#FF8A4C;letter-spacing:-.02em">±9</span><span id="s6-km" class="pj" style="font-size:44px;font-weight:600;color:#FF8A4C">km</span></div>
+<p id="s6-note" class="a mono lbl" style="left:670px;top:676px;">Tanpa titik naik-turun</p>
+<p id="s6-meas" class="a mono plabel" style="left:670px;top:540px;">Mengukur celah</p>
+<p id="s6-mval" class="a mono" style="left:670px;top:576px;font-size:44px;line-height:48px;color:#FF8A4C;letter-spacing:.04em;">0,0 km</p>
+<div class="bar" style="left:670px;top:704px;width:320px;height:3px;background:rgba(234,241,245,.14)"></div>
+<div id="s6-prog" class="bar" style="left:670px;top:704px;width:320px;height:3px;background:#FF8A4C"></div>
+<div id="s6-leg1" class="a" style="left:74px;top:1132px"><span style="position:absolute;left:0;top:4px;width:28px;height:18px;background:rgba(92,200,255,.75)"></span><span class="a mono lbl" style="left:40px;top:0">Dalam 500 m</span></div><div id="s6-leg2" class="a" style="left:304px;top:1132px"><span style="position:absolute;left:0;top:4px;width:28px;height:18px;background:rgba(255,138,76,.75)"></span><span class="a mono lbl" style="left:40px;top:0">Di luar 500 m</span></div>
+<p id="s6-status" class="a mono status" style="left:74px;top:1214px;">Sektor Bandung Selatan · 7.00°S 107.56°E</p>
+        </div>
+      </div>
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          const S = TR.scene(tl, 7);
+          const fx = TR.fx;
+          S.decode('#s6-tag', 0.15, 0.45);
+          fx.wordsBlur(tl, '.s6-title-w', 0.3);
+          fx.bar(tl, '#s6-accent', 0.6);
+          fx.lineBlur(tl, '#s6-sub', 0.85, 0.22);
+          S.decode('#s6-status', 0.3, 0.6);
+          tl.fromTo('#s6-vig', { opacity: 0 }, { opacity: 1, duration: 0.8, ease: 'power2.inOut' }, 2.2);
+          // the camera lands (2.7 s): the stops are marked and the map's labels are covered
+          fx.open(tl, '#s6-chip1, #s6-chip2', 2.72, 0.32);
+          S.decode('#s6-l1', 2.85, 0.4); S.decode('#s6-s1', 3.0, 0.3);
+          S.decode('#s6-l2', 2.95, 0.4); S.decode('#s6-s2', 3.1, 0.3);
+          tl.fromTo('#s6-d1', { opacity: 0, scale: 0, svgOrigin: '800 432' }, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, 2.8);
+          tl.fromTo('#s6-k1', { opacity: 0, scale: 1.8, svgOrigin: '800 432' }, { opacity: 1, scale: 1, duration: 0.4, ease: 'expo.out' }, 2.9);
+          // the hero plate is in place before the map's own toll note shows (3.6 s)
+          fx.open(tl, '#s6-plate', 3.3, 0.4);
+          tl.set('#s6-km, #s6-note', { opacity: 0 }, 0);
+          S.decode('#s6-meas', 3.55, 0.45);
+          tl.fromTo('#s6-mval', { opacity: 0 }, { opacity: 1, duration: 0.15 }, 3.4);
+          S.count('#s6-mval', 3.4, 1.6, 9, 1, '', 'power1.inOut');
+          S.job((t) => { const el = document.getElementById('s6-mval'); if (t >= 3.4) el.textContent = el.textContent.replace(/ km$/, '') + ' km'; });
+          tl.fromTo('#s6-prog', { scaleX: 0, transformOrigin: '0% 50%' }, { scaleX: 1, duration: 1.6, ease: 'power1.inOut' }, 3.4);
+          fx.out(tl, '#s6-meas, #s6-mval', 5.05, 0.16);
+          tl.to('#s6-prog', { opacity: 0, duration: 0.2, ease: 'power2.in' }, 5.2);
+          // the bus leaves the city and runs the toll without a stop
+          tl.fromTo('#s6-drawp', { attr: { 'stroke-dashoffset': 1 } }, { attr: { 'stroke-dashoffset': 0 }, duration: 1.6, ease: 'power1.inOut' }, 3.4);
+          const path = document.getElementById('s6-drawp'), bus = document.getElementById('s6-bus');
+          const L = path.getTotalLength() || 470, E = gsap.parseEase('power1.inOut');
+          S.job((t) => {
+            const p = Math.min(1, Math.max(0, (t - 3.4) / 1.6));
+            const pt = path.getPointAtLength(E(p) * L);
+            bus.setAttribute('cx', pt.x); bus.setAttribute('cy', pt.y);
+            bus.setAttribute('opacity', t < 3.4 ? 0 : t < 5.0 ? 1 : Math.max(0, 1 - (t - 5.0) / 0.3));
+          });
+          tl.fromTo('#s6-d2', { opacity: 0, scale: 0, svgOrigin: '518 790' }, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, 4.95);
+          tl.fromTo('#s6-k2', { opacity: 0, scale: 1.8, svgOrigin: '518 790' }, { opacity: 1, scale: 1, duration: 0.4, ease: 'expo.out' }, 5.0);
+          // the measured gap
+          tl.fromTo('#s6-lead', { attr: { 'stroke-dashoffset': 1 } }, { attr: { 'stroke-dashoffset': 0 }, duration: 0.3, ease: 'power2.out' }, 5.05);
+          tl.fromTo('#s6-hero', { opacity: 0, scale: 1.25, filter: 'blur(8px)', transformOrigin: '0% 60%' }, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.4, ease: 'expo.out' }, 5.15);
+          fx.lineBlur(tl, '#s6-km', 5.35, 0.2);
+          tl.set('#s6-note', { opacity: 1 }, 5.55);
+          S.decode('#s6-note', 5.55, 0.5);
+          fx.lineBlur(tl, '#s6-leg1, #s6-leg2', 3.2, 0.2);
+          fx.out(tl, '#s6-ui', 6.72);
+
+          S.flush();
+          window.__timelines["s6"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

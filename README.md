@@ -7,6 +7,7 @@ Proyek video animasi dan motion design yang dibuat dengan kode.
 | Proyek | Status | Spec |
 |---|---|---|
 | [GALVIS Launch Film](projects/galvis-launch-film/) | desain | [spec](docs/superpowers/specs/2026-10-20-galvis-launch-film-design.md) |
+| [Jangkauan Transportasi Umum 500 m](projects/transportasi-500m/) | animasi v1.2 (review) | [README](projects/transportasi-500m/README.md) |
 
 ## Referensi
 

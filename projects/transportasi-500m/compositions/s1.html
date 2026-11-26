@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+@font-face{font-family:'Plus Jakarta Sans';src:url('assets/fonts/PlusJakartaSans-VF.ttf') format('truetype');font-weight:200 800;}
+@font-face{font-family:'Share Tech Mono';src:url('assets/fonts/ShareTechMono-Regular.ttf') format('truetype');font-weight:400;}
+#root{position:absolute;inset:0;overflow:hidden;}
+.ui{position:absolute;inset:0;}
+.a{position:absolute;margin:0;white-space:nowrap;}
+.mono{font-family:'Share Tech Mono',monospace;text-transform:uppercase;font-weight:400;}
+.pj{font-family:'Plus Jakarta Sans',sans-serif;}
+.tag{font-size:22px;line-height:25px;letter-spacing:.2em;color:#9EB0BA;}
+.title{font-weight:700;color:#EAF1F5;letter-spacing:-.01em;line-height:1.06;white-space:normal;}
+.sub{font-weight:500;font-size:30px;line-height:1.35;color:#9EB0BA;white-space:normal;}
+.status{font-size:18px;line-height:20px;letter-spacing:.12em;color:#9EB0BA;opacity:.7;}
+.lbl{font-size:22px;line-height:25px;letter-spacing:.12em;color:#EAF1F5;text-shadow:0 1px 2px rgba(6,8,10,.95),0 0 10px rgba(6,8,10,.85);}
+.plus{font-size:18px;line-height:20px;color:rgba(234,241,245,.75);text-shadow:0 0 6px rgba(6,8,10,.9);}
+.plabel{font-size:20px;line-height:23px;letter-spacing:.14em;color:#9EB0BA;}
+.panel{position:absolute;background:rgba(10,16,21,.78);outline:1px solid rgba(234,241,245,.14);}
+.rule{position:absolute;height:1px;background:rgba(234,241,245,.12);}
+.corners{position:absolute;overflow:visible;}
+.numrow{position:absolute;display:flex;align-items:baseline;gap:6px;white-space:nowrap;}
+.num{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;}
+.unit{font-family:'Share Tech Mono',monospace;}
+.bar{position:absolute;}
+.w{display:inline-block;}
+.halo{text-shadow:0 1px 2px rgba(6,8,10,.95),0 0 10px rgba(6,8,10,.85);}
+
+      </style>
+      <div id="root" data-composition-id="s1" data-width="1080" data-height="1350">
+        <div id="s1-ui" class="ui">
+<div id="s1-scrim" class="a" style="left:-160px;top:420px;width:980px;height:340px;background:radial-gradient(closest-side,rgba(6,8,10,.82),rgba(6,8,10,0))"></div>
+<p id="s1-tag" class="a mono tag" style="left:74px;top:176px;width:540px;">Pembuka</p>
+<h1 id="s1-title" class="a pj title" style="left:74px;top:217px;width:540px;font-size:68px;"><span class="w s1-title-w">Seberapa</span> <span class="w s1-title-w">dekat</span> <span class="w s1-title-w">transportasi</span> <span class="w s1-title-w">umum</span> <span class="w s1-title-w">dari</span> <span class="w s1-title-w">rumahmu?</span></h1>
+<div id="s1-accent" class="a" style="left:74px;top:521px;width:72px;height:3px;background:#5CC8FF"></div>
+<p id="s1-sub" class="a pj sub" style="left:74px;top:540px;width:540px;">Kami ukur jarak rumah warga ke titik transportasi umum terdekat di empat kawasan metropolitan.</p>
+<p id="s1-plus0" class="a mono plus s1-plus" data-layout-ignore style="left:592px;top:529px">+</p><p id="s1-lbl0" class="a mono lbl s1-lbl" style="left:610px;top:526px">Senen</p>
+<p id="s1-plus1" class="a mono plus s1-plus" data-layout-ignore style="left:458px;top:646px">+</p><p id="s1-lbl1" class="a mono lbl s1-lbl" style="left:476px;top:643px">Menteng</p>
+<p id="s1-plus2" class="a mono plus s1-plus" data-layout-ignore style="left:181px;top:760px">+</p><p id="s1-lbl2" class="a mono lbl s1-lbl" style="left:199px;top:757px">Tanah Abang</p>
+<div id="s1-moda" class="panel" style="left:636px;top:176px;width:370px;height:166px"></div>
+<svg id="s1-moda-c" class="corners" style="left:636px;top:176px" width="370" height="166" viewBox="0 0 370 166"><path d="M0 18 V0 H18 M352 0 H370 V18 M370 148 V166 H352 M18 166 H0 V148" fill="none" stroke="#EAF1F5" stroke-opacity="0" stroke-width="2"/></svg>
+<p id="s1-moda-h" class="a mono plabel" style="left:652px;top:189px;">Moda transportasi</p>
+<div id="s1-moda-rule" class="rule" style="left:636px;top:216px;width:370px"></div>
+<div id="s1-sw0" class="bar s1-sw" style="left:652px;top:245px;width:22px;height:3px;background:#e8475e"></div><p id="s1-md0" class="a pj s1-md" style="left:684px;top:232px;font-size:20px;line-height:25px;font-weight:500;color:#EAF1F5">KRL / KA lokal</p>
+<div id="s1-sw1" class="bar s1-sw" style="left:855px;top:245px;width:22px;height:3px;background:#4a7dff"></div><p id="s1-md1" class="a pj s1-md" style="left:874px;top:232px;font-size:20px;line-height:25px;font-weight:500;color:#EAF1F5">MRT</p>
+<div id="s1-sw2" class="bar s1-sw" style="left:652px;top:279px;width:22px;height:3px;background:#2ecc8f"></div><p id="s1-md2" class="a pj s1-md" style="left:684px;top:266px;font-size:20px;line-height:25px;font-weight:500;color:#EAF1F5">LRT Jabodebek</p>
+<div id="s1-sw3" class="bar s1-sw" style="left:855px;top:279px;width:22px;height:3px;background:#b5e51c"></div><p id="s1-md3" class="a pj s1-md" style="left:874px;top:266px;font-size:20px;line-height:25px;font-weight:500;color:#EAF1F5">LRT Jakarta</p>
+<div id="s1-sw4" class="bar s1-sw" style="left:652px;top:313px;width:22px;height:3px;background:#ffd140"></div><p id="s1-md4" class="a pj s1-md" style="left:684px;top:300px;font-size:20px;line-height:25px;font-weight:500;color:#EAF1F5">Transjakarta</p>
+<div id="s1-sw5" class="bar s1-sw" style="left:855px;top:313px;width:22px;height:3px;background:#9c8cff;background:repeating-linear-gradient(90deg,#9c8cff 0 5px,transparent 5px 8px)"></div><p id="s1-md5" class="a pj s1-md" style="left:874px;top:300px;font-size:20px;line-height:25px;font-weight:500;color:#EAF1F5">Bus kota</p>
+<p id="s1-status" class="a mono status" style="left:74px;top:1214px;">Sektor Jakarta Pusat · 6.20°S 106.84°E</p>
+        </div>
+      </div>
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          const S = TR.scene(tl, 6);
+          const fx = TR.fx;
+          S.decode('#s1-tag', 0.15, 0.4);
+          fx.bar(tl, '#s1-accent', 0.25);
+          fx.lineBlur(tl, '#s1-sub', 0.55, 0.22);
+          S.decode('#s1-status', 0.3, 0.6);
+          fx.open(tl, '#s1-moda', 1.45); fx.lock(tl, '#s1-moda-c', 1.55);
+          tl.set('#s1-moda-c path', { attr: { 'stroke-opacity': 0.7 } }, 1.55);
+          S.decode('#s1-moda-h', 1.6, 0.4);
+          // each mode row arrives as its line appears on the map
+          [[0, 1, 1.9], [2, 3, 2.8], [4, 5, 3.4]].forEach(([a, b, t]) => {
+            fx.bar(tl, `#s1-sw${a}, #s1-sw${b}`, t, 0.35);
+            fx.lineBlur(tl, `#s1-md${a}, #s1-md${b}`, t + 0.1, 0.18);
+          });
+          fx.plus(tl, '.s1-plus', 2.5, 0.16);
+          S.decode('.s1-lbl', 2.58, 0.45, 0.16);
+          fx.out(tl, '#s1-ui', 5.72);
+
+          S.flush();
+          window.__timelines["s1"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
